@@ -21,6 +21,8 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+#include <Empire/generated/assets_generated.h>
+
 typedef struct { float m[16]; } emp_mat4_t;
 
 static emp_mat4_t mat4_identity(void) {
@@ -82,21 +84,18 @@ static emp_mat4_t mat4_make_translation(float x, float y, float z) {
 #define SHADER_HEADER "#version 330 core\n"
 #endif
 
-static char* load_shader_file(const char* path) {
-    size_t size = 0;
-    void* data = SDL_LoadFile(path, &size);
-    if (!data) {
-        SDL_Log("Failed to load shader: %s", path);
+static char* load_shader_from_asset(emp_buffer shader_data) {
+    if (!shader_data.data || shader_data.size == 0) {
+        SDL_Log("Failed to load shader: invalid asset data");
         return NULL;
     }
     
     size_t header_len = strlen(SHADER_HEADER);
-    char* result = (char*)SDL_malloc(header_len + size + 1);
+    char* result = (char*)SDL_malloc(header_len + shader_data.size + 1);
     memcpy(result, SHADER_HEADER, header_len);
-    memcpy(result + header_len, data, size);
-    result[header_len + size] = '\0';
+    memcpy(result + header_len, shader_data.data, shader_data.size);
+    result[header_len + shader_data.size] = '\0';
     
-    SDL_free(data);
     return result;
 }
 
@@ -112,15 +111,15 @@ typedef struct {
     int index_count;
 } emp_mesh_t;
 
-static emp_mesh_t load_obj(const char* path) {
+static emp_mesh_t load_obj_from_asset(emp_buffer obj_data) {
     emp_mesh_t mesh = {0};
     
-    size_t size = 0;
-    char* data = (char*)SDL_LoadFile(path, &size);
-    if (!data) {
-        SDL_Log("Failed to load OBJ: %s", path);
+    if (!obj_data.data || obj_data.size == 0) {
+        SDL_Log("Failed to load OBJ: invalid asset data");
         return mesh;
     }
+    
+    char* data = (char*)obj_data.data;
     
     int pos_count = 0, color_count = 0, face_count = 0;
     char* line = data;
@@ -196,7 +195,6 @@ static emp_mesh_t load_obj(const char* path) {
     
     SDL_free(positions);
     SDL_free(colors);
-    SDL_free(data);
     return mesh;
 }
 
@@ -211,6 +209,7 @@ static void free_mesh(emp_mesh_t* mesh) {
 
 static SDL_Window* g_window = NULL;
 static SDL_GLContext g_gl_context = NULL;
+static emp_generated_assets_o* g_assets = NULL;
 static GLuint g_shader_program = 0;
 static GLuint g_vao = 0;
 static GLuint g_vbo = 0;
@@ -238,9 +237,9 @@ static GLuint compile_shader(GLenum type, const char* src) {
     return shader;
 }
 
-static GLuint create_shader_program(const char* vert_path, const char* frag_path) {
-    char* vert_src = load_shader_file(vert_path);
-    char* frag_src = load_shader_file(frag_path);
+static GLuint create_shader_program_from_assets(emp_buffer vert_data, emp_buffer frag_data) {
+    char* vert_src = load_shader_from_asset(vert_data);
+    char* frag_src = load_shader_from_asset(frag_data);
     if (!vert_src || !frag_src) {
         SDL_free(vert_src);
         SDL_free(frag_src);
@@ -354,14 +353,21 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
-    g_shader_program = create_shader_program("src/shaders/cube.vert", "src/shaders/cube.frag");
+    // Load assets
+    g_assets = emp_generated_assets_create();
+    if (!g_assets) {
+        SDL_Log("Failed to create assets");
+        return 1;
+    }
+
+    g_shader_program = create_shader_program_from_assets(g_assets->vert.cube.data, g_assets->frag.cube.data);
     if (!g_shader_program) {
         SDL_Log("Failed to create shader program");
         return 1;
     }
     g_mvp_loc = glGetUniformLocation(g_shader_program, "u_mvp");
 
-    emp_mesh_t cube = load_obj("src/models/cube.obj");
+    emp_mesh_t cube = load_obj_from_asset(g_assets->obj.cube.data);
     if (!cube.vertices) {
         SDL_Log("Failed to load cube mesh");
         return 1;

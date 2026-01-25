@@ -1,2 +1,5 @@
 Local/
+embuild/
 .clangd
+include/Empire/generated/
+src/generated/
