@@ -23,3 +23,8 @@ if(WIN32)
         $<TARGET_FILE_DIR:Empire>
     )
 endif()
+
+if(EMSCRIPTEN)
+    set_target_properties(Empire PROPERTIES SUFFIX ".html")
+    target_link_options(Empire PRIVATE "-sALLOW_MEMORY_GROWTH=1")
+endif()
