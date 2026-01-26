@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 project(Empire LANGUAGES C CXX)
 
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES "Ninja")
+    add_compile_options(/MP)
+endif()
+
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(SDL_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
+
 add_subdirectory(soy/SDL)
 
 # gl loader for win/macos
@@ -14,28 +23,50 @@ if(NOT EMSCRIPTEN)
     add_executable(Florence src/codegen/florence.c)
     target_include_directories(Florence PRIVATE include)
     target_link_libraries(Florence PRIVATE SDL3::SDL3)
+    set_target_properties(Florence PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    
+    add_custom_target(RunFlorence ALL
+        COMMAND Florence
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS Florence
+    )
 endif()
 
-add_executable(Empire src/main.c src/generated/assets_generated.c src/util.c)
+# get all the sloppy files
+file(GLOB EMPIRE_SOURCES "src/*.c")
+file(GLOB EMPIRE_HEADERS "include/Empire/*.h" "include/Empire/*.inl")
+file(GLOB EMPIRE_GENERATED "src/generated/*")
+
+add_executable(Empire 
+    ${EMPIRE_SOURCES}
+    ${EMPIRE_HEADERS}
+    ${EMPIRE_GENERATED}
+)
+
 target_include_directories(Empire PRIVATE include)
 target_link_libraries(Empire PRIVATE SDL3::SDL3)
 
-# Run codegen before building Empire
+# make pretty filters in VS
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    source_group("Sources" FILES ${EMPIRE_SOURCES})
+    source_group("Sources\\Generated" REGULAR_EXPRESSION "src/generated/.*\\.c")
+    source_group("Headers" FILES ${EMPIRE_HEADERS})
+    source_group("Headers\\Generated" REGULAR_EXPRESSION "src/generated/.*\\.h")
+endif()
+
 if(NOT EMSCRIPTEN)
-    add_custom_target(RunFlorence ALL
-        COMMAND $<TARGET_FILE:Florence>
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Running Florence codegen..."
-        DEPENDS Florence
-    )
     add_dependencies(Empire RunFlorence)
-endif()
-
-if(NOT EMSCRIPTEN)
     target_link_libraries(Empire PRIVATE glad)
+    set_target_properties(Empire PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
-if(WIN32)
+# Copy SDL3 DLL for Windows builds
+if(WIN32 AND NOT EMSCRIPTEN)
+    add_custom_command(TARGET Florence POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:SDL3::SDL3>
+        $<TARGET_FILE_DIR:Florence>
+    )
     add_custom_command(TARGET Empire POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:SDL3::SDL3>

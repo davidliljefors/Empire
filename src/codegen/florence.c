@@ -21,7 +21,7 @@ static char* to_snake_case(const char* filename) {
     return result;
 }
 
-static void upper_ext(const char* ext, char buf[static 64])
+static void upper_ext(const char* ext, char* buf)
 {
     for (const char* p = ext; *p; p++, buf++) {
         *buf = SDL_toupper(*p);

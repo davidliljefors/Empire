@@ -3,3 +3,5 @@ embuild/
 .clangd
 include/Empire/generated/
 src/generated/
+.vs/*
+out/*

@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#include <Empire/types.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
