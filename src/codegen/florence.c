@@ -21,6 +21,13 @@ static char* to_snake_case(const char* filename) {
     return result;
 }
 
+static void upper_ext(const char* ext, char buf[static 64])
+{
+    for (const char* p = ext; *p; p++, buf++) {
+        *buf = SDL_toupper(*p);
+    }
+}
+
 static int scan_directory(const char* dir, Asset* assets, int* count) {
     char** files = SDL_GlobDirectory(dir, NULL, SDL_GLOB_CASEINSENSITIVE, NULL);
     if (!files) return 0;
@@ -96,6 +103,9 @@ static void write_header(Asset* assets, int count) {
         if (already_written) continue;
         
         // Write struct for this extension
+        char uppercase_ext_buf[64]= {0};
+        upper_ext(current_ext, uppercase_ext_buf);
+        SDL_IOprintf(f, "#define EMP_ASSET_TYPE_%s 0x%016llxULL\n\n", uppercase_ext_buf, hash_str(uppercase_ext_buf));
         SDL_IOprintf(f, "typedef struct emp_generated_%s_t\n{\n", current_ext);
         
         for (int i = 0; i < count; i++) {
