@@ -211,16 +211,20 @@ static void free_mesh(emp_mesh_t* mesh) {
 static SDL_Window* g_window = NULL;
 static SDL_GLContext g_gl_context = NULL;
 static emp_generated_assets_o* g_assets = NULL;
+static emp_asset_manager_o* g_asset_mgr = NULL;
 static GLuint g_shader_program = 0;
-static GLuint g_vao = 0;
-static GLuint g_vbo = 0;
-static GLuint g_ebo = 0;
 static GLint g_mvp_loc = -1;
 static float g_angle_x = 0.0f;
 static float g_angle_y = 0.0f;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
-static int g_index_count = 0;
+
+typedef struct {
+    GLuint vao;
+    GLuint vbo;
+    GLuint ebo;
+    int index_count;
+} emp_mesh_gpu_t;
 
 static GLuint compile_shader(GLenum type, const char* src) {
     GLuint shader = glCreateShader(type);
@@ -303,10 +307,64 @@ static void main_loop(void) {
 
     glUniformMatrix4fv(g_mvp_loc, 1, GL_FALSE, mvp.m);
 
-    glBindVertexArray(g_vao);
-    glDrawElements(GL_TRIANGLES, g_index_count, GL_UNSIGNED_SHORT, 0);
+    emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->cube.handle;
+    if (cube_mesh) {
+        glBindVertexArray(cube_mesh->vao);
+        glDrawElements(GL_TRIANGLES, cube_mesh->index_count, GL_UNSIGNED_SHORT, 0);
+        glBindVertexArray(0);
+    }
 
     SDL_GL_SwapWindow(g_window);
+}
+
+void emp_mesh_load_func(emp_asset_t* asset)
+{
+    emp_mesh_t cube = load_obj_from_asset(asset->data);
+    if (!cube.vertices) {
+        SDL_Log("Failed to load mesh from %s", asset->path);
+        return;
+    }
+
+    emp_mesh_gpu_t* gpu_mesh = (emp_mesh_gpu_t*)SDL_malloc(sizeof(emp_mesh_gpu_t));
+    gpu_mesh->index_count = cube.index_count;
+
+    glGenVertexArrays(1, &gpu_mesh->vao);
+    glGenBuffers(1, &gpu_mesh->vbo);
+    glGenBuffers(1, &gpu_mesh->ebo);
+
+    glBindVertexArray(gpu_mesh->vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, gpu_mesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER, cube.vertex_count * sizeof(emp_vertex_t), cube.vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_mesh->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube.index_count * sizeof(unsigned short), cube.indices, GL_STATIC_DRAW);
+
+    free_mesh(&cube);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, position));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, color));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+    
+    asset->handle = gpu_mesh;
+}
+
+void emp_mesh_unload_func(emp_asset_t* asset)
+{
+    if (!asset->handle) return;
+    
+    emp_mesh_gpu_t* gpu_mesh = (emp_mesh_gpu_t*)asset->handle;
+    
+    glDeleteVertexArrays(1, &gpu_mesh->vao);
+    glDeleteBuffers(1, &gpu_mesh->vbo);
+    glDeleteBuffers(1, &gpu_mesh->ebo);
+    
+    SDL_free(gpu_mesh);
+    asset->handle = NULL;
 }
 
 int main(int argc, char* argv[]) {
@@ -354,48 +412,23 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
-    // Load assets
-    g_assets = emp_generated_assets_create();
-    if (!g_assets) {
-        SDL_Log("Failed to create assets");
-        return 1;
-    }
 
-    g_shader_program = create_shader_program_from_assets(g_assets->vert.cube.data, g_assets->frag.cube.data);
+    g_assets = emp_generated_assets_create();
+    g_asset_mgr = emp_asset_manager_create(g_assets);
+    emp_asset_loader_t mesh_loader = {
+        .load = &emp_mesh_load_func,
+        .unload = &emp_mesh_unload_func,
+    };
+
+    emp_asset_manager_add_loader(g_asset_mgr, mesh_loader, EMP_ASSET_TYPE_OBJ);
+    emp_asset_manager_check_hot_reload(g_asset_mgr);
+
+    g_shader_program = create_shader_program_from_assets(g_assets->vert->cube.data, g_assets->frag->cube.data);
     if (!g_shader_program) {
         SDL_Log("Failed to create shader program");
         return 1;
     }
     g_mvp_loc = glGetUniformLocation(g_shader_program, "u_mvp");
-
-    emp_mesh_t cube = load_obj_from_asset(g_assets->obj.cube.data);
-    if (!cube.vertices) {
-        SDL_Log("Failed to load cube mesh");
-        return 1;
-    }
-    g_index_count = cube.index_count;
-
-    glGenVertexArrays(1, &g_vao);
-    glGenBuffers(1, &g_vbo);
-    glGenBuffers(1, &g_ebo);
-
-    glBindVertexArray(g_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, g_vbo);
-    glBufferData(GL_ARRAY_BUFFER, cube.vertex_count * sizeof(emp_vertex_t), cube.vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, g_ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube.index_count * sizeof(unsigned short), cube.indices, GL_STATIC_DRAW);
-
-    free_mesh(&cube);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, position));
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, color));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
 
     g_last_time = SDL_GetTicks();
 
@@ -404,13 +437,11 @@ int main(int argc, char* argv[]) {
 #else
     while (g_running) {
         main_loop();
+        emp_asset_manager_check_hot_reload(g_asset_mgr);
         SDL_Delay(16);
     }
 #endif
 
-    glDeleteVertexArrays(1, &g_vao);
-    glDeleteBuffers(1, &g_vbo);
-    glDeleteBuffers(1, &g_ebo);
     glDeleteProgram(g_shader_program);
 
     SDL_GL_DestroyContext(g_gl_context);

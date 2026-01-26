@@ -105,8 +105,20 @@ static void write_header(Asset* assets, int count) {
         // Write struct for this extension
         char uppercase_ext_buf[64]= {0};
         upper_ext(current_ext, uppercase_ext_buf);
-        SDL_IOprintf(f, "#define EMP_ASSET_TYPE_%s 0x%016llxULL\n\n", uppercase_ext_buf, hash_str(uppercase_ext_buf));
+        uint64_t ext_hash = hash_str(uppercase_ext_buf);
+        SDL_IOprintf(f, "#define EMP_ASSET_TYPE_%s 0x%016llxULL\n\n", uppercase_ext_buf, ext_hash);
         SDL_IOprintf(f, "typedef struct emp_generated_%s_t\n{\n", current_ext);
+        
+        // Count assets for this extension
+        int asset_count = 0;
+        for (int i = 0; i < count; i++) {
+            if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
+                asset_count++;
+            }
+        }
+        
+        SDL_IOprintf(f, "    int count;\n");
+        SDL_IOprintf(f, "    u64 type_hash;\n");
         
         for (int i = 0; i < count; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
@@ -132,7 +144,7 @@ static void write_header(Asset* assets, int count) {
         }
         if (already_written) continue;
         
-        SDL_IOprintf(f, "    emp_generated_%s_t %s;\n", current_ext, current_ext);
+        SDL_IOprintf(f, "    emp_generated_%s_t* %s;\n", current_ext, current_ext);
     }
     
     SDL_IOprintf(f, "} emp_generated_assets_o;\n\n");
@@ -155,7 +167,42 @@ static void write_source(Asset* assets, int count) {
     SDL_IOprintf(f, "// Auto-generated file. Do not edit.\n\n");
     
     SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(void) {\n");
-    SDL_IOprintf(f, "    emp_generated_assets_o* assets = (emp_generated_assets_o*)SDL_malloc(sizeof(emp_generated_assets_o));\n\n");
+    SDL_IOprintf(f, "    emp_generated_assets_o* assets = (emp_generated_assets_o*)SDL_malloc(sizeof(emp_generated_assets_o));\n");
+    SDL_IOprintf(f, "    SDL_memset(assets, 0, sizeof(emp_generated_assets_o));\n\n");
+    
+    // Allocate structs for each extension type
+    for (int ext_pass = 0; ext_pass < count; ext_pass++) {
+        const char* current_ext = assets[ext_pass].ext;
+        int already_written = 0;
+        
+        for (int i = 0; i < ext_pass; i++) {
+            if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
+                already_written = 1;
+                break;
+            }
+        }
+        if (already_written) continue;
+        
+        // Count assets for this extension
+        int asset_count = 0;
+        for (int i = 0; i < count; i++) {
+            if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
+                asset_count++;
+            }
+        }
+        
+        // Calculate extension hash
+        char uppercase_ext_buf[64]= {0};
+        upper_ext(current_ext, uppercase_ext_buf);
+        uint64_t ext_hash = hash_str(uppercase_ext_buf);
+        
+        SDL_IOprintf(f, "    assets->%s = (emp_generated_%s_t*)SDL_malloc(sizeof(emp_generated_%s_t));\n",
+            current_ext, current_ext, current_ext);
+        SDL_IOprintf(f, "    SDL_memset(assets->%s, 0, sizeof(emp_generated_%s_t));\n", current_ext, current_ext);
+        SDL_IOprintf(f, "    assets->%s->count = %d;\n", current_ext, asset_count);
+        SDL_IOprintf(f, "    assets->%s->type_hash = 0x%016llxULL;\n", current_ext, (unsigned long long)ext_hash);
+    }
+    SDL_IOprintf(f, "\n");
     
     // Group by extension
     for (int ext_pass = 0; ext_pass < count; ext_pass++) {
@@ -174,11 +221,11 @@ static void write_source(Asset* assets, int count) {
         
         for (int i = 0; i < count; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
-                SDL_IOprintf(f, "    assets->%s.%s.path = \"%s\";\n", 
+                SDL_IOprintf(f, "    assets->%s->%s.path = \"%s\";\n", 
                     current_ext, assets[i].name, assets[i].path);
-                SDL_IOprintf(f, "    assets->%s.%s.data = emp_read_entire_file(assets->%s.%s.path);\n",
+                SDL_IOprintf(f, "    assets->%s->%s.data = emp_read_entire_file(assets->%s->%s.path);\n",
                     current_ext, assets[i].name, current_ext, assets[i].name);
-                SDL_IOprintf(f, "    assets->%s.%s.hash = 0x%016llxULL;\n", 
+                SDL_IOprintf(f, "    assets->%s->%s.hash = 0x%016llxULL;\n", 
                     current_ext, assets[i].name, (unsigned long long)assets[i].hash);
                 SDL_IOprintf(f, "\n");
             }
