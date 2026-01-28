@@ -1,6 +1,8 @@
 #pragma once
 #include "types.h"
 
+struct emp_generated_assets_o;
+
 typedef struct emp_asset_t
 {
     const char* path;
