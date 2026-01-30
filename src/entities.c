@@ -95,7 +95,7 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 	const bool* state = SDL_GetKeyboardState(NULL);
 	emp_player_conf_t conf = get_player_conf();
 
-	SDL_Log("%s, x:%f y:%f", "update enemy", player->x, player->y);
+	//SDL_Log("%s, x:%f y:%f", "update enemy", player->x, player->y);
 
 	if (state[SDL_SCANCODE_W]) {
 		player->y -= conf.speed;
