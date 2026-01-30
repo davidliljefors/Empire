@@ -210,7 +210,7 @@ static void main_loop(void) {
     // Set texture uniform (0 = no texture, for now)
     glUniform1i(g_has_texture_loc, 0);
 
-    emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->model_test.handle;
+    emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->cube.handle;
     if (cube_mesh) {
         glBindVertexArray(cube_mesh->vao);
         glDrawElements(GL_TRIANGLES, cube_mesh->index_count, GL_UNSIGNED_INT, 0);
