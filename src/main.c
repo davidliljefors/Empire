@@ -428,6 +428,22 @@ void emp_png_unload_func(emp_asset_t* asset)
 	SDL_free(emp_tex);
 }
 
+const char* get_asset_argument(int argc, char* arguments[])
+{
+    for(int index = 0; index < argc; index++) 
+    {
+        char* arg = arguments[index];
+        const char token[] = "cwd=";
+        char* path = SDL_strstr(arg, token);
+
+        if(path != NULL) 
+        {
+            return path + sizeof(token) - 1; // Null terminator
+        }
+    }
+    return "";
+}
+
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
@@ -476,8 +492,9 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
+    const char* root = get_asset_argument(argc, argv);
 
-    g_assets = emp_generated_assets_create();
+    g_assets = emp_generated_assets_create(root);
     g_asset_mgr = emp_asset_manager_create(g_assets);
     emp_asset_loader_t mesh_loader = {
         .load = &emp_mesh_load_func,
@@ -492,7 +509,7 @@ int main(int argc, char* argv[]) {
     emp_asset_manager_add_loader(g_asset_mgr, mesh_loader, EMP_ASSET_TYPE_OBJ);
     emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
     emp_asset_manager_check_hot_reload(g_asset_mgr);
-
+    
     g_shader_program = create_shader_program_from_assets(g_assets->vert->cube.data, g_assets->frag->cube.data);
 	emp_entities_init();
 	u32 player = emp_create_player();
