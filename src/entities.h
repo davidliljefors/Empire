@@ -9,9 +9,8 @@ typedef struct emp_player_t
 {
 	u32 generation;
 	bool alive;
+	emp_vec2_t pos;
 	emp_asset_t* texture_asset;
-	float x;
-	float y;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
@@ -32,6 +31,10 @@ typedef struct emp_bullet_t
 {
 	bool alive;
 	u32 generation;
+	emp_vec2_t pos;
+	emp_vec2_t vel;
+	float life_left;
+	emp_asset_t* texture_asset;
 } emp_bullet_t;
 
 typedef struct emp_bullet_h
@@ -68,7 +71,7 @@ u32 emp_create_player();
 emp_enemy_h emp_create_enemy();
 void emp_destroy_enemy(emp_enemy_h handle);
 
-emp_enemy_h emp_create_bullet();
+emp_bullet_h emp_create_bullet();
 void emp_destroy_bullet(emp_bullet_h handle);
 
 emp_bullet_generator_h emp_create_bullet_generator();

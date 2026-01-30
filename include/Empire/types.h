@@ -32,3 +32,10 @@ typedef struct
 	u32 height;
 	SDL_Texture* texture;
 } emp_texture_t;
+
+
+typedef struct emp_vec2_t
+{
+	float x;
+	float y;
+} emp_vec2_t;
