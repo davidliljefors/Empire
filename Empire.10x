@@ -159,6 +159,9 @@
 							<File>
 								<Path>include/Empire/stb_image.h</Path>
 							</File>
+							<File>
+								<Path>include/Empire/math.inl</Path>
+							</File>
 						</Children>
 					</Folder>
 				</Children>
