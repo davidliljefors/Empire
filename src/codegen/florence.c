@@ -39,7 +39,8 @@ static uint64_t hash_file_contents(const char* path) {
 }
 
 static uint64_t compute_assets_checksum(Asset* assets, int count) {
-    uint64_t combined = 0x9e3779b97f4a7c15ULL;
+	u64 seed = hash_str(__DATE__ __TIME__);
+    uint64_t combined = seed;
     for (int i = 0; i < count; i++) {
         combined ^= assets[i].hash;
         combined = (combined << 13) | (combined >> 51);
