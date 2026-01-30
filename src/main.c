@@ -118,7 +118,7 @@ static char* load_shader_from_asset(emp_buffer shader_data)
 	return result;
 }
 
-typedef struct
+typedef struct emp_vertex_t
 {
 	float position[3];
 	float normal[3];
@@ -138,7 +138,7 @@ static float g_angle_y = 0.0f;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
-typedef struct
+typedef struct emp_mesh_gpu_t
 {
 	GLuint vao;
 	GLuint vbo;
