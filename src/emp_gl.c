@@ -53,7 +53,7 @@ static void emp_material_bind(emp_material_t const* material)
 	}
 }
 
-static void render_test(emp_material_t const* material, emp_gpu_instance_list_t const* instances)
+void render_test(emp_material_t const* material, emp_gpu_instance_list_t const* instances)
 {
 	emp_material_bind(material);
 	for (size_t index = 0; index < instances->count; index++) {
