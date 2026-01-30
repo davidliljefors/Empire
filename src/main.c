@@ -7,8 +7,8 @@
 #include <SDL3/SDL_main.h>
 
 #ifdef __EMSCRIPTEN__
-#include <emscripten.h>
 #include <GLES3/gl3.h>
+#include <emscripten.h>
 #else
 #include <glad/gl.h>
 #endif
@@ -16,8 +16,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stddef.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -25,15 +25,20 @@
 #include <Empire/fast_obj.h>
 #include <Empire/generated/assets_generated.h>
 
-typedef struct { float m[16]; } emp_mat4_t;
+typedef struct
+{
+	float m[16];
+} emp_mat4_t;
 
-static emp_mat4_t mat4_identity(void) {
+static emp_mat4_t mat4_identity(void)
+{
 	emp_mat4_t r = { 0 };
 	r.m[0] = r.m[5] = r.m[10] = r.m[15] = 1.0f;
 	return r;
 }
 
-static emp_mat4_t mat4_mul(emp_mat4_t a, emp_mat4_t b) {
+static emp_mat4_t mat4_mul(emp_mat4_t a, emp_mat4_t b)
+{
 	emp_mat4_t r = { 0 };
 	for (int col = 0; col < 4; col++) {
 		for (int row = 0; row < 4; row++) {
@@ -45,23 +50,30 @@ static emp_mat4_t mat4_mul(emp_mat4_t a, emp_mat4_t b) {
 	return r;
 }
 
-static emp_mat4_t mat4_make_rotation_x(float angle) {
+static emp_mat4_t mat4_make_rotation_x(float angle)
+{
 	emp_mat4_t r = mat4_identity();
 	float c = cosf(angle), s = sinf(angle);
-	r.m[5] = c;   r.m[9] = -s;
-	r.m[6] = s;   r.m[10] = c;
+	r.m[5] = c;
+	r.m[9] = -s;
+	r.m[6] = s;
+	r.m[10] = c;
 	return r;
 }
 
-static emp_mat4_t mat4_make_rotation_y(float angle) {
+static emp_mat4_t mat4_make_rotation_y(float angle)
+{
 	emp_mat4_t r = mat4_identity();
 	float c = cosf(angle), s = sinf(angle);
-	r.m[0] = c;   r.m[8] = s;
-	r.m[2] = -s;  r.m[10] = c;
+	r.m[0] = c;
+	r.m[8] = s;
+	r.m[2] = -s;
+	r.m[10] = c;
 	return r;
 }
 
-static emp_mat4_t mat4_make_perspective(float fov, float aspect, float nearZ, float farZ) {
+static emp_mat4_t mat4_make_perspective(float fov, float aspect, float nearZ, float farZ)
+{
 	emp_mat4_t r = { 0 };
 	float f = 1.0f / tanf(fov / 2.0f);
 	r.m[0] = f / aspect;
@@ -72,7 +84,8 @@ static emp_mat4_t mat4_make_perspective(float fov, float aspect, float nearZ, fl
 	return r;
 }
 
-static emp_mat4_t mat4_make_translation(float x, float y, float z) {
+static emp_mat4_t mat4_make_translation(float x, float y, float z)
+{
 	emp_mat4_t r = mat4_identity();
 	r.m[12] = x;
 	r.m[13] = y;
@@ -86,7 +99,8 @@ static emp_mat4_t mat4_make_translation(float x, float y, float z) {
 #define SHADER_HEADER "#version 330 core\n"
 #endif
 
-static char* load_shader_from_asset(emp_buffer shader_data) {
+static char* load_shader_from_asset(emp_buffer shader_data)
+{
 	if (!shader_data.data || shader_data.size == 0) {
 		SDL_Log("Failed to load shader: invalid asset data");
 		return NULL;
@@ -101,7 +115,8 @@ static char* load_shader_from_asset(emp_buffer shader_data) {
 	return result;
 }
 
-typedef struct emp_vertex_t {
+typedef struct emp_vertex_t
+{
 	float position[3];
 	float normal[3];
 	float texcoord[2];
@@ -125,44 +140,52 @@ typedef enum emp_uniform_type {
 	emp_uniform_int = 3
 } emp_uniform_type;
 
-typedef struct emp_uniform_t {
+typedef struct emp_uniform_t
+{
 	emp_uniform_type type;
 	int location;
 	void* stable_data;
-}emp_uniform_t;
+} emp_uniform_t;
 
-typedef struct emp_ubo_t {
+typedef struct emp_ubo_t
+{
 	emp_uniform_t uniforms[16];
 	size_t count;
-}emp_ubo_t;
+} emp_ubo_t;
 
-typedef struct emp_material_t {
+typedef struct emp_material_t
+{
 	GLuint shader_program;
 	emp_ubo_t ubo;
-}emp_material_t;
+} emp_material_t;
 
-typedef struct emp_mesh_gpu_t {
+typedef struct emp_mesh_gpu_t
+{
 	GLuint vao;
 	GLuint vbo;
 	GLuint ebo;
 	unsigned int index_count;
 } emp_mesh_gpu_t;
 
-typedef struct emp_gpu_instance_t {
+typedef struct emp_gpu_instance_t
+{
 	emp_mesh_gpu_t mesh;
-}emp_gpu_instance_t;
+} emp_gpu_instance_t;
 
-typedef struct emp_gpu_instance_list_t {
+typedef struct emp_gpu_instance_list_t
+{
 	emp_gpu_instance_t entries[16];
 	size_t count;
-}emp_gpu_instance_list_t;
+} emp_gpu_instance_list_t;
 
-typedef struct emp_gpu_state_t {
+typedef struct emp_gpu_state_t
+{
 	emp_material_t material;
 	emp_gpu_instance_list_t instances;
-}emp_gpu_state_t;
+} emp_gpu_state_t;
 
-void emp_ubo_set_push(emp_ubo_t* ubo, emp_uniform_type type, int location, void* stable_data) {
+void emp_ubo_set_push(emp_ubo_t* ubo, emp_uniform_type type, int location, void* stable_data)
+{
 	emp_uniform_t* uniform = ubo->uniforms + ubo->count;
 	uniform->type = type;
 	uniform->location = location;
@@ -170,18 +193,21 @@ void emp_ubo_set_push(emp_ubo_t* ubo, emp_uniform_type type, int location, void*
 	ubo->count = ubo->count + 1;
 }
 
-void emp_ubo_set_clear(emp_ubo_t* ubo) {
+void emp_ubo_set_clear(emp_ubo_t* ubo)
+{
 	ubo->count = 0;
 }
 
-void emp_gpu_instance_list_add(emp_gpu_instance_list_t* list, emp_gpu_instance_t const* value) {
+void emp_gpu_instance_list_add(emp_gpu_instance_list_t* list, emp_gpu_instance_t const* value)
+{
 	SDL_assert(list->count < SDL_arraysize(list->entries));
 
 	list->entries[list->count] = *value;
 	list->count = list->count + 1;
 }
 
-static GLuint compile_shader(GLenum type, const char* src) {
+static GLuint compile_shader(GLenum type, const char* src)
+{
 	GLuint shader = glCreateShader(type);
 	glShaderSource(shader, 1, &src, NULL);
 	glCompileShader(shader);
@@ -197,7 +223,8 @@ static GLuint compile_shader(GLenum type, const char* src) {
 	return shader;
 }
 
-static GLuint create_shader_program_from_assets(emp_buffer vert_data, emp_buffer frag_data) {
+static GLuint create_shader_program_from_assets(emp_buffer vert_data, emp_buffer frag_data)
+{
 	char* vert_src = load_shader_from_asset(vert_data);
 	char* frag_src = load_shader_from_asset(frag_data);
 	if (!vert_src || !frag_src) {
@@ -211,7 +238,8 @@ static GLuint create_shader_program_from_assets(emp_buffer vert_data, emp_buffer
 	SDL_free(vert_src);
 	SDL_free(frag_src);
 
-	if (!vs || !fs) return 0;
+	if (!vs || !fs)
+		return 0;
 
 	GLuint program = glCreateProgram();
 	glAttachShader(program, vs);
@@ -232,15 +260,16 @@ static GLuint create_shader_program_from_assets(emp_buffer vert_data, emp_buffer
 	return program;
 }
 
-static void emp_mesh_draw(emp_mesh_gpu_t const* mesh) {
+static void emp_mesh_draw(emp_mesh_gpu_t const* mesh)
+{
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 	glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
 	glBindVertexArray(mesh->vao);
 	glDrawElements(GL_TRIANGLES, mesh->index_count, GL_UNSIGNED_INT, 0);
 }
 
-
-static void emp_material_bind(emp_material_t const* material) {
+static void emp_material_bind(emp_material_t const* material)
+{
 	glUseProgram(material->shader_program);
 
 	for (size_t index = 0; index < material->ubo.count; index++) {
@@ -259,7 +288,8 @@ static void emp_material_bind(emp_material_t const* material) {
 	}
 }
 
-static void render_test(emp_material_t const* material, emp_gpu_instance_list_t const* instances) {
+static void render_test(emp_material_t const* material, emp_gpu_instance_list_t const* instances)
+{
 	emp_material_bind(material);
 	for (size_t index = 0; index < instances->count; index++) {
 		emp_gpu_instance_t const* instance = instances->entries + index;
@@ -267,7 +297,8 @@ static void render_test(emp_material_t const* material, emp_gpu_instance_list_t 
 	}
 }
 
-static void main_loop(emp_gpu_state_t* gpu) {
+static void main_loop(emp_gpu_state_t* gpu)
+{
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_EVENT_QUIT) {
@@ -289,7 +320,6 @@ static void main_loop(emp_gpu_state_t* gpu) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	render_test(&gpu->material, &gpu->instances);
-
 
 	glUseProgram(g_shader_program);
 
@@ -314,7 +344,8 @@ static void main_loop(emp_gpu_state_t* gpu) {
 }
 
 // Hash function for vertex deduplication (FNV-1a)
-static unsigned int hash_vertex(emp_vertex_t* v) {
+static unsigned int hash_vertex(emp_vertex_t* v)
+{
 	unsigned int hash = 2166136261u;
 	unsigned char* bytes = (unsigned char*)v;
 	for (size_t i = 0; i < sizeof(emp_vertex_t); i++) {
@@ -324,7 +355,8 @@ static unsigned int hash_vertex(emp_vertex_t* v) {
 	return hash;
 }
 
-static int vertices_equal(emp_vertex_t* a, emp_vertex_t* b) {
+static int vertices_equal(emp_vertex_t* a, emp_vertex_t* b)
+{
 	return memcmp(a, b, sizeof(emp_vertex_t)) == 0;
 }
 
@@ -382,8 +414,7 @@ void emp_mesh_load_func(emp_asset_t* asset)
 					vert.normal[0] = obj->normals[idx.n * 3 + 0];
 					vert.normal[1] = obj->normals[idx.n * 3 + 1];
 					vert.normal[2] = obj->normals[idx.n * 3 + 2];
-				}
-				else {
+				} else {
 					vert.normal[1] = 1.0f;
 				}
 				if (idx.t) {
@@ -462,7 +493,8 @@ void emp_mesh_load_func(emp_asset_t* asset)
 
 void emp_mesh_unload_func(emp_asset_t* asset)
 {
-	if (!asset->handle) return;
+	if (!asset->handle)
+		return;
 
 	emp_mesh_gpu_t* gpu_mesh = (emp_mesh_gpu_t*)asset->handle;
 
@@ -476,21 +508,20 @@ void emp_mesh_unload_func(emp_asset_t* asset)
 
 const char* get_asset_argument(int argc, char* arguments[])
 {
-	for (int index = 0; index < argc; index++)
-	{
+	for (int index = 0; index < argc; index++) {
 		char* arg = arguments[index];
 		const char token[] = "cwd=";
 		char* path = SDL_strstr(arg, token);
 
-		if (path != NULL)
-		{
+		if (path != NULL) {
 			return path + sizeof(token) - 1; // Null terminator
 		}
 	}
 	return "";
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
 		return 1;
@@ -571,7 +602,6 @@ int main(int argc, char* argv[]) {
 	material->shader_program = g_shader_program;
 
 	emp_mesh_gpu_t* mesh = &gpu_instances->mesh;
-	
 
 	while (g_running) {
 		main_loop(&gpu);
