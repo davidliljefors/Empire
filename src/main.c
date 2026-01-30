@@ -22,6 +22,7 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+#include <Empire/fast_obj.h>
 #include <Empire/generated/assets_generated.h>
 
 typedef struct { float m[16]; } emp_mat4_t;
@@ -102,111 +103,9 @@ static char* load_shader_from_asset(emp_buffer shader_data) {
 
 typedef struct {
     float position[3];
-    float color[3];
+    float normal[3];
+    float texcoord[2];
 } emp_vertex_t;
-
-typedef struct {
-    emp_vertex_t* vertices;
-    unsigned short* indices;
-    int vertex_count;
-    int index_count;
-} emp_mesh_t;
-
-static emp_mesh_t load_obj_from_asset(emp_buffer obj_data) {
-    emp_mesh_t mesh = {0};
-    
-    if (!obj_data.data || obj_data.size == 0) {
-        SDL_Log("Failed to load OBJ: invalid asset data");
-        return mesh;
-    }
-    
-    char* data = (char*)obj_data.data;
-    
-    int pos_count = 0, color_count = 0, face_count = 0;
-    char* line = data;
-    while (*line) {
-        if (line[0] == 'v' && line[1] == ' ') pos_count++;
-        else if (line[0] == 'v' && line[1] == 'c') color_count++;
-        else if (line[0] == 'f' && line[1] == ' ') face_count++;
-        while (*line && *line != '\n') line++;
-        if (*line == '\n') line++;
-    }
-    
-    float* positions = (float*)SDL_malloc(pos_count * 3 * sizeof(float));
-    float* colors = (float*)SDL_malloc(color_count * 3 * sizeof(float));
-    
-    mesh.vertices = (emp_vertex_t*)SDL_malloc(face_count * 3 * sizeof(emp_vertex_t));
-    mesh.indices = (unsigned short*)SDL_malloc(face_count * 3 * sizeof(unsigned short));
-    
-    int pi = 0, ci = 0;
-    line = data;
-    while (*line) {
-        if (line[0] == 'v' && line[1] == ' ') {
-            sscanf(line, "v %f %f %f", &positions[pi*3], &positions[pi*3+1], &positions[pi*3+2]);
-            pi++;
-        } else if (line[0] == 'v' && line[1] == 'c') {
-            sscanf(line, "vc %f %f %f", &colors[ci*3], &colors[ci*3+1], &colors[ci*3+2]);
-            ci++;
-        }
-        while (*line && *line != '\n') line++;
-        if (*line == '\n') line++;
-    }
-    
-    int vi = 0;
-    line = data;
-    while (*line) {
-        if (line[0] == 'f' && line[1] == ' ') {
-            int p1, c1, p2, c2, p3, c3;
-            sscanf(line, "f %d/%d %d/%d %d/%d", &p1, &c1, &p2, &c2, &p3, &c3);
-            p1--; c1--; p2--; c2--; p3--; c3--;
-            
-            mesh.vertices[vi].position[0] = positions[p1*3+0];
-            mesh.vertices[vi].position[1] = positions[p1*3+1];
-            mesh.vertices[vi].position[2] = positions[p1*3+2];
-            mesh.vertices[vi].color[0] = colors[c1*3+0];
-            mesh.vertices[vi].color[1] = colors[c1*3+1];
-            mesh.vertices[vi].color[2] = colors[c1*3+2];
-            mesh.indices[vi] = (unsigned short)vi;
-            vi++;
-            
-            mesh.vertices[vi].position[0] = positions[p2*3+0];
-            mesh.vertices[vi].position[1] = positions[p2*3+1];
-            mesh.vertices[vi].position[2] = positions[p2*3+2];
-            mesh.vertices[vi].color[0] = colors[c2*3+0];
-            mesh.vertices[vi].color[1] = colors[c2*3+1];
-            mesh.vertices[vi].color[2] = colors[c2*3+2];
-            mesh.indices[vi] = (unsigned short)vi;
-            vi++;
-            
-            mesh.vertices[vi].position[0] = positions[p3*3+0];
-            mesh.vertices[vi].position[1] = positions[p3*3+1];
-            mesh.vertices[vi].position[2] = positions[p3*3+2];
-            mesh.vertices[vi].color[0] = colors[c3*3+0];
-            mesh.vertices[vi].color[1] = colors[c3*3+1];
-            mesh.vertices[vi].color[2] = colors[c3*3+2];
-            mesh.indices[vi] = (unsigned short)vi;
-            vi++;
-        }
-        while (*line && *line != '\n') line++;
-        if (*line == '\n') line++;
-    }
-    
-    mesh.vertex_count = vi;
-    mesh.index_count = vi;
-    
-    SDL_free(positions);
-    SDL_free(colors);
-    return mesh;
-}
-
-static void free_mesh(emp_mesh_t* mesh) {
-    SDL_free(mesh->vertices);
-    SDL_free(mesh->indices);
-    mesh->vertices = NULL;
-    mesh->indices = NULL;
-    mesh->vertex_count = 0;
-    mesh->index_count = 0;
-}
 
 static SDL_Window* g_window = NULL;
 static SDL_GLContext g_gl_context = NULL;
@@ -214,6 +113,7 @@ static emp_generated_assets_o* g_assets = NULL;
 static emp_asset_manager_o* g_asset_mgr = NULL;
 static GLuint g_shader_program = 0;
 static GLint g_mvp_loc = -1;
+static GLint g_has_texture_loc = -1;
 static float g_angle_x = 0.0f;
 static float g_angle_y = 0.0f;
 static Uint64 g_last_time = 0;
@@ -223,7 +123,7 @@ typedef struct {
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
-    int index_count;
+    unsigned int index_count;
 } emp_mesh_gpu_t;
 
 static GLuint compile_shader(GLenum type, const char* src) {
@@ -306,27 +206,128 @@ static void main_loop(void) {
     emp_mat4_t mvp = mat4_mul(proj, mat4_mul(view, model));
 
     glUniformMatrix4fv(g_mvp_loc, 1, GL_FALSE, mvp.m);
+    
+    // Set texture uniform (0 = no texture, for now)
+    glUniform1i(g_has_texture_loc, 0);
 
-    emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->cube.handle;
+    emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->model_test.handle;
     if (cube_mesh) {
         glBindVertexArray(cube_mesh->vao);
-        glDrawElements(GL_TRIANGLES, cube_mesh->index_count, GL_UNSIGNED_SHORT, 0);
+        glDrawElements(GL_TRIANGLES, cube_mesh->index_count, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
 
     SDL_GL_SwapWindow(g_window);
 }
 
+// Hash function for vertex deduplication (FNV-1a)
+static unsigned int hash_vertex(emp_vertex_t* v) {
+    unsigned int hash = 2166136261u;
+    unsigned char* bytes = (unsigned char*)v;
+    for (size_t i = 0; i < sizeof(emp_vertex_t); i++) {
+        hash ^= bytes[i];
+        hash *= 16777619u;
+    }
+    return hash;
+}
+
+static int vertices_equal(emp_vertex_t* a, emp_vertex_t* b) {
+    return memcmp(a, b, sizeof(emp_vertex_t)) == 0;
+}
+
 void emp_mesh_load_func(emp_asset_t* asset)
 {
-    emp_mesh_t cube = load_obj_from_asset(asset->data);
-    if (!cube.vertices) {
+    fastObjMesh* obj = fast_obj_read(asset->path);
+    if (!obj) {
         SDL_Log("Failed to load mesh from %s", asset->path);
         return;
     }
 
+    // First pass: count how many triangles we'll have after triangulation
+    unsigned int triangle_count = 0;
+    for (unsigned int i = 0; i < obj->face_count; i++) {
+        unsigned int verts_in_face = obj->face_vertices[i];
+        if (verts_in_face >= 3) {
+            triangle_count += verts_in_face - 2;
+        }
+    }
+    
+    unsigned int max_vertices = triangle_count * 3;
+    emp_vertex_t* vertices = (emp_vertex_t*)SDL_malloc(max_vertices * sizeof(emp_vertex_t));
+    unsigned int* indices = (unsigned int*)SDL_malloc(max_vertices * sizeof(unsigned int));
+    
+    // Simple hash table for vertex deduplication
+    unsigned int hash_size = max_vertices * 2;
+    int* hash_table = (int*)SDL_malloc(hash_size * sizeof(int));
+    memset(hash_table, -1, hash_size * sizeof(int));
+    int* hash_next = (int*)SDL_malloc(max_vertices * sizeof(int));
+    
+    unsigned int unique_vertex_count = 0;
+    unsigned int index_count = 0;
+    
+    // Second pass: triangulate faces and build vertex/index buffers with deduplication
+    unsigned int idx_offset = 0;
+    
+    for (unsigned int face = 0; face < obj->face_count; face++) {
+        unsigned int verts_in_face = obj->face_vertices[face];
+        
+        // Fan triangulation
+        for (unsigned int v = 2; v < verts_in_face; v++) {
+            unsigned int face_indices[3] = { 0, v - 1, v };
+            
+            for (int t = 0; t < 3; t++) {
+                fastObjIndex idx = obj->indices[idx_offset + face_indices[t]];
+                
+                // Build vertex
+                emp_vertex_t vert = {0};
+                if (idx.p) {
+                    vert.position[0] = obj->positions[idx.p * 3 + 0];
+                    vert.position[1] = obj->positions[idx.p * 3 + 1];
+                    vert.position[2] = obj->positions[idx.p * 3 + 2];
+                }
+                if (idx.n) {
+                    vert.normal[0] = obj->normals[idx.n * 3 + 0];
+                    vert.normal[1] = obj->normals[idx.n * 3 + 1];
+                    vert.normal[2] = obj->normals[idx.n * 3 + 2];
+                } else {
+                    vert.normal[1] = 1.0f;
+                }
+                if (idx.t) {
+                    vert.texcoord[0] = obj->texcoords[idx.t * 2 + 0];
+                    vert.texcoord[1] = obj->texcoords[idx.t * 2 + 1];
+                }
+                
+                // Look up in hash table
+                unsigned int hash = hash_vertex(&vert) % hash_size;
+                int found_idx = -1;
+                for (int hi = hash_table[hash]; hi != -1; hi = hash_next[hi]) {
+                    if (vertices_equal(&vertices[hi], &vert)) {
+                        found_idx = hi;
+                        break;
+                    }
+                }
+                
+                if (found_idx == -1) {
+                    // New unique vertex
+                    found_idx = unique_vertex_count;
+                    vertices[unique_vertex_count] = vert;
+                    hash_next[unique_vertex_count] = hash_table[hash];
+                    hash_table[hash] = unique_vertex_count;
+                    unique_vertex_count++;
+                }
+                
+                indices[index_count++] = found_idx;
+            }
+        }
+        
+        idx_offset += verts_in_face;
+    }
+    
+    SDL_free(hash_table);
+    SDL_free(hash_next);
+
     emp_mesh_gpu_t* gpu_mesh = (emp_mesh_gpu_t*)SDL_malloc(sizeof(emp_mesh_gpu_t));
-    gpu_mesh->index_count = cube.index_count;
+    gpu_mesh->index_count = index_count;
 
     glGenVertexArrays(1, &gpu_mesh->vao);
     glGenBuffers(1, &gpu_mesh->vbo);
@@ -335,18 +336,30 @@ void emp_mesh_load_func(emp_asset_t* asset)
     glBindVertexArray(gpu_mesh->vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, gpu_mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, cube.vertex_count * sizeof(emp_vertex_t), cube.vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, unique_vertex_count * sizeof(emp_vertex_t), vertices, GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, gpu_mesh->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube.index_count * sizeof(unsigned short), cube.indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_count * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 
-    free_mesh(&cube);
+    SDL_Log("Loaded mesh: %u unique vertices, %u indices (%.1f%% vertex reuse)", 
+            unique_vertex_count, index_count, 
+            (1.0f - (float)unique_vertex_count / index_count) * 100.0f);
 
+    SDL_free(vertices);
+    SDL_free(indices);
+    fast_obj_destroy(obj);
+
+    // Position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, position));
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, color));
+    // Normal attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, normal));
     glEnableVertexAttribArray(1);
+    
+    // Texture coordinate attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(emp_vertex_t), (void*)offsetof(emp_vertex_t, texcoord));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
     
@@ -429,6 +442,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     g_mvp_loc = glGetUniformLocation(g_shader_program, "u_mvp");
+    g_has_texture_loc = glGetUniformLocation(g_shader_program, "u_has_texture");
 
     g_last_time = SDL_GetTicks();
 
