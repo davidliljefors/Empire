@@ -481,7 +481,8 @@ int main(int argc, char* argv[])
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-	bool result = SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
+	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
+
 	SDL_SetRenderVSync(g_renderer, 1);
 
 	if (!g_window) {
@@ -531,8 +532,7 @@ int main(int argc, char* argv[])
 	g_shader_program = create_shader_program_from_assets(g_assets->vert->cube.data, g_assets->frag->cube.data);
 	emp_entities_init();
 	u32 player = emp_create_player();
-
-	G->player[0].texture = g_assets->png->base.handle;
+	G->player[player].texture = g_assets->png->base.handle;
 
 	if (!g_shader_program) {
 		SDL_Log("Failed to create shader program");
