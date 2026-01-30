@@ -25,17 +25,23 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(Florence PRIVATE SDL3::SDL3)
     set_target_properties(Florence PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
     
+    set(EMPIRE_GENERATED
+        ${CMAKE_SOURCE_DIR}/src/generated/assets_generated.c
+        ${CMAKE_SOURCE_DIR}/include/Empire/generated/assets_generated.h
+    )
+    
     add_custom_target(RunFlorence ALL
         COMMAND Florence
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS Florence
+        BYPRODUCTS ${EMPIRE_GENERATED}
+        COMMENT "Running Florence codegen..."
     )
 endif()
 
 # get all the sloppy files
 file(GLOB EMPIRE_SOURCES "src/*.c")
 file(GLOB EMPIRE_HEADERS "include/Empire/*.h" "include/Empire/*.inl")
-file(GLOB EMPIRE_GENERATED "src/generated/*")
 
 add_executable(Empire 
     ${EMPIRE_SOURCES}
@@ -55,8 +61,8 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
 endif()
 
 if(NOT EMSCRIPTEN)
-    add_dependencies(Empire RunFlorence)
     target_link_libraries(Empire PRIVATE glad)
+    add_dependencies(Empire RunFlorence)
     set_target_properties(Empire PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
