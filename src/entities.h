@@ -6,8 +6,11 @@
 #define EMP_MAX_PLAYERS 1
 typedef struct emp_player_t
 {
-	bool alive;
 	u32 generation;
+	bool alive;
+	emp_texture_t* texture;
+	float x;
+	float y;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
@@ -71,4 +74,4 @@ emp_bullet_generator_h emp_create_bullet_generator();
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle);
 
 void emp_entities_init();
-void emp_entities_update(float dt);
+void emp_entities_update(emp_update_args_t* args);

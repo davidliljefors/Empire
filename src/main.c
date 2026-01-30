@@ -19,11 +19,13 @@
 #include <string.h>
 #include <stdio.h>
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 2200
+#define WINDOW_HEIGHT 1400
 
 #include <Empire/fast_obj.h>
 #include <Empire/generated/assets_generated.h>
+#include <Empire/stb_image.h>
+#include "entities.h"
 
 typedef struct { float m[16]; } emp_mat4_t;
 
@@ -107,7 +109,9 @@ typedef struct {
     float texcoord[2];
 } emp_vertex_t;
 
+
 static SDL_Window* g_window = NULL;
+static SDL_Renderer* g_renderer = NULL;
 static SDL_GLContext g_gl_context = NULL;
 static emp_generated_assets_o* g_assets = NULL;
 static emp_asset_manager_o* g_asset_mgr = NULL;
@@ -188,6 +192,9 @@ static void main_loop(void) {
         }
     }
 
+	emp_update_args_t update_args;
+
+
     Uint64 current_time = SDL_GetTicks();
     float delta_time = (current_time - g_last_time) / 1000.0f;
     g_last_time = current_time;
@@ -195,10 +202,14 @@ static void main_loop(void) {
     g_angle_x += 0.5f * delta_time;
     g_angle_y += 0.8f * delta_time;
 
-    glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(g_renderer);
 
-    glUseProgram(g_shader_program);
+	//glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+  	glUseProgram(g_shader_program);
 
     emp_mat4_t model = mat4_mul(mat4_make_rotation_x(g_angle_x), mat4_make_rotation_y(g_angle_y));
     emp_mat4_t view = mat4_make_translation(0.0f, 0.0f, -3.0f);
@@ -216,6 +227,15 @@ static void main_loop(void) {
         glDrawElements(GL_TRIANGLES, cube_mesh->index_count, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
+
+	glDisable(GL_DEPTH_TEST);
+
+	update_args.dt = delta_time;
+	update_args.assets = g_assets;
+	update_args.r = g_renderer;
+	emp_entities_update(&update_args);
+
+	SDL_RenderPresent(g_renderer);
 
     SDL_GL_SwapWindow(g_window);
 }
@@ -380,6 +400,34 @@ void emp_mesh_unload_func(emp_asset_t* asset)
     asset->handle = NULL;
 }
 
+void emp_png_load_func(emp_asset_t* asset)
+{
+	int width, height, channels;
+	unsigned char* data = stbi_load(asset->path, &width, &height, &channels, 4);
+
+	SDL_Surface* surface = SDL_CreateSurfaceFrom(
+        width, height, SDL_PIXELFORMAT_RGBA32, data, width * 4
+    );
+
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(g_renderer, surface);
+	SDL_DestroySurface(surface);
+	stbi_image_free(data);
+	emp_texture_t* emp_tex = SDL_malloc(sizeof(emp_texture_t));
+
+	emp_tex->texture = texture;
+	emp_tex->width = width;
+	emp_tex->height = height;
+	
+	asset->handle = emp_tex;
+}
+
+void emp_png_unload_func(emp_asset_t* asset)
+{
+	emp_texture_t* emp_tex = asset->handle;
+	SDL_DestroyTexture(emp_tex->texture);
+	SDL_free(emp_tex);
+}
+
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
@@ -398,7 +446,10 @@ int main(int argc, char* argv[]) {
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 
-    g_window = SDL_CreateWindow("Empire - OpenGL Cube", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+
+    bool result = SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
+	SDL_SetRenderVSync(g_renderer, 1);
+
     if (!g_window) {
         SDL_Log("Failed to create window: %s", SDL_GetError());
         SDL_Quit();
@@ -433,10 +484,21 @@ int main(int argc, char* argv[]) {
         .unload = &emp_mesh_unload_func,
     };
 
+	emp_asset_loader_t png_loader = {
+        .load = &emp_png_load_func,
+        .unload = &emp_png_unload_func,
+    };
+
     emp_asset_manager_add_loader(g_asset_mgr, mesh_loader, EMP_ASSET_TYPE_OBJ);
+    emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
     emp_asset_manager_check_hot_reload(g_asset_mgr);
 
     g_shader_program = create_shader_program_from_assets(g_assets->vert->cube.data, g_assets->frag->cube.data);
+	emp_entities_init();
+	u32 player = emp_create_player();
+
+	G->player[0].texture = g_assets->png->base.handle;
+
     if (!g_shader_program) {
         SDL_Log("Failed to create shader program");
         return 1;
@@ -449,10 +511,22 @@ int main(int argc, char* argv[]) {
 #ifdef __EMSCRIPTEN__
     emscripten_set_main_loop(main_loop, 0, 1);
 #else
+	u64 last_time = SDL_GetTicks() - 900;
+	u64 frame_count = 0;
     while (g_running) {
+		frame_count++;
+		u64 currentTime = SDL_GetTicks();
+		if (currentTime - last_time >= 1000) {
+			char title[64];
+			SDL_snprintf(title, sizeof(title), "My App - FPS: %llu", frame_count);
+			SDL_SetWindowTitle(g_window, title);
+			frame_count = 0;
+			last_time = currentTime;
+		}
+
+
         main_loop();
         emp_asset_manager_check_hot_reload(g_asset_mgr);
-        SDL_Delay(16);
     }
 #endif
 
