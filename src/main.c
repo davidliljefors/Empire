@@ -251,6 +251,7 @@ static void main_loop(void)
 	update_args.dt = delta_time;
 	update_args.assets = g_assets;
 	update_args.r = g_renderer;
+	G->args = &update_args;
 	emp_entities_update(&update_args);
 
 	SDL_RenderPresent(g_renderer);
@@ -531,8 +532,12 @@ int main(int argc, char* argv[])
 
 	g_shader_program = create_shader_program_from_assets(g_assets->vert->cube.data, g_assets->frag->cube.data);
 	emp_entities_init();
+
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->base;
+	G->assets = g_assets;
+
+	emp_init_weapon_configs();
 
 	if (!g_shader_program) {
 		SDL_Log("Failed to create shader program");
