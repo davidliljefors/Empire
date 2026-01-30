@@ -4,7 +4,6 @@
 #include <Empire/stb_ds.h>
 #include <Empire/util.h>
 #include <Empire/hash.inl>
-#include <Windows.h>
 #include <stdio.h>
 
 typedef struct emp_generated_generic_t
@@ -26,10 +25,6 @@ emp_asset_manager_o* emp_asset_manager_create(emp_generated_assets_o* assets)
 		emp_generated_generic_t* generic = generic_assets[i];
 		emp_asset_type_t asset_type = {.count = generic->count, .assets = generic->asset, .loader = NULL};
 		hmput(mgr->assets_by_ext, generic->type_hash, asset_type);
-
-		char buf[128];
-		snprintf(buf, 128, "Added type of hash %llu\n", generic->type_hash);
-		OutputDebugStringA(buf);
 	}
 
 	return mgr;
@@ -37,10 +32,6 @@ emp_asset_manager_o* emp_asset_manager_create(emp_generated_assets_o* assets)
 
 void emp_asset_manager_add_loader(emp_asset_manager_o* mgr, emp_asset_loader_t loader, u64 type)
 {
-	char buf[128];
-	snprintf(buf, 128, "Getting type of hash %llu\n", type);
-	OutputDebugStringA(buf);
-
 	emp_asset_kvp* asset_type = stbds_hmgetp(mgr->assets_by_ext, type);
 	if (asset_type)
 	{
