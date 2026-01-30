@@ -532,7 +532,7 @@ int main(int argc, char* argv[])
 	g_shader_program = create_shader_program_from_assets(g_assets->vert->cube.data, g_assets->frag->cube.data);
 	emp_entities_init();
 	u32 player = emp_create_player();
-	G->player[player].texture = g_assets->png->base.handle;
+	G->player[player].texture_asset = &g_assets->png->base;
 
 	if (!g_shader_program) {
 		SDL_Log("Failed to create shader program");

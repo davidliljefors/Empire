@@ -1,5 +1,7 @@
 #include "entities.h"
 
+#include <Empire/assets.h>
+
 #include <SDL3/SDL.h>
 
 emp_entities_t* G;
@@ -103,7 +105,7 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 		player->x += conf.speed;
 	}
 
-	emp_texture_t* tex = player->texture;
+	emp_texture_t* tex = player->texture_asset->handle;
 
 	SDL_FRect dstRect = (SDL_FRect) { player->x, player->y, (float)tex->width, (float)tex->height };
 

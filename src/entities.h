@@ -2,12 +2,14 @@
 
 #include <Empire/types.h>
 
+typedef struct emp_asset_t emp_asset_t;
+
 #define EMP_MAX_PLAYERS 1
 typedef struct emp_player_t
 {
 	u32 generation;
 	bool alive;
-	emp_texture_t* texture;
+	emp_asset_t* texture_asset;
 	float x;
 	float y;
 } emp_player_t;
