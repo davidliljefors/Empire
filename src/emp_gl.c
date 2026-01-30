@@ -38,7 +38,7 @@ static void emp_material_bind(emp_material_t const* material)
 	glUseProgram(material->shader_program);
 
 	for (size_t index = 0; index < material->ubo.count; index++) {
-		emp_uniform_t* uniform = material->ubo.uniforms + index;
+		emp_uniform_t const* uniform = material->ubo.uniforms + index;
 		switch (uniform->type) {
 		case emp_uniform_float:
 			glUniform1f(uniform->location, *(GLfloat*)uniform->stable_data);
