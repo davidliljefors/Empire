@@ -221,7 +221,7 @@ static void main_loop(void)
 	g_angle_x += 0.5f * delta_time;
 	g_angle_y += 0.8f * delta_time;
 
-	SDL_SetRenderDrawColor(g_renderer, 54, 54, 54, 255);
+	SDL_SetRenderDrawColor(g_renderer, 255, 255, 255, 255);
 	SDL_RenderClear(g_renderer);
 
 	// glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
