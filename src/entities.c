@@ -33,7 +33,7 @@ void emp_entities_update(float dt)
 	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i)
 	{
 		emp_player_t* enemy = &G->enemies[i];
-		emp_enemy_uptdate(dt, enemy);
+		emp_enemy_uptdate(dt, enemy); 
 	}
 
 	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i)
