@@ -1,0 +1,14 @@
+# 4 Vertex Positions (x, y, z)
+v -1.0 -1.0  0.0
+v  1.0 -1.0  0.0
+v  1.0  1.0  0.0
+v -1.0  1.0  0.0
+
+# 4 Texture Coordinates (u, v)
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+# 1 Quad Face (v1/vt1 v2/vt2 v3/vt3 v4/vt4)
+f 1/1 2/2 3/3 4/4
