@@ -36,4 +36,4 @@ typedef struct emp_entities_t
 
 extern emp_entities_t* G;
 
-void emp_entities_update(float dt, emp_entities_t*, u32 count);
+void emp_entities_update(float dt);
