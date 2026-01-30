@@ -292,7 +292,7 @@ static void write_header(Asset* assets, int count, uint64_t checksum) {
     }
     
     SDL_IOprintf(f, "} emp_generated_assets_o;\n\n");
-    SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(void);\n");
+    SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(const char* root);\n");
     
     SDL_CloseIO(f);
 }
@@ -310,7 +310,7 @@ static void write_source(Asset* assets, int count) {
     SDL_IOprintf(f, "#include <SDL3/SDL.h>\n\n");
     SDL_IOprintf(f, "// Auto-generated file. Do not edit.\n\n");
     
-    SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(void) {\n");
+    SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(const char* root) {\n");
     SDL_IOprintf(f, "    emp_generated_assets_o* assets = (emp_generated_assets_o*)SDL_malloc(sizeof(emp_generated_assets_o));\n");
     SDL_IOprintf(f, "    SDL_memset(assets, 0, sizeof(emp_generated_assets_o));\n\n");
     
@@ -365,7 +365,7 @@ static void write_source(Asset* assets, int count) {
         
         for (int i = 0; i < count; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
-                SDL_IOprintf(f, "    assets->%s->%s.path = \"%s\";\n", 
+                SDL_IOprintf(f, "    assets->%s->%s.path = emp_concat(root, \"%s\");\n", 
                     current_ext, assets[i].name, assets[i].path);
                 SDL_IOprintf(f, "    assets->%s->%s.data = emp_read_entire_file(assets->%s->%s.path);\n",
                     current_ext, assets[i].name, current_ext, assets[i].name);
