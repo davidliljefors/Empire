@@ -1,5 +1,7 @@
 #include "entities.h"
 
+#include <Empire/assets.h>
+
 #include <SDL3/SDL.h>
 
 emp_entities_t* G;
@@ -23,7 +25,7 @@ u32 emp_create_player()
 
 emp_enemy_h emp_create_enemy()
 {
-	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
+	for (u32 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
 		if (!enemy->alive) {
 			enemy->generation++;
@@ -42,7 +44,7 @@ void emp_destroy_enemy(emp_enemy_h handle)
 
 emp_enemy_h emp_create_bullet()
 {
-	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i) {
+	for (u32 i = 0; i < EMP_MAX_BULLETS; ++i) {
 		emp_bullet_t* bullet = &G->bullets[i];
 		if (!bullet->alive) {
 			bullet->generation++;
@@ -62,7 +64,7 @@ void emp_destroy_bullet(emp_bullet_h handle)
 
 emp_bullet_generator_h emp_create_bullet_generator()
 {
-	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
+	for (u32 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
 		emp_bullet_generator_t* gen = &G->generators[i];
 		if (!gen->alive) {
 			gen->generation++;
@@ -103,9 +105,9 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 		player->x += conf.speed;
 	}
 
-	emp_texture_t* tex = player->texture;
+	emp_texture_t* tex = player->texture_asset->handle;
 
-	SDL_FRect dstRect = (SDL_FRect) { player->x, player->y, tex->width, tex->height };
+	SDL_FRect dstRect = (SDL_FRect) { player->x, player->y, (float)tex->width, (float)tex->height };
 
 	SDL_RenderTexture(args->r, tex->texture, NULL, &dstRect);
 }

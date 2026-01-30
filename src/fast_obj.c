@@ -23,6 +23,6 @@
  * SOFTWARE.
  *
  */
-
+#define _CRT_SECURE_NO_WARNINGS
 #define FAST_OBJ_IMPLEMENTATION
 #include <Empire/fast_obj.h>

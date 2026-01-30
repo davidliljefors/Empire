@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(Empire LANGUAGES C CXX)
 
+
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES "Ninja")
     add_compile_options(/MP)
 endif()
@@ -51,6 +52,22 @@ add_executable(Empire
 
 target_include_directories(Empire PRIVATE include)
 target_link_libraries(Empire PRIVATE SDL3::SDL3)
+
+set_target_properties(Empire PROPERTIES COMPILE_WARNING_AS_ERROR ON)
+
+target_compile_options(Empire PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:
+        /W4            # High-level warnings
+        /permissive-   # Standards conformance mode
+        /wd4100        # OPTIONAL: Silence "unreferenced formal parameter" noise
+    >
+    
+    # Clang Configuration
+    $<$<CXX_COMPILER_ID:Clang,AppleClang>:
+        -Wall          # High-level warnings
+        -Wshadow       # Warn if a variable shadows another
+    >
+)
 
 # make pretty filters in VS
 if(CMAKE_GENERATOR MATCHES "Visual Studio")

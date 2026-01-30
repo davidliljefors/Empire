@@ -9,7 +9,7 @@ const char* emp_concat(const char* root, const char* path)
 		return path;
 	}
 
-	if (SDL_snprintf(buffer, sizeof(buffer), "%s\\%s", root, path) != NULL) {
+	if (SDL_snprintf(buffer, sizeof(buffer), "%s\\%s", root, path) != 0) {
 		return SDL_strdup(buffer);
 	}
 	return path;

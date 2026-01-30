@@ -22,7 +22,7 @@ emp_asset_manager_o* emp_asset_manager_create(emp_generated_assets_o* assets)
 
 	for (u64 i = 0; i < sizeof(emp_generated_assets_o) / 8; ++i) {
 		emp_generated_generic_t* generic = generic_assets[i];
-		emp_asset_type_t asset_type = { .count = generic->count, .assets = generic->asset, .loader = NULL };
+		emp_asset_type_t asset_type = { .count = generic->count, .assets = generic->asset, .loader = {0} };
 		hmput(mgr->assets_by_ext, generic->type_hash, asset_type);
 	}
 
