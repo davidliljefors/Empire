@@ -2,7 +2,6 @@
 
 #include <Empire/types.h>
 
-
 #define EMP_MAX_PLAYERS 1
 typedef struct emp_player_t
 {

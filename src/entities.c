@@ -11,7 +11,7 @@ typedef struct emp_player_conf_t
 
 emp_player_conf_t get_player_conf()
 {
-	return (emp_player_conf_t) {.speed = 5.0f };
+	return (emp_player_conf_t) { .speed = 5.0f };
 }
 
 u32 emp_create_player()
@@ -23,71 +23,61 @@ u32 emp_create_player()
 
 emp_enemy_h emp_create_enemy()
 {
-	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
-		if (!enemy->alive)
-		{
+		if (!enemy->alive) {
 			enemy->generation++;
-			return (emp_enemy_h){.index = i, .generation = enemy->generation};
+			return (emp_enemy_h) { .index = i, .generation = enemy->generation };
 		}
 	}
 
 	assert(false && "out of enemies");
 
-	return (emp_enemy_h){ 0 };
+	return (emp_enemy_h) { 0 };
 }
 
 void emp_destroy_enemy(emp_enemy_h handle)
 {
-
 }
 
 emp_enemy_h emp_create_bullet()
 {
-	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i) {
 		emp_bullet_t* bullet = &G->bullets[i];
-		if (!bullet->alive)
-		{
+		if (!bullet->alive) {
 			bullet->generation++;
 			bullet->alive = true;
-			return (emp_enemy_h){.index = i, .generation = bullet->generation};
+			return (emp_enemy_h) { .index = i, .generation = bullet->generation };
 		}
-
 	}
 
 	assert(false && "out of bullets");
 
-	return (emp_enemy_h){ 0 };
+	return (emp_enemy_h) { 0 };
 }
 
 void emp_destroy_bullet(emp_bullet_h handle)
 {
-
 }
 
 emp_bullet_generator_h emp_create_bullet_generator()
 {
-	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
 		emp_bullet_generator_t* gen = &G->generators[i];
-		if (!gen->alive)
-		{
+		if (!gen->alive) {
 			gen->generation++;
 			gen->alive = true;
-			return (emp_bullet_generator_h){.index = i, .generation = gen->generation};
+			return (emp_bullet_generator_h) { .index = i, .generation = gen->generation };
 		}
 	}
 
 	assert(false && "out of generators");
 
-	return (emp_bullet_generator_h){ 0 };
+	return (emp_bullet_generator_h) { 0 };
 }
 
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 {
-
 }
 
 void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
@@ -95,11 +85,11 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 	const bool* state = SDL_GetKeyboardState(NULL);
 	emp_player_conf_t conf = get_player_conf();
 
-	//SDL_Log("%s, x:%f y:%f", "update enemy", player->x, player->y);
+	// SDL_Log("%s, x:%f y:%f", "update enemy", player->x, player->y);
 
 	if (state[SDL_SCANCODE_W]) {
 		player->y -= conf.speed;
-	}  
+	}
 
 	if (state[SDL_SCANCODE_A]) {
 		player->x -= conf.speed;
@@ -115,24 +105,21 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 
 	emp_texture_t* tex = player->texture;
 
-	SDL_FRect dstRect = (SDL_FRect){ player->x, player->y, tex->width, tex->height };
+	SDL_FRect dstRect = (SDL_FRect) { player->x, player->y, tex->width, tex->height };
 
 	SDL_RenderTexture(args->r, tex->texture, NULL, &dstRect);
 }
 
 void emp_enemy_uptdate(emp_update_args_t* args, emp_enemy_t* enemy)
 {
-
 }
 
 void emp_bullet_uptdate(emp_update_args_t* args, emp_bullet_t* bullet)
 {
-
 }
 
 void emp_generator_uptdate(emp_update_args_t* args, emp_bullet_generator_t* generator)
 {
-
 }
 
 void emp_entities_init()
@@ -151,38 +138,30 @@ void emp_entities_init()
 
 void emp_entities_update(emp_update_args_t* args)
 {
-	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
-		if (player->alive)
-		{
+		if (player->alive) {
 			emp_player_uptdate(args, player);
 		}
 	}
 
-	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
-		if (enemy->alive)
-		{
-			emp_enemy_uptdate(args, enemy); 
-	  	}
+		if (enemy->alive) {
+			emp_enemy_uptdate(args, enemy);
+		}
 	}
 
-	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i) {
 		emp_bullet_t* bullet = &G->bullets[i];
-		if (bullet->alive)
-		{
+		if (bullet->alive) {
 			emp_bullet_uptdate(args, bullet);
 		}
 	}
 
-	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i)
-	{
+	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
 		emp_bullet_generator_t* generator = &G->generators[i];
-		if (generator->alive)
-		{
+		if (generator->alive) {
 			emp_generator_uptdate(args, generator);
 		}
 	}
