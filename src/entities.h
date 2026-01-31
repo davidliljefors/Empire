@@ -80,6 +80,7 @@ typedef struct emp_enemy_t
 	emp_weapon_conf_t* weapon;
 	emp_enemy_update_f update;
 	double last_shot;
+	double last_damage_time;
 	u8 dynamic_data[64];
 } emp_enemy_t;
 
@@ -87,6 +88,7 @@ typedef enum bullet_mask
 {
 	emp_player_bullet_mask = 1 << 1,
 	emp_enemy_bullet_mask = 1 << 2,
+	emp_heavy_bullet_mask = 1 << 3,
 } bullet_mask;
 
 #define EMP_MAX_BULLETS 65535

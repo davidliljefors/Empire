@@ -262,6 +262,7 @@ void emp_init_weapon_configs()
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
+		.damage = 1.0,
 	};
 	weapons[0]->path = G->assets->wav->shot1.path;
 
@@ -679,13 +680,13 @@ void emp_player_update(emp_player_t* player)
 
 void emp_enemy_update(emp_enemy_t* enemy)
 {
-	add_enemy_to_tile(enemy);
-
 	enemy->update(enemy);
 
 	if (enemy->health <= 0) {
 		enemy->alive = false;
 	}
+
+	add_enemy_to_tile(enemy);
 
 	emp_vec2_t player_pos = G->player->pos;
 	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
@@ -700,7 +701,19 @@ void emp_enemy_update(emp_enemy_t* enemy)
 	SDL_FRect src = source_rect(enemy->texture_asset);
 	SDL_FRect dst = render_rect(enemy->pos, texture);
 
-	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	double t = 0.3;
+	double has_taken_damage = enemy->last_damage_time + t - G->args->global_time;
+	if (has_taken_damage > 0.0)
+	{
+		u8 mod_value = 255 - (u8)(600.0 * has_taken_damage);
+		SDL_SetTextureColorMod(texture->texture, 255, mod_value, mod_value);
+		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+		SDL_SetTextureColorMod(texture->texture, 255, 255, 255);
+	}
+	else
+	{
+		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	}
 
 	draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
@@ -724,9 +737,9 @@ void emp_bullet_update(emp_bullet_t* bullet)
 
 		if (tile_data->state != emp_tile_state_none) {
 			bullet->alive = false;
-			if(tile_data->state == emp_tile_state_breakable)
+			if(bullet->mask & emp_tile_state_breakable && G->level->health[index].value > 0)
 			{
-	
+				G->level->health[index].value--;
 			}
 		}
 	}
@@ -751,6 +764,8 @@ void emp_bullet_update(emp_bullet_t* bullet)
 					if (check_overlap_bullet_enemy(bullet, enemy_in_tile))
 					{
 						bullet->alive = false;
+						enemy_in_tile->health -= bullet->damage;
+						enemy_in_tile->last_damage_time = G->args->global_time;
 						goto collision_done;
 					}
 					enemy_in_tile = enemy_in_tile->next_in_tile;
