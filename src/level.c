@@ -65,7 +65,7 @@ void emp_level_parse_tile_data(emp_level_asset_t* level, yyjson_val* layer, emp_
 	}
 }
 
-int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fields, emp_level_entities_t* out_entity)
+int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fields, emp_level_entity_t* out_entity)
 {
 	size_t idx, size;
 	yyjson_val* field;
@@ -100,7 +100,7 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 	return 0;
 }
 
-static void emp_level_entities_list_add(emp_level_entities_list_t* list, emp_level_entities_t* value)
+static void emp_level_entities_list_add(emp_level_entities_list_t* list, emp_level_entity_t* value)
 {
 	if (list->count < SDL_arraysize(list->entries)) {
 		list->entries[list->count] = *value;
@@ -116,7 +116,7 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 	yyjson_val* instance;
 	yyjson_arr_foreach(instances, idx, size, instance)
 	{
-		emp_level_entities_t entity = { 0 };
+		emp_level_entity_t entity = { 0 };
 
 		float x = (float)yyjson_get_num(yyjson_obj_get(instance, "__worldX"));
 		float y = (float)yyjson_get_num(yyjson_obj_get(instance, "__worldY"));
@@ -181,7 +181,7 @@ void emp_load_sublevel(emp_level_asset_t* level, size_t index, yyjson_val* data)
 size_t emp_level_query(emp_level_asset_t* level, emp_entity_type type, size_t offset)
 {
 	for (size_t index = offset; index < level->entities.count; index++) {
-		emp_level_entities_t* entity = level->entities.entries + index;
+		emp_level_entity_t* entity = level->entities.entries + index;
 		if (entity->type == type) {
 			return index + 1;
 		}
@@ -189,7 +189,7 @@ size_t emp_level_query(emp_level_asset_t* level, emp_entity_type type, size_t of
 	return 0;
 }
 
-emp_level_entities_t* emp_level_get(emp_level_asset_t* level, size_t at)
+emp_level_entity_t* emp_level_get(emp_level_asset_t* level, size_t at)
 {
 	return level->entities.entries + at;
 }

@@ -65,17 +65,17 @@ typedef enum emp_behaviour_type {
 	emp_behaviour_type_roamer,
 } emp_behaviour_type;
 
-typedef struct emp_level_entities_t
+typedef struct emp_level_entity_t
 {
 	emp_entity_type type;
 	emp_behaviour_type behaviour;
 	float x;
 	float y;
-} emp_level_entities_t;
+} emp_level_entity_t;
 
 typedef struct emp_level_entities_list_t
 {
-	emp_level_entities_t entries[emo_entities_capacity];
+	emp_level_entity_t entries[emo_entities_capacity];
 	size_t count;
 } emp_level_entities_list_t;
 
@@ -88,7 +88,7 @@ typedef struct emp_level_asset_t
 } emp_level_asset_t;
 
 size_t emp_level_query(emp_level_asset_t* level, emp_entity_type type, size_t offset);
-emp_level_entities_t* emp_level_get(emp_level_asset_t* level, size_t at);
+emp_level_entity_t* emp_level_get(emp_level_asset_t* level, size_t at);
 
 void emp_load_level_asset(struct emp_asset_t* asset);
 void emp_unload_level_asset(struct emp_asset_t* asset);
