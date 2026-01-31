@@ -19,7 +19,6 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
-
 SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
 {
 	SDL_FRect rect;
@@ -28,6 +27,14 @@ SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
 	rect.w = (float)texture->width;
 	rect.h = (float)texture->height;
 	return rect;
+}
+
+emp_vec2i_t get_tile(emp_vec2_t pos)
+{
+	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * 4.0f)));
+	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * 4.0f)));
+
+	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
 }
 
 
@@ -281,16 +288,15 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		bullet->alive = false;
 	}
 
-	int tile_x = (int)(roundf(bullet->pos.x / (EMP_TILE_SIZE * 4.0f)));
-	int tile_y = (int)(roundf(bullet->pos.y / (EMP_TILE_SIZE * 4.0f)));
+	emp_vec2i_t tile = get_tile(bullet->pos);
 
-	if (tile_x >= 0 && tile_x < (int)EMP_LEVEL_WIDTH && 
-		tile_y >= 0 && tile_y < (int)EMP_LEVEL_HEIGHT) 
+	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && 
+		tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) 
 	{
-		u32 index = ((u32)tile_y * EMP_LEVEL_WIDTH) + (u32)tile_x;
-		emp_tile_t* tile = &G->level->tiles[index];
+		u32 index = ((u32)tile.y * EMP_LEVEL_WIDTH) + (u32)tile.x;
+		emp_tile_t* tile_data = &G->level->tiles[index];
 
-		if (tile->occupied)
+		if (tile_data->occupied)
 		{
 			bullet->alive = false;
 		}
