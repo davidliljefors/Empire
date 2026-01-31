@@ -63,7 +63,7 @@ void emp_init_weapon_configs()
 		.speed = 500.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet,
+		.texture_asset = &G->assets->png->bullet_8,
 	};
 
 	wep2 = SDL_malloc(sizeof(emp_weapon_conf_t));
@@ -73,35 +73,35 @@ void emp_init_weapon_configs()
 		.speed = 500.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[1] = (emp_bullet_conf_t) {
 		.speed = 500.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[2] = (emp_bullet_conf_t) {
 		.speed = 600.0f,
 		.start_angle = 25.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[3] = (emp_bullet_conf_t) {
 		.speed = 600.0f,
 		.start_angle = -25.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[4] = (emp_bullet_conf_t) {
 		.speed = 800.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep3 = SDL_malloc(sizeof(emp_weapon_conf_t));
@@ -110,7 +110,7 @@ void emp_init_weapon_configs()
 
 emp_bullet_conf_t get_bullet1()
 {
-	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 1000.0f, .texture_asset = &G->assets->png->bullet };
+	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 1000.0f, .texture_asset = &G->assets->png->bullet_8 };
 	return bullet;
 }
 
