@@ -9,8 +9,10 @@ set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
-
+set(SDLMIXER_VENDORED OFF)
 add_subdirectory(soy/SDL)
+add_subdirectory(soy/SDL_mixer)
+
 
 # gl loader for win/macos
 if(NOT EMSCRIPTEN)
@@ -23,7 +25,7 @@ if(NOT EMSCRIPTEN)
     add_executable(Florence src/codegen/florence.c)
     target_include_directories(Florence PRIVATE include)
     target_link_libraries(Florence PRIVATE SDL3::SDL3)
-    
+
     # Always build Florence in Release mode
     set_target_properties(Florence PROPERTIES
         VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -99,6 +101,7 @@ add_executable(Empire
 
 target_include_directories(Empire PRIVATE include)
 target_link_libraries(Empire PRIVATE SDL3::SDL3)
+target_link_libraries(Empire PRIVATE SDL3_mixer::SDL3_mixer)
 
 set_target_properties(Empire PROPERTIES COMPILE_WARNING_AS_ERROR ON)
 
@@ -141,6 +144,11 @@ if(WIN32 AND NOT EMSCRIPTEN)
     add_custom_command(TARGET Empire POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:SDL3::SDL3>
+        $<TARGET_FILE_DIR:Empire>
+    )
+        add_custom_command(TARGET Empire POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
         $<TARGET_FILE_DIR:Empire>
     )
 endif()
