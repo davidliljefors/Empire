@@ -427,13 +427,12 @@ emp_bullet_conf_t get_bullet1()
 	return bullet;
 }
 
-void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, emp_weapon_conf_t* conf)
+void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_weapon_conf_t* conf)
 {
 	for (u32 i = 0; i < conf->num_shots; ++i) {
 		emp_bullet_conf_t bullet_conf = conf->shots[i];
 		emp_bullet_h bullet_handle = emp_create_bullet();
 		emp_bullet_t* bullet = &G->bullets[bullet_handle.index];
-
 		bullet->vel = emp_vec2_mul(emp_vec2_normalize(direction), bullet_conf.speed);
 		if (bullet_conf.start_angle != 0.0f) {
 			bullet->vel = emp_vec2_rotate(bullet->vel, bullet_conf.start_angle);
@@ -442,6 +441,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, emp_weapon_conf_t* conf
 		bullet->damage = bullet_conf.damage;
 		bullet->pos = pos;
 		bullet->texture_asset = bullet_conf.texture_asset;
+		bullet->mask = mask;
 	}
 }
 
@@ -625,7 +625,7 @@ void emp_player_update(emp_player_t* player)
 		if (player->last_shot + weapons[player->weapon_index]->delay_between_shots < G->args->global_time) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
-			spawn_bullets(player->pos, delta, weapons[player->weapon_index]);
+			spawn_bullets(player->pos, delta, emp_player_bullet_mask, weapons[player->weapon_index]);
 			player->last_shot = G->args->global_time;
 		}
 	}
@@ -635,19 +635,18 @@ void emp_enemy_update(emp_enemy_t* enemy)
 {
 	enemy->update(enemy);
 
-	if (enemy->health <= 0)
-	{
+	if (enemy->health <= 0) {
 		enemy->alive = false;
 	}
 
 	emp_vec2_t player_pos = G->player->pos;
 	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
 
-	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time)
-	{
-		spawn_bullets(enemy->pos, dir, enemy->weapon);
+	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time) {
+		spawn_bullets(enemy->pos, dir, emp_enemy_bullet_mask, enemy->weapon);
 		enemy->last_shot = G->args->global_time;
 	}
+
 	emp_texture_t* texture = enemy->texture_asset->handle;
 
 	SDL_FRect src = source_rect(enemy->texture_asset);
