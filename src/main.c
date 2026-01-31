@@ -180,6 +180,8 @@ int main(int argc, char* argv[])
 	G->renderer = g_renderer;
 
 	emp_entities_init();
+	emp_init_enemy_configs();
+	emp_init_weapon_configs();
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->player_32;
@@ -205,9 +207,10 @@ int main(int argc, char* argv[])
 
 
 	emp_create_level();
+
+
 	SDL_zerop(G->args);
 
-	emp_init_weapon_configs();
 
 	g_last_time = SDL_GetTicks();
 

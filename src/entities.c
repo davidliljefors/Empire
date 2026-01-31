@@ -1,4 +1,5 @@
 #include "entities.h"
+#include "SDL3/SDL_scancode.h"
 
 #include <Empire/assets.h>
 #include <Empire/generated/assets_generated.h>
@@ -9,6 +10,15 @@
 #define ANIMATION_SPEED 0.1f
 
 emp_G* G;
+emp_enemy_conf_t* enemy_confs[16];
+emp_weapon_conf_t* weapons[10];
+
+typedef struct emp_roamer_data_t
+{
+	float time_until_change;
+} emp_roamer_data_t;
+
+u32 rng_state;
 
 typedef struct emp_player_conf_t
 {
@@ -139,171 +149,208 @@ SDL_FRect source_rect(emp_asset_t* texture_asset)
 
 	return rect;
 }
-emp_weapon_conf_t* wep0;
-emp_weapon_conf_t* wep1;
-emp_weapon_conf_t* wep2;
-emp_weapon_conf_t* wep3;
-emp_weapon_conf_t* wep4;
-emp_weapon_conf_t* wep5;
-emp_weapon_conf_t* wep6;
-emp_weapon_conf_t* wep7;
-emp_weapon_conf_t* wep8;
-emp_weapon_conf_t* wep9;
+
+
+u32 simple_rng(u32* state)
+{
+	*state = *state * 1103515245u + 12345u;
+	return (*state >> 16) & 0x7FFF;
+}
+
+void enemy_roamer_update(emp_enemy_t* enemy)
+{
+	emp_roamer_data_t* data = (emp_roamer_data_t*)&enemy->dynamic_data[0];
+	float dt = G->args->dt;
+
+	data->time_until_change -= dt;
+	
+	if (data->time_until_change <= 0.0f) {
+		float angle = (float)(simple_rng(&rng_state) % 360);
+		enemy->direction = emp_vec2_rotate((emp_vec2_t){1.0f, 0.0f}, angle);
+		
+		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
+	}
+
+	float move_speed = 120.0f;
+	emp_vec2_t movement = emp_vec2_mul(enemy->direction, move_speed * dt);
+
+	emp_vec2_t new_pos = emp_vec2_add(enemy->pos, movement);
+	if (!check_overlap_map(new_pos)) {
+		enemy->pos = new_pos;
+	} else {
+		float angle = (float)(simple_rng(&rng_state) % 360);
+		enemy->direction = emp_vec2_rotate((emp_vec2_t){1.0f, 0.0f}, angle);
+		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
+	}
+}
+
+
+
+void emp_init_enemy_configs()
+{
+	enemy_confs[0] = SDL_malloc(sizeof(emp_enemy_conf_t));
+	emp_enemy_conf_t* e0 = enemy_confs[0];
+	e0->health = 10;
+	e0->speed = 300.0f;
+	e0->texture_asset = &G->assets->png->enemy1_32;
+	e0->data_size = sizeof(emp_roamer_data_t);
+	e0->update = enemy_roamer_update;
+}
 
 void emp_init_weapon_configs()
 {
-	wep0 = SDL_malloc(sizeof(emp_weapon_conf_t));
-	wep0->delay_between_shots = 0.2f;
-	wep0->num_shots = 1;
-	wep0->shots[0] = (emp_bullet_conf_t) {
+	weapons[0] = SDL_malloc(sizeof(emp_weapon_conf_t));
+	weapons[0]->delay_between_shots = 0.2f;
+	weapons[0]->num_shots = 1;
+	weapons[0]->shots[0] = (emp_bullet_conf_t) {
+		.speed = 900.0f,
+		.start_angle = 0.0f,
+		.lifetime = 3.0f,
+		.texture_asset = &G->assets->png->bullet_8,
+	};
+
+	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
+	weapons[1]->delay_between_shots = 0.2f;
+	weapons[1]->num_shots = 1;
+	weapons[1]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 300.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
 
-	wep1 = SDL_malloc(sizeof(emp_weapon_conf_t));
-	wep1->delay_between_shots = 0.2f;
-	wep1->num_shots = 1;
-	wep1->shots[0] = (emp_bullet_conf_t) {
-		.speed = 300.0f,
-		.start_angle = 0.0f,
-		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet_8,
-	};
-
-	wep2 = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
-	wep2->delay_between_shots = 0.3f;
-	wep2->num_shots = 3;
-	wep2->shots[0] = (emp_bullet_conf_t) {
+	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
+	weapons[2]->delay_between_shots = 0.3f;
+	weapons[2]->num_shots = 3;
+	weapons[2]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep2->shots[1] = (emp_bullet_conf_t) {
+	weapons[2]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep2->shots[2] = (emp_bullet_conf_t) {
+	weapons[2]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 
-	wep3 = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
-	wep3->delay_between_shots = 0.3f;
-	wep3->num_shots = 5;
-	wep3->shots[0] = (emp_bullet_conf_t) {
+	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
+	weapons[3]->delay_between_shots = 0.3f;
+	weapons[3]->num_shots = 5;
+	weapons[3]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep3->shots[1] = (emp_bullet_conf_t) {
+	weapons[3]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
-	wep3->shots[2] = (emp_bullet_conf_t) {
+	weapons[3]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
-	wep3->shots[3] = (emp_bullet_conf_t) {
+	weapons[3]->shots[3] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep3->shots[4] = (emp_bullet_conf_t) {
+	weapons[3]->shots[4] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 
-	wep4 = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
-	wep4->delay_between_shots = 0.3f;
-	wep4->num_shots = 12;
-	wep4->shots[0] = (emp_bullet_conf_t) {
+	weapons[4] = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
+	weapons[4]->delay_between_shots = 0.3f;
+	weapons[4]->num_shots = 12;
+	weapons[4]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[1] = (emp_bullet_conf_t) {
+	weapons[4]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[2] = (emp_bullet_conf_t) {
+	weapons[4]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[3] = (emp_bullet_conf_t) {
+	weapons[4]->shots[3] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -60.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[4] = (emp_bullet_conf_t) {
+	weapons[4]->shots[4] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 60.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[5] = (emp_bullet_conf_t) {
+	weapons[4]->shots[5] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -90.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[6] = (emp_bullet_conf_t) {
+	weapons[4]->shots[6] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 90.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[7] = (emp_bullet_conf_t) {
+	weapons[4]->shots[7] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -120.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[8] = (emp_bullet_conf_t) {
+	weapons[4]->shots[8] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 120.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[9] = (emp_bullet_conf_t) {
+	weapons[4]->shots[9] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -150.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[10] = (emp_bullet_conf_t) {
+	weapons[4]->shots[10] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 150.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[11] = (emp_bullet_conf_t) {
+	weapons[4]->shots[11] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 180.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	wep4->shots[12] = (emp_bullet_conf_t) {
+	weapons[4]->shots[12] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -180.0f,
 		.lifetime = 3.0f,
@@ -311,15 +358,15 @@ void emp_init_weapon_configs()
 	};
 
 	int total_bullets = 24;
-	wep5 = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
-	wep5->delay_between_shots = 0.3f;
-	wep5->num_shots = total_bullets;
+	weapons[5] = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
+	weapons[5]->delay_between_shots = 0.3f;
+	weapons[5]->num_shots = total_bullets;
 
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
 
-		wep5->shots[i] = (emp_bullet_conf_t) {
+		weapons[5]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
@@ -327,15 +374,15 @@ void emp_init_weapon_configs()
 		};
 	}
 
-	wep6 = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
-	wep6->delay_between_shots = 0.5f;
-	wep6->num_shots = total_bullets;
+	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
+	weapons[6]->delay_between_shots = 0.5f;
+	weapons[6]->num_shots = total_bullets;
 
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
 
-		wep6->shots[i] = (emp_bullet_conf_t) {
+		weapons[6]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
@@ -343,15 +390,15 @@ void emp_init_weapon_configs()
 		};
 	}
 
-	wep7 = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
-	wep7->delay_between_shots = 0.5f;
-	wep7->num_shots = total_bullets / 2 + 1;
+	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
+	weapons[7]->delay_between_shots = 0.5f;
+	weapons[7]->num_shots = total_bullets / 2 + 1;
 
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
 
-		wep7->shots[i] = (emp_bullet_conf_t) {
+		weapons[7]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
@@ -359,15 +406,15 @@ void emp_init_weapon_configs()
 		};
 	}
 
-	wep7 = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
-	wep7->delay_between_shots = 0.5f;
-	wep7->num_shots = total_bullets / 2 + 1;
+	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
+	weapons[7]->delay_between_shots = 0.5f;
+	weapons[7]->num_shots = total_bullets / 2 + 1;
 
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
 
-		wep7->shots[i] = (emp_bullet_conf_t) {
+		weapons[7]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
@@ -404,15 +451,31 @@ u32 emp_create_player()
 {
 	G->player[0].alive = true;
 	G->player[0].generation = 1;
+	G->player[0].weapon_index = 0;
 	return 0;
 }
 
-emp_enemy_h emp_create_enemy()
+emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 {
 	for (u32 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
 		if (!enemy->alive) {
+			emp_enemy_conf_t* conf = enemy_confs[enemy_conf_index];
+			SDL_memset(&enemy->dynamic_data, 0 , 64);
+			enemy->pos = pos;
+			
+			emp_vec2_t player_pos = G->player->pos;
+			emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(enemy->pos, player_pos));
+
+			enemy->direction = dir;
 			enemy->generation++;
+			enemy->health = conf->health;
+			enemy->update = conf->update;
+			enemy->speed = conf->speed;
+			enemy->texture_asset = conf->texture_asset;
+			enemy->weapon = weapons[0];
+			enemy->alive = true;
+
 			return (emp_enemy_h) { .index = i, .generation = enemy->generation };
 		}
 	}
@@ -424,6 +487,7 @@ emp_enemy_h emp_create_enemy()
 
 void emp_destroy_enemy(emp_enemy_h handle)
 {
+
 }
 
 emp_bullet_h emp_create_bullet()
@@ -432,7 +496,6 @@ emp_bullet_h emp_create_bullet()
 		emp_bullet_t* bullet = &G->bullets[i];
 		if (!bullet->alive) {
 			bullet->generation++;
-			// Initialize fields BEFORE setting alive to prevent update with stale data
 			bullet->pos = (emp_vec2_t) { 0 };
 			bullet->vel = (emp_vec2_t) { 0 };
 			bullet->life_left = 0.0f;
@@ -450,6 +513,7 @@ emp_bullet_h emp_create_bullet()
 
 void emp_destroy_bullet(emp_bullet_h handle)
 {
+
 }
 
 emp_bullet_generator_h emp_create_bullet_generator()
@@ -470,6 +534,7 @@ emp_bullet_generator_h emp_create_bullet_generator()
 
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 {
+
 }
 
 void emp_player_update(emp_player_t* player)
@@ -494,6 +559,7 @@ void emp_player_update(emp_player_t* player)
 	if (state[SDL_SCANCODE_D]) {
 		movement.x = conf.speed;
 	}
+
 	movement = emp_vec2_normalize(movement);
 	movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
 
@@ -517,20 +583,78 @@ void emp_player_update(emp_player_t* player)
 
 	player->pos = emp_vec2_add(player->pos, movement);
 
-	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
-		if (player->shot_delay <= 0.0f) {
-			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
-			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
-			spawn_bullets(player->pos, delta, wep1);
-			player->shot_delay = wep1->delay_between_shots;
-		}
+	if (state[SDL_SCANCODE_1])
+	{
+		player->weapon_index = 1;
+	}
+	else if (state[SDL_SCANCODE_2])
+	{
+		player->weapon_index = 2;
+	}
+	else if (state[SDL_SCANCODE_3])
+	{
+		player->weapon_index = 3;
+	}
+	else if (state[SDL_SCANCODE_4])
+	{
+		player->weapon_index = 4;
+	}
+	else if (state[SDL_SCANCODE_5])
+	{
+		player->weapon_index = 5;
+	}
+	else if (state[SDL_SCANCODE_6])
+	{
+		player->weapon_index = 6;
+	}
+	else if (state[SDL_SCANCODE_7])
+	{
+		player->weapon_index = 7;
+	}
+	else if (state[SDL_SCANCODE_8])
+	{
+		player->weapon_index = 8;
+	}
+	else if (state[SDL_SCANCODE_9])
+	{
+		player->weapon_index = 9;
 	}
 
-	player->shot_delay -= G->args->dt;
+	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT) || state[SDL_SCANCODE_SPACE]) {
+		if (player->last_shot + weapons[player->weapon_index]->delay_between_shots < G->args->global_time) {
+			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
+			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
+			spawn_bullets(player->pos, delta, weapons[player->weapon_index]);
+			player->last_shot = G->args->global_time;
+		}
+	}
 }
 
-void emp_enemy_uptdate(emp_enemy_t* enemy)
+void emp_enemy_update(emp_enemy_t* enemy)
 {
+	enemy->update(enemy);
+
+	if (enemy->health <= 0)
+	{
+		enemy->alive = false;
+	}
+
+	emp_vec2_t player_pos = G->player->pos;
+	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
+
+	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time)
+	{
+		spawn_bullets(enemy->pos, dir, enemy->weapon);
+		enemy->last_shot = G->args->global_time;
+	}
+	emp_texture_t* texture = enemy->texture_asset->handle;
+
+	SDL_FRect src = source_rect(enemy->texture_asset);
+	SDL_FRect dst = render_rect(enemy->pos, texture);
+
+	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+
+	draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
 
 void emp_bullet_update(emp_bullet_t* bullet)
@@ -585,16 +709,16 @@ void emp_level_update()
 		for (size_t ti = 0; ti < sublevel->tiles.count; ti++) {
 			float grid_size = sublevel->values.grid_size;
 			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
-			size_t lx = (size_t)(desc->dst.x / grid_size);
-			size_t ly = (size_t)(desc->dst.y / grid_size);
+			u64 lx = (u64)(desc->dst.x / grid_size);
+			u64 ly = (u64)(desc->dst.y / grid_size);
 
 			size_t index = (ly * sublevel->values.grid_width) + lx;
 			u8 value = sublevel->values.entries[index];
 
 			SDL_FRect src = { desc->src.x, desc->src.y, grid_size, grid_size };
 			emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
-			size_t wx = (size_t)(pos.x / grid_size);
-			size_t wy = (size_t)(pos.y / grid_size);
+			u64 wx = (u64)(pos.x / grid_size);
+			u64 wy = (u64)(pos.y / grid_size);
 
 			pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
 			SDL_FRect dst = render_rect_with_size(pos, grid_size * SPRITE_MAGNIFICATION);
@@ -643,7 +767,7 @@ void emp_entities_update()
 	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
 		if (enemy->alive) {
-			emp_enemy_uptdate(enemy);
+			emp_enemy_update(enemy);
 		}
 	}
 
