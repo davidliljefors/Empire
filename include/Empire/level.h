@@ -32,6 +32,9 @@ typedef struct emp_tile_desc_slice_t
 typedef struct emp_sublevel_t
 {
 	float grid_size;
+	u32 grid_width;
+	u32 grid_height;
+	emp_vec2_t offset;
 
 	emp_tile_desc_slice_t tiles;
 	emp_values_slice_t values;

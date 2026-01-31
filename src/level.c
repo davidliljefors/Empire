@@ -4,13 +4,12 @@
 #include <Empire/yyjson.h>
 #include <SDL3/SDL_stdinc.h>
 
-emp_sublevel_t* emp_level_create_sublevel(emp_level_asset_t* level, float grid_size, emp_values_slice_t* values, emp_tile_desc_slice_t* tiles)
+emp_sublevel_t* emp_level_create_sublevel(emp_level_asset_t* level, emp_values_slice_t* values, emp_tile_desc_slice_t* tiles)
 {
 	emp_sublevel_t* sublevel = level->sublevels.entries + level->sublevels.count;
 	level->sublevels.count = level->sublevels.count + 1;
 	sublevel->values = *values;
 	sublevel->tiles = *tiles;
-	sublevel->grid_size = grid_size;
 	return sublevel;
 }
 
@@ -43,7 +42,7 @@ void emp_level_parse_int_grid_data(emp_level_asset_t* level, yyjson_val* layer, 
 	}
 }
 
-void emp_level_parse_tile_data(emp_level_asset_t* level, emp_vec2_t offset, yyjson_val* layer, emp_tile_desc_slice_t* tiles)
+void emp_level_parse_tile_data(emp_level_asset_t* level, yyjson_val* layer, emp_tile_desc_slice_t* tiles)
 {
 	yyjson_val* layer_tiles = yyjson_obj_get(layer, "autoLayerTiles");
 
@@ -58,13 +57,10 @@ void emp_level_parse_tile_data(emp_level_asset_t* level, emp_vec2_t offset, yyjs
 		yyjson_val* px = yyjson_obj_get(value, "px");
 		yyjson_val* src = yyjson_obj_get(value, "src");
 
-		tile_desc->dst.x = (float)yyjson_get_num(yyjson_arr_get(px, 0)) + offset.x;
-		tile_desc->dst.y = (float)yyjson_get_num(yyjson_arr_get(px, 1)) + offset.y;
+		tile_desc->dst.x = (float)yyjson_get_num(yyjson_arr_get(px, 0));
+		tile_desc->dst.y = (float)yyjson_get_num(yyjson_arr_get(px, 1));
 		tile_desc->src.x = (float)yyjson_get_num(yyjson_arr_get(src, 0));
 		tile_desc->src.y = (float)yyjson_get_num(yyjson_arr_get(src, 1));
-
-
-
 	}
 }
 
@@ -89,9 +85,13 @@ void emp_load_sublevel(emp_level_asset_t* level, size_t index, yyjson_val* data)
 
 		if (SDL_strcmp(str, "world") == 0) {
 			emp_level_parse_int_grid_data(level, layer, &values);
-			emp_level_parse_tile_data(level, world_offset, layer, &tiles);
-			float grid_size = (float)yyjson_get_num(yyjson_obj_get(layer, "__gridSize"));
-			emp_level_create_sublevel(level, grid_size, &values, &tiles);
+			emp_level_parse_tile_data(level, layer, &tiles);
+			emp_sublevel_t* sublevel = emp_level_create_sublevel(level, &values, &tiles);
+			sublevel->grid_size = (float)yyjson_get_num(yyjson_obj_get(layer, "__gridSize"));
+			sublevel->grid_width = (u32)yyjson_get_uint(yyjson_obj_get(layer, "__cWid"));
+			sublevel->grid_height = (u32)yyjson_get_uint(yyjson_obj_get(layer, "__cHei"));
+			sublevel->offset.x = world_offset.x;
+			sublevel->offset.y = world_offset.y;
 		}
 	}
 }
