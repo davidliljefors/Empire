@@ -121,7 +121,7 @@ static void main_loop(void)
 	Uint64 current_time = SDL_GetTicks();
 	double delta_time = (current_time - g_last_time) / 1000.0;
 	g_last_time = current_time;
-	G->args->dt = (float)delta_time;
+	G->args->dt = (float)delta_time * 0.2;
 	G->args->global_time += delta_time;
 
 	SDL_SetRenderDrawColor(g_renderer, 108, 129, 161, 1);
