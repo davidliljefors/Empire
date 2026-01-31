@@ -28,7 +28,7 @@ emp_vec2_t render_offset()
 	return (emp_vec2_t) { .x = (float)render_w / 2.0f, .y = (float)render_h / 1.5f };
 }
 
-void draw_rect_at(emp_vec2_t pos, float size)
+void draw_rect_at(emp_vec2_t pos, float size, u8 r, u8 g, u8 b, u8 a)
 {
 	SDL_FRect rect;
 	rect.x = pos.x - (size / 2);
@@ -43,7 +43,7 @@ void draw_rect_at(emp_vec2_t pos, float size)
 	rect.x += offset.x;
 	rect.y += offset.y;
 
-	SDL_SetRenderDrawColor(G->renderer, 255, 0, 0, 255);
+	SDL_SetRenderDrawColor(G->renderer, r, g, b, a);
 	SDL_RenderRect(G->renderer, &rect);
 }
 
@@ -559,7 +559,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 	emp_texture_t* tex = bullet->texture_asset->handle;
 	SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
-	draw_rect_at(bullet->pos, 32);
+	draw_rect_at(bullet->pos, 32, 255, 0, 0, 255);
 }
 
 void emp_level_update()
@@ -569,25 +569,35 @@ void emp_level_update()
 	emp_texture_t* texture = (emp_texture_t*)G->assets->png->tilemap.handle;
 	for (size_t li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
+
 		for (size_t ti = 0; ti < sublevel->tiles.count; ti++) {
 			float grid_size = sublevel->grid_size;
 			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
-			size_t x = (size_t)(desc->dst.x / grid_size);
-			size_t y = (size_t)(desc->dst.y / grid_size);
-			emp_tile_t* tile = &G->level->tiles[(y * EMP_LEVEL_WIDTH) + x];
+			size_t lx = (size_t)(desc->dst.x / grid_size);
+			size_t ly = (size_t)(desc->dst.y / grid_size);
 
-			u8 value = sublevel->values.entries[ti];
-			tile->occupied = value == 1;
+			size_t index = (ly * sublevel->grid_width) + lx;
+			u8 value = sublevel->values.entries[index];
 
 			SDL_FRect src = { desc->src.x, desc->src.y, grid_size, grid_size };
-			emp_vec2_t pos = emp_vec2_mul(desc->dst, SPRITE_MAGNIFICATION);
+			emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
+			size_t wx = (size_t)(pos.x / grid_size);
+			size_t wy = (size_t)(pos.y / grid_size);
+
+			pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
 			SDL_FRect dst = render_rect_with_size(pos, grid_size * SPRITE_MAGNIFICATION);
 			SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
-			if (value == 1) {
-				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION);
+
+			emp_tile_t* tile = &G->level->tiles[(wy * EMP_LEVEL_WIDTH) + wx];
+			tile->occupied = 1;
+
+			if (value == 1)
+			{
+				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
 			}
-			if (value == 2) {
-				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION);
+			if (value == 2)
+			{
+				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 255, 0, 255);
 			}
 		}
 	}
