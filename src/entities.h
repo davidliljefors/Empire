@@ -41,6 +41,7 @@ typedef struct emp_weapon_conf_t
 	float delay_between_shots;
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
+	const char* path;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
@@ -82,6 +83,12 @@ typedef struct emp_enemy_t
 	u8 dynamic_data[64];
 } emp_enemy_t;
 
+typedef enum bullet_mask
+{
+	emp_player_bullet_mask = 1 << 1,
+	emp_enemy_bullet_mask = 1 << 2,
+} bullet_mask;
+
 #define EMP_MAX_BULLETS 65535
 typedef struct emp_bullet_t
 {
@@ -92,6 +99,7 @@ typedef struct emp_bullet_t
 	float life_left;
 	float damage;
 	emp_asset_t* texture_asset;
+	bullet_mask mask;
 } emp_bullet_t;
 
 #define EMP_MAX_BULLET_GENERATORS 1024
