@@ -43,7 +43,7 @@ typedef struct emp_weapon_conf_t
 	emp_bullet_conf_t shots[36];
 } emp_weapon_conf_t;
 
-typedef struct emp_enemy_conf_t 
+typedef struct emp_enemy_conf_t
 {
 	float hp;
 	float movement_speed;

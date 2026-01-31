@@ -552,11 +552,11 @@ void emp_player_update(emp_player_t* player)
 	}
 
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
-		if (player->last_shot + wep1->delay_between_shots < G->args->global_time) {
+		if (player->last_shot + wep[player->weapon_index]->delay_between_shots < G->args->global_time) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
 			spawn_bullets(player->pos, delta, wep[player->weapon_index]);
-			player->shot_delay = wep[player->weapon_index]->delay_between_shots;
+			player->last_shot = G->args->global_time;
 		}
 	}
 }
