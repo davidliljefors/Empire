@@ -29,7 +29,7 @@ typedef struct
 {
 	float width;
 	float height;
-	u32 atlas_size;
+	u32 source_size;
 	u32 rows;
 	u32 columns;
 	SDL_Texture* texture;

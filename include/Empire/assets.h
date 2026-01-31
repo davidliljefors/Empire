@@ -31,9 +31,16 @@ typedef struct emp_asset_kvp
 	emp_asset_type_t value;
 } emp_asset_kvp;
 
+typedef struct emp_asset_by_path_t
+{
+	const char* key;
+	emp_asset_t* value;
+} emp_asset_by_path_t;
+
 typedef struct emp_asset_manager_o
 {
 	emp_asset_kvp* assets_by_ext;
+	emp_asset_by_path_t* assets_by_path;
 } emp_asset_manager_o;
 
 emp_asset_manager_o* emp_asset_manager_create(struct emp_generated_assets_o* assets);

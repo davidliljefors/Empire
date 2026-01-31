@@ -74,17 +74,17 @@ typedef struct emp_bullet_generator_h
 	u32 generation;
 } emp_bullet_generator_h;
 
-#define EMP_LEVEL_WIDTH 1024;
-#define EMP_LEVEL_HEIGHT 1024;
+#define EMP_LEVEL_WIDTH 1024
+#define EMP_LEVEL_HEIGHT 1024
+#define EMP_LEVEL_TILES EMP_LEVEL_WIDTH * EMP_LEVEL_HEIGHT
 
 typedef struct emp_tile_t
 {
-	bool dummy;
+	emp_asset_t* texture_asset;
 } emp_tile_t;
 
 typedef struct emp_level_t
 {
-
 	emp_tile_t* tiles;
 } emp_level_t;
 
@@ -97,6 +97,7 @@ typedef struct emp_entities_t
 	emp_enemy_t* enemies;
 	emp_bullet_t* bullets;
 	emp_bullet_generator_t* generators;
+	emp_level_t* level;
 } emp_G;
 
 extern emp_G* G;
@@ -115,3 +116,6 @@ void emp_destroy_bullet_generator(emp_bullet_generator_h handle);
 
 void emp_entities_init();
 void emp_entities_update();
+
+void emp_create_level(void);
+void emp_destroy_level(void);

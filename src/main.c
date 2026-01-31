@@ -190,7 +190,7 @@ void emp_png_load_func(emp_asset_t* asset)
 	int atlas_size = parse_atlas_width_from_path_name(asset->path);
 	if (atlas_size)
 	{
-		emp_tex->atlas_size = (u32)(atlas_size);
+		emp_tex->source_size = (u32)(atlas_size);
 		emp_tex->columns = width / atlas_size;
 		emp_tex->rows = height / atlas_size;
 		emp_tex->width = atlas_size * SPRITE_MAGNIFICATION;
@@ -198,7 +198,7 @@ void emp_png_load_func(emp_asset_t* asset)
 	}
 	else
 	{
-		emp_tex->atlas_size = 1;
+		emp_tex->source_size = width;
 		emp_tex->rows = 1;
 		emp_tex->columns = 1;
 		emp_tex->width = width * SPRITE_MAGNIFICATION;
@@ -263,13 +263,16 @@ int main(int argc, char* argv[])
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_check_hot_reload(g_asset_mgr);
 
+	G = SDL_malloc(sizeof(emp_G));
+	G->assets = g_assets;
+	G->args = SDL_malloc(sizeof(emp_update_args_t));
+	G->renderer = g_renderer;
+	
 	emp_entities_init();
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->player_32;
-	G->assets = g_assets;
-	G->args = SDL_malloc(sizeof(emp_update_args_t));
-	G->renderer = g_renderer;
+	emp_create_level();
 	SDL_zerop(G->args);
 
 	emp_init_weapon_configs();
