@@ -566,10 +566,11 @@ void emp_level_update()
 {
 	emp_level_asset_t* level_asset = (emp_level_asset_t*)G->assets->ldtk->world.handle;
 
+	memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
+
 	emp_texture_t* texture = (emp_texture_t*)G->assets->png->tilemap.handle;
 	for (size_t li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
-
 		for (size_t ti = 0; ti < sublevel->tiles.count; ti++) {
 			float grid_size = sublevel->grid_size;
 			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
@@ -679,10 +680,6 @@ void emp_create_level(void)
 	SDL_zerop(G->level);
 	G->level->tiles = SDL_malloc(sizeof(emp_tile_t) * EMP_LEVEL_TILES);
 	SDL_memset(G->level->tiles, 0, sizeof(emp_tile_t) * EMP_LEVEL_TILES);
-
-	for (u32 i = 0; i < EMP_LEVEL_TILES; ++i) {
-		G->level->tiles[i].texture_asset = &G->assets->png->brick;
-	}
 }
 
 void emp_destroy_level(void)

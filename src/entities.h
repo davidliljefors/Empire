@@ -83,7 +83,6 @@ typedef struct emp_bullet_generator_h
 
 typedef struct emp_tile_t
 {
-	emp_asset_t* texture_asset;
 	bool occupied;
 } emp_tile_t;
 
