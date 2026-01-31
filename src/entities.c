@@ -1,4 +1,5 @@
 #include "entities.h"
+#include "SDL3/SDL_scancode.h"
 
 #include <Empire/assets.h>
 #include <Empire/generated/assets_generated.h>
@@ -620,7 +621,7 @@ void emp_player_update(emp_player_t* player)
 		player->weapon_index = 9;
 	}
 
-	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
+	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT) || state[SDL_SCANCODE_SPACE]) {
 		if (player->last_shot + weapons[player->weapon_index]->delay_between_shots < G->args->global_time) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
