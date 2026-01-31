@@ -35,10 +35,6 @@ static emp_asset_manager_o* g_asset_mgr = NULL;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
-// typedef struct sprite_t {
-//
-// }sprite_t;
-
 static void main_loop(void)
 {
 	SDL_Event event;
@@ -137,7 +133,7 @@ const char* get_asset_argument(int argc, char* arguments[])
 
 int main(int argc, char* argv[])
 {
-	if (!SDL_Init(SDL_INIT_VIDEO)) {
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
 		SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
 		return 1;
 	}
@@ -184,38 +180,27 @@ int main(int argc, char* argv[])
 	emp_init_enemy_configs();
 	emp_init_weapon_configs();
 
-	u32 player = emp_create_player();
-	G->player[player].texture_asset = &g_assets->png->player_32;
+	emp_create_level(&G->assets->ldtk->world, 0);
 
-	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
-	size_t found = emp_level_query(level, emp_entity_type_player, 0);
-	if (found) {
-		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
-		float half = level->entities.grid_size * 0.5f;
-		float x = player_entity->x - half;
-		float y = player_entity->y - half;
-		G->player[player].pos.x = x * SPRITE_MAGNIFICATION;
-		G->player[player].pos.y = y * SPRITE_MAGNIFICATION;
-	} else {
-		SDL_Log("No Player config broke!");
-	}
+	SDL_AudioSpec spec;
+    Uint8 *wav_data = NULL;
+    Uint32 wav_data_len = 0;
 
-	found = 0;
-	for (;;) {
-		found = emp_level_query(level, emp_entity_type_spawner, found);
-		if (!found) {
-			break;
-		}
+    if (!SDL_LoadWAV( G->assets->wav->calm_music_loopable.path, &spec, &wav_data, &wav_data_len)) {
+        SDL_Log("Failed to load WAV: %s", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
 
-		float half = level->entities.grid_size * 0.5f;
-		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
-		float x = enemy->x - half;
-		float y = enemy->y - half;
-
-		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
-	}
-
-	emp_create_level();
+	SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+    if (!stream) {
+        SDL_Log("Failed to open audio stream: %s", SDL_GetError());
+        SDL_free(wav_data);
+        SDL_Quit();
+        return 1;
+    }
+	SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
+    SDL_ResumeAudioStreamDevice(stream);
 
 	SDL_zerop(G->args);
 
@@ -227,8 +212,6 @@ int main(int argc, char* argv[])
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
 
-	// emp_load_level_asset(&g_assets->ldtk->world);
-
 	while (g_running) {
 		frame_count++;
 		u64 currentTime = SDL_GetTicks();
@@ -239,6 +222,10 @@ int main(int argc, char* argv[])
 			frame_count = 0;
 			last_time = currentTime;
 		}
+		
+		if (SDL_GetAudioStreamQueued(stream) == 0) {
+            SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
+        }
 
 		main_loop();
 		emp_asset_manager_check_hot_reload(g_asset_mgr);

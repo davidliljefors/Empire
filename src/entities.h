@@ -41,6 +41,7 @@ typedef struct emp_weapon_conf_t
 	float delay_between_shots;
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
+	const char* path;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
@@ -126,9 +127,15 @@ typedef struct emp_tile_t
 	emp_enemy_h first_in_tile;
 } emp_tile_t;
 
+typedef struct emp_tile_health_t
+{
+	u8 value;
+} emp_tile_health_t;
+
 typedef struct emp_level_t
 {
 	emp_tile_t* tiles;
+	emp_tile_health_t *health;
 } emp_level_t;
 
 typedef struct emp_entities_t
@@ -161,5 +168,5 @@ void emp_destroy_bullet_generator(emp_bullet_generator_h handle);
 void emp_entities_init();
 void emp_entities_update();
 
-void emp_create_level(void);
+void emp_create_level(emp_asset_t* level_asset, int is_reload);
 void emp_destroy_level(void);
