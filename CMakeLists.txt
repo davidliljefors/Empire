@@ -33,12 +33,6 @@ if(NOT EMSCRIPTEN)
         EXCLUDE_FROM_ALL FALSE
     )
     set_property(TARGET Florence PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-
-    set(EMPIRE_GENERATED
-        ${CMAKE_SOURCE_DIR}/src/generated/assets_generated.c
-        ${CMAKE_SOURCE_DIR}/include/Empire/generated/assets_generated.h
-    )
-
     # Create placeholder files if they don't exist (for first-time configure)
     foreach(gen_file ${EMPIRE_GENERATED})
         if(NOT EXISTS ${gen_file})
@@ -57,11 +51,14 @@ if(NOT EMSCRIPTEN)
     )
 endif()
 
+set(EMPIRE_GENERATED
+        ${CMAKE_SOURCE_DIR}/src/generated/assets_generated.c
+        ${CMAKE_SOURCE_DIR}/include/Empire/generated/assets_generated.h
+    )
+
 set(EMPIRE_SOURCES
     src/assets.c
-    src/emp_gl.c
     src/entities.c
-    src/fast_obj.c
     src/level.c
     src/main.c
     src/stb_ds.c
@@ -76,8 +73,6 @@ set(EMPIRE_SOURCES
 set(EMPIRE_HEADERS
     include/Empire/aspect.h
     include/Empire/assets.h
-    include/Empire/emp_gl.h
-    include/Empire/fast_obj.h
     include/Empire/hash.inl
     include/Empire/level.h
     include/Empire/math.inl
@@ -102,6 +97,10 @@ add_executable(Empire
 target_include_directories(Empire PRIVATE include)
 target_link_libraries(Empire PRIVATE SDL3::SDL3)
 target_link_libraries(Empire PRIVATE SDL3_mixer::SDL3_mixer)
+
+if(EMSCRIPTEN)
+    target_link_options(Empire PRIVATE "--preload-file" "${CMAKE_CURRENT_SOURCE_DIR}/assets@/assets")
+endif()
 
 set_target_properties(Empire PROPERTIES COMPILE_WARNING_AS_ERROR ON)
 

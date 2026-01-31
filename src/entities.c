@@ -1,6 +1,7 @@
 #include "entities.h"
 
 #include "SDL3/SDL_scancode.h"
+#include "SDL3_mixer/SDL_mixer.h"
 
 #include <Empire/assets.h>
 #include <Empire/generated/assets_generated.h>
@@ -31,23 +32,9 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
-void PlayOneShot(const char* filename)
+void PlayOneShot(emp_asset_t* asset)
 {
-
-	if (!filename) {
-		return;
-	}
-	SDL_AudioSpec spec;
-	Uint8* wav_data;
-	Uint32 wav_data_len;
-
-	if (SDL_LoadWAV(filename, &spec, &wav_data, &wav_data_len)) {
-		SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
-		if (stream) {
-			SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
-			SDL_ResumeAudioStreamDevice(stream);
-		}
-	}
+	MIX_PlayAudio(G->mixer, (MIX_Audio *)asset->handle);
 }
 
 emp_vec2_t render_offset()
@@ -137,17 +124,55 @@ emp_vec2i_t get_tile(emp_vec2_t pos)
 	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
 }
 
+bool tile_in_bounds(emp_vec2i_t tile)
+{
+	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT)
+	{
+		return true;
+	}
+	return false;
+}
+
 bool check_overlap_map(emp_vec2_t pos)
 {
 	emp_vec2i_t tile = get_tile(pos);
 
-	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
-		size_t index = tile.y * EMP_LEVEL_WIDTH + tile.x;
+	if (tile_in_bounds(tile)) {
+		u64 index = tile.y * EMP_LEVEL_WIDTH + tile.x;
 		emp_tile_t* tile_data = G->level->tiles + index;
 		return tile_data->state != emp_tile_state_none;
 	}
 
 	return true;
+}
+
+bool check_overlap_bullet_enemy(emp_bullet_t* bullet, emp_enemy_t* enemy)
+{
+	emp_texture_t* texture = enemy->texture_asset->handle;
+	float size = texture->width / 2.0f;
+	return emp_vec2_dist_sq(bullet->pos, enemy->pos) < size * size;
+}
+
+u64 index_from_tile(emp_vec2i_t tile)
+{
+	return tile.y * EMP_LEVEL_WIDTH + tile.x;
+}
+
+void add_enemy_to_tile(emp_enemy_t* enemy)
+{
+	emp_vec2i_t tile = get_tile(enemy->pos);
+
+	if (tile_in_bounds(tile)) {
+		u64 index = index_from_tile(tile);
+		emp_enemy_t** first_enemy = &G->level->enemy_in_tile[index];
+		enemy->next_in_tile = *first_enemy;
+		*first_enemy = enemy;
+		G->level->enemy_in_tile[index] = enemy;
+	}
+	else
+	{
+		enemy->next_in_tile = NULL;
+	}
 }
 
 SDL_FRect source_rect(emp_asset_t* texture_asset)
@@ -224,8 +249,9 @@ void emp_init_weapon_configs()
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
+		.damage = 1.0,
 	};
-	weapons[0]->path = G->assets->wav->shot1.path;
+	weapons[0]->asset = &G->assets->wav->shot1;
 
 	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[1]->delay_between_shots = 0.2f;
@@ -236,7 +262,7 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
-	weapons[1]->path = G->assets->wav->shot1.path;
+	weapons[1]->asset = &G->assets->wav->shot1;
 
 	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
 	weapons[2]->delay_between_shots = 0.3f;
@@ -259,7 +285,7 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[2]->path = G->assets->wav->shot2.path;
+	weapons[2]->asset = &G->assets->wav->shot2;
 
 	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
 	weapons[3]->delay_between_shots = 0.3f;
@@ -294,12 +320,12 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[3]->path = G->assets->wav->shot3.path;
+	weapons[3]->asset = &G->assets->wav->shot3;
 
 	weapons[4] = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
 	weapons[4]->delay_between_shots = 0.3f;
 	weapons[4]->num_shots = 12;
-	weapons[4]->path = G->assets->wav->shot1.path;
+	weapons[4]->asset = &G->assets->wav->shot1;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -383,7 +409,7 @@ void emp_init_weapon_configs()
 	weapons[5] = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
 	weapons[5]->delay_between_shots = 0.3f;
 	weapons[5]->num_shots = total_bullets;
-	weapons[5]->path = G->assets->wav->shot2.path;
+	weapons[5]->asset = &G->assets->wav->shot2;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -399,7 +425,7 @@ void emp_init_weapon_configs()
 	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
 	weapons[6]->delay_between_shots = 0.5f;
 	weapons[6]->num_shots = total_bullets;
-	weapons[6]->path = G->assets->wav->shot3.path;
+	weapons[6]->asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -431,7 +457,7 @@ void emp_init_weapon_configs()
 	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
 	weapons[7]->delay_between_shots = 0.5f;
 	weapons[7]->num_shots = total_bullets / 2 + 1;
-	weapons[7]->path = G->assets->wav->shot3.path;
+	weapons[7]->asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -467,7 +493,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->texture_asset = bullet_conf.texture_asset;
 		bullet->mask = mask;
 	}
-	PlayOneShot(conf->path);
+	PlayOneShot(conf->asset);
 }
 
 u32 emp_create_player()
@@ -633,7 +659,7 @@ void emp_player_update(emp_player_t* player)
 		if (player->last_shot + weapons[player->weapon_index]->delay_between_shots < G->args->global_time) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x + dst.w / 2, .y = dst.y + dst.h / 2 };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
-			spawn_bullets(player->pos, delta, emp_player_bullet_mask, weapons[player->weapon_index]);
+			spawn_bullets(player->pos, delta, emp_enemy_bullet_mask, weapons[player->weapon_index]);
 			player->last_shot = G->args->global_time;
 		}
 	}
@@ -647,11 +673,13 @@ void emp_enemy_update(emp_enemy_t* enemy)
 		enemy->alive = false;
 	}
 
+	add_enemy_to_tile(enemy);
+
 	emp_vec2_t player_pos = G->player->pos;
 	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
 
 	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time) {
-		spawn_bullets(enemy->pos, dir, emp_enemy_bullet_mask, enemy->weapon);
+		spawn_bullets(enemy->pos, dir, emp_player_bullet_mask, enemy->weapon);
 		enemy->last_shot = G->args->global_time;
 	}
 
@@ -660,7 +688,19 @@ void emp_enemy_update(emp_enemy_t* enemy)
 	SDL_FRect src = source_rect(enemy->texture_asset);
 	SDL_FRect dst = render_rect(enemy->pos, texture);
 
-	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	double t = 0.3;
+	double has_taken_damage = enemy->last_damage_time + t - G->args->global_time;
+	if (has_taken_damage > 0.0)
+	{
+		u8 mod_value = 255 - (u8)(600.0 * has_taken_damage);
+		SDL_SetTextureColorMod(texture->texture, 255, mod_value, mod_value);
+		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+		SDL_SetTextureColorMod(texture->texture, 255, 255, 255);
+	}
+	else
+	{
+		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	}
 
 	draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
@@ -684,9 +724,9 @@ void emp_bullet_update(emp_bullet_t* bullet)
 
 		if (tile_data->state != emp_tile_state_none) {
 			bullet->alive = false;
-			if(tile_data->state == emp_tile_state_breakable)
+			if(bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0)
 			{
-	
+				G->level->health[index].value--;
 			}
 		}
 	}
@@ -695,6 +735,32 @@ void emp_bullet_update(emp_bullet_t* bullet)
 	SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
 	draw_rect_at(bullet->pos, 32, 255, 0, 0, 255);
+	
+	if (bullet->mask & emp_enemy_bullet_mask)
+	{
+		for (int y = -1; y <= 1; ++y)
+		{
+			for (int x = -1; x <= 1; ++x)
+			{
+				emp_vec2i_t bullet_tile = get_tile(bullet->pos);
+				bullet_tile.x += x;
+				bullet_tile.y += y;
+				emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
+				while (enemy_in_tile != NULL)
+				{
+					if (check_overlap_bullet_enemy(bullet, enemy_in_tile))
+					{
+						bullet->alive = false;
+						enemy_in_tile->health -= bullet->damage;
+						enemy_in_tile->last_damage_time = G->args->global_time;
+						goto collision_done;
+					}
+					enemy_in_tile = enemy_in_tile->next_in_tile;
+				}
+			}
+		}
+	}
+	collision_done:;
 }
 
 static emp_texture_t* emp_texture_find(const char* path)
@@ -708,23 +774,34 @@ static emp_texture_t* emp_texture_find(const char* path)
 void emp_level_update(void)
 {
 	emp_level_asset_t* level_asset = (emp_level_asset_t*)G->assets->ldtk->world.handle;
-
+	
 	memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
 
-	for (size_t li = 0; li < level_asset->sublevels.count; li++) {
+	for(u64 i = 0; i < EMP_LEVEL_TILES; ++i) 
+	{
+		if(G->level->enemy_in_tile[i] != NULL) {
+			emp_vec2_t pos;
+			pos.x = 64.0f * (i % EMP_LEVEL_WIDTH);
+			pos.y = 64.0f * (i / EMP_LEVEL_WIDTH);
+
+			draw_rect_at(pos, 64, 0, 255, 0, 255);
+		}
+	}
+
+	for (u64 li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
 
 		emp_texture_t* texture = emp_texture_find(sublevel->tiles.tilemap);
 		if (texture == NULL) {
 			continue;
 		}
-		for (size_t ti = 0; ti < sublevel->tiles.count; ti++) {
+		for (u64 ti = 0; ti < sublevel->tiles.count; ti++) {
 			float grid_size = sublevel->values.grid_size;
 			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
 			u64 lx = (u64)(desc->dst.x / grid_size);
 			u64 ly = (u64)(desc->dst.y / grid_size);
 
-			size_t index = (ly * sublevel->values.grid_width) + lx;
+			size_t index = (size_t)(ly * sublevel->values.grid_width) + (size_t)lx;
 			u8 value = sublevel->values.entries[index];
 
 			SDL_FRect src = { desc->src.x, desc->src.y, grid_size, grid_size };
@@ -748,6 +825,7 @@ void emp_level_update(void)
 			}
 		}
 	}
+	SDL_memset(G->level->enemy_in_tile, 0, sizeof(emp_enemy_t*) * EMP_LEVEL_TILES);
 }
 
 void emp_generator_uptdate(emp_bullet_generator_t* generator)
@@ -810,7 +888,7 @@ void setup_level(emp_asset_t* level_asset)
 	G->player[player].texture_asset = &G->assets->png->player_32;
 
 	emp_level_asset_t* level = (emp_level_asset_t*)level_asset->handle;
-	size_t found = emp_level_query(level, emp_entity_type_player, 0);
+	u32 found = emp_level_query(level, emp_entity_type_player, 0);
 	if (found) {
 		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
 		float half = level->entities.grid_size * 0.5f;
@@ -828,6 +906,7 @@ void setup_level(emp_asset_t* level_asset)
 		if (!found) {
 			break;
 		}
+		SDL_Log("%s", "looping");
 
 		float half = level->entities.grid_size * 0.5f;
 		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
@@ -844,14 +923,19 @@ void emp_create_level(emp_asset_t* level_asset, int is_reload)
 		G->level = SDL_malloc(sizeof(emp_level_t));
 		G->level->tiles = SDL_malloc(sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
 		G->level->health = SDL_malloc(sizeof(*G->level->health) * EMP_LEVEL_TILES);
+		G->level->enemy_in_tile = SDL_malloc(sizeof(emp_enemy_t*) * EMP_LEVEL_TILES);
 	}
 	emp_tile_t* tiles = G->level->tiles;
 	emp_tile_health_t* health = G->level->health;
+	emp_enemy_t** enemy_in_tile = G->level->enemy_in_tile;
 	SDL_memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
 	SDL_memset(G->level->health, 0, sizeof(*G->level->health) * EMP_LEVEL_TILES);
+	SDL_memset(G->level->enemy_in_tile, 0, sizeof(emp_enemy_t*) * EMP_LEVEL_TILES);
 	SDL_zerop(G->level);
 	G->level->tiles = tiles;
 	G->level->health = health;
+	G->level->enemy_in_tile = enemy_in_tile;
+	SDL_Log("%s", level_asset->path);
 	setup_level(&G->assets->ldtk->world);
 }
 

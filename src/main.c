@@ -1,5 +1,10 @@
+#include "SDL3_mixer/SDL_mixer.h"
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 #endif
 
 #include <Empire/types.h>
@@ -49,7 +54,7 @@ static void main_loop(void)
 
 	Uint64 current_time = SDL_GetTicks();
 	double delta_time = (current_time - g_last_time) / 1000.0;
-	delta_time = min(delta_time, 0.5f);
+	delta_time = SDL_min(delta_time, 0.5f);
 	g_last_time = current_time;
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;
@@ -131,6 +136,13 @@ const char* get_asset_argument(int argc, char* arguments[])
 	return "";
 }
 
+void emp_load_wav_asset(struct emp_asset_t* asset){
+	asset->handle = MIX_LoadAudio(G->mixer, asset->path, 0);
+}
+void emp_unload_wav_asset(struct emp_asset_t* asset){
+	MIX_DestroyAudio(asset->handle);
+}
+
 int main(int argc, char* argv[])
 {
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -164,17 +176,30 @@ int main(int argc, char* argv[])
 		.unload = &emp_unload_level_asset,
 	};
 
+	emp_asset_loader_t wav_loader = {
+		.load = &emp_load_wav_asset,
+		.unload = &emp_unload_wav_asset,
+	};
+
+	G = SDL_malloc(sizeof(emp_G));
+	SDL_AudioSpec spec;
+	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+    if (!G->mixer) {
+        SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
+    }
+
 	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_add_loader(g_asset_mgr, ldtk_loader, EMP_ASSET_TYPE_LDTK);
+	emp_asset_manager_add_loader(g_asset_mgr, wav_loader, EMP_ASSET_TYPE_WAV);
 
 	emp_asset_manager_check_hot_reload(g_asset_mgr);
 
-	G = SDL_malloc(sizeof(emp_G));
 	G->assets = g_assets;
 	G->args = SDL_malloc(sizeof(emp_update_args_t));
 	G->renderer = g_renderer;
+
 
 	emp_entities_init();
 	emp_init_enemy_configs();
@@ -182,7 +207,6 @@ int main(int argc, char* argv[])
 
 	emp_create_level(&G->assets->ldtk->world, 0);
 
-	SDL_AudioSpec spec;
     Uint8 *wav_data = NULL;
     Uint32 wav_data_len = 0;
 

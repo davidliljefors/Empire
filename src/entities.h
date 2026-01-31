@@ -41,12 +41,12 @@ typedef struct emp_weapon_conf_t
 	float delay_between_shots;
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
-	const char* path;
+	emp_asset_t* asset;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
 {
-	int health;
+	float health;
 	float speed;
 	emp_asset_t* texture_asset;
 	emp_enemy_update_f update;
@@ -68,11 +68,11 @@ typedef struct emp_player_t
 #define EMP_MAX_ENEMIES 256
 typedef struct emp_enemy_t
 {
-	emp_enemy_h next_in_tile;
+	emp_enemy_t* next_in_tile;
 
 	bool alive;
 	u32 generation;
-	int health;
+	float health;
 	float speed;
 	emp_vec2_t pos;
 	emp_vec2_t direction;
@@ -80,6 +80,7 @@ typedef struct emp_enemy_t
 	emp_weapon_conf_t* weapon;
 	emp_enemy_update_f update;
 	double last_shot;
+	double last_damage_time;
 	u8 dynamic_data[64];
 } emp_enemy_t;
 
@@ -87,6 +88,7 @@ typedef enum bullet_mask
 {
 	emp_player_bullet_mask = 1 << 1,
 	emp_enemy_bullet_mask = 1 << 2,
+	emp_heavy_bullet_mask = 1 << 3,
 } bullet_mask;
 
 #define EMP_MAX_BULLETS 65535
@@ -135,9 +137,11 @@ typedef struct emp_tile_health_t
 typedef struct emp_level_t
 {
 	emp_tile_t* tiles;
+	emp_enemy_t** enemy_in_tile;
 	emp_tile_health_t *health;
 } emp_level_t;
 
+struct MIX_Mixer;
 typedef struct emp_entities_t
 {
 	SDL_Renderer* renderer;
@@ -148,6 +152,7 @@ typedef struct emp_entities_t
 	emp_bullet_t* bullets;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
+	struct MIX_Mixer *mixer;
 } emp_G;
 
 extern emp_G* G;
