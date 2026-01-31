@@ -19,25 +19,6 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
-SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
-{
-	SDL_FRect rect;
-	rect.x = pos.x - (texture->width / 2);
-	rect.y = pos.y - (texture->height / 2);
-	rect.w = (float)texture->width;
-	rect.h = (float)texture->height;
-	return rect;
-}
-
-emp_vec2i_t get_tile(emp_vec2_t pos)
-{
-	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * 4.0f)));
-	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * 4.0f)));
-
-	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
-}
-
-
 void draw_rect_at(emp_vec2_t pos, float size)
 {
 	SDL_FRect rect;
@@ -48,6 +29,56 @@ void draw_rect_at(emp_vec2_t pos, float size)
 
 	SDL_SetRenderDrawColor(G->renderer, 255, 0, 0, 255); 
 	SDL_RenderRect(G->renderer, &rect);
+}
+
+emp_vec2_t render_offset()
+{
+	int render_w, render_h;
+	SDL_Window* window = SDL_GetRenderWindow(G->renderer);
+	SDL_GetWindowSize(window, &render_w, &render_h);
+	return (emp_vec2_t) { .x = (float)render_w / 2.0f, .y = (float)render_h / 1.5f };
+}
+
+SDL_FRect player_rect(emp_vec2_t pos, emp_texture_t* texture)
+{
+	SDL_FRect rect;
+	
+	rect.x = -(texture->width / 2);
+	rect.y = -(texture->height / 2);
+	rect.w = (float)texture->width;
+	rect.h = (float)texture->height;
+
+	emp_vec2_t offset = render_offset();
+	rect.x += offset.x;
+	rect.y += offset.y;
+
+	return rect;
+}
+
+SDL_FRect render_rect(emp_vec2_t pos, emp_texture_t* texture)
+{
+	SDL_FRect rect;
+	rect.x = pos.x - (texture->width / 2);
+	rect.y = pos.y - (texture->height / 2);
+	rect.w = (float)texture->width;
+	rect.h = (float)texture->height;
+
+	rect.x -= G->player->pos.x;
+	rect.y -= G->player->pos.y;
+
+	emp_vec2_t offset = render_offset();
+	rect.x += offset.x;
+	rect.y += offset.y;
+
+	return rect;
+}
+
+emp_vec2i_t get_tile(emp_vec2_t pos)
+{
+	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * 4.0f)));
+	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * 4.0f)));
+
+	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
 }
 
 SDL_FRect source_rect(emp_asset_t* texture_asset)
@@ -231,7 +262,6 @@ void emp_player_update(emp_player_t* player)
 	const bool* state = SDL_GetKeyboardState(NULL);
 	emp_player_conf_t conf = get_player_conf();
 
-
 	emp_vec2_t movement = {0};
 
 	if (state[SDL_SCANCODE_W]) {
@@ -256,15 +286,16 @@ void emp_player_update(emp_player_t* player)
 
 	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
-	SDL_FRect dstRect = center_rect(player->pos, tex);
-	SDL_RenderTexture(G->renderer, tex->texture, &src, &dstRect);
+	SDL_FRect dst = player_rect(player->pos, tex);
+	SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
 
 	emp_vec2_t mouse_pos;
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
 
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
 		if (player->shot_delay <= 0.0f) {
-			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player->pos);
+			emp_vec2_t player_screen_pos = (emp_vec2_t){ .x = dst.x, .y = dst.y };
+			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
 			spawn_bullets(player->pos, delta, wep1);
 			player->shot_delay = wep1->delay_between_shots;
 		}
@@ -303,7 +334,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 	}
 
 	emp_texture_t* tex = bullet->texture_asset->handle;
-	SDL_FRect dstRect = center_rect(bullet->pos, bullet->texture_asset->handle);
+	SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
 	draw_rect_at(bullet->pos, 32);
 }
@@ -325,7 +356,7 @@ void emp_level_update()
 				emp_vec2_t pos;
 				pos.x = (float)(x * 16.0f * 4.0);
 				pos.y = (float)(y * 16.0f * 4.0);
-				SDL_FRect dst = center_rect(pos, texture);
+				SDL_FRect dst = render_rect(pos, texture);
 				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 				draw_rect_at(pos, 16.0f*4.0f);
 				tile->occupied = true;
