@@ -6,6 +6,24 @@
 
 typedef struct emp_asset_t emp_asset_t;
 
+typedef struct emp_enemy_h
+{
+	u32 index;
+	u32 generation;
+} emp_enemy_h;
+
+typedef struct emp_bullet_h
+{
+	u32 index;
+	u32 generation;
+} emp_bullet_h;
+
+typedef struct emp_bullet_generator_h
+{
+	u32 index;
+	u32 generation;
+} emp_bullet_generator_h;
+
 typedef struct emp_bullet_conf_t
 {
 	float speed;
@@ -29,7 +47,7 @@ typedef struct emp_player_t
 	bool alive;
 	emp_vec2_t pos;
 	emp_asset_t* texture_asset;
-	float shot_delay;
+	double last_shot;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
@@ -37,13 +55,10 @@ typedef struct emp_enemy_t
 {
 	bool alive;
 	u32 generation;
+	emp_vec2_t pos;
+	emp_asset_t* texture_asset;
+	emp_bullet_generator_h bullet_generator;
 } emp_enemy_t;
-
-typedef struct emp_enemy_h
-{
-	u32 index;
-	u32 generation;
-} emp_enemy_h;
 
 #define EMP_MAX_BULLETS 65535
 typedef struct emp_bullet_t
@@ -57,24 +72,13 @@ typedef struct emp_bullet_t
 	emp_asset_t* texture_asset;
 } emp_bullet_t;
 
-typedef struct emp_bullet_h
-{
-	u32 index;
-	u32 generation;
-} emp_bullet_h;
-
 #define EMP_MAX_BULLET_GENERATORS 1024
 typedef struct emp_bullet_generator_t
 {
 	bool alive;
 	u32 generation;
+	emp_weapon_conf_t weapons[16];
 } emp_bullet_generator_t;
-
-typedef struct emp_bullet_generator_h
-{
-	u32 index;
-	u32 generation;
-} emp_bullet_generator_h;
 
 #define EMP_TILE_SIZE 16.0f
 #define EMP_LEVEL_WIDTH 1024
