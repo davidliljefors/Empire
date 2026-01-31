@@ -67,6 +67,7 @@ set(EMPIRE_SOURCES
     src/text.c
     src/ui.c
     src/util.c
+    src/yyjson.c
 )
 
 set(EMPIRE_HEADERS
@@ -84,6 +85,7 @@ set(EMPIRE_HEADERS
     include/Empire/types.h
     include/Empire/ui.h
     include/Empire/util.h
+    include/Empire/yyjson.h
     src/entities.h
 )
 

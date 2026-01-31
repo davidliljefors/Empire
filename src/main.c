@@ -175,13 +175,14 @@ void emp_png_load_func(emp_asset_t* asset)
 		width, height, SDL_PIXELFORMAT_RGBA32, data, width * 4);
 
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(g_renderer, surface);
+	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 	SDL_DestroySurface(surface);
 	stbi_image_free(data);
 	emp_texture_t* emp_tex = SDL_malloc(sizeof(emp_texture_t));
 
 	emp_tex->texture = texture;
-	emp_tex->width = width;
-	emp_tex->height = height;
+	emp_tex->width = width * 4.0f;
+	emp_tex->height = height * 4.0f;
 
 	asset->handle = emp_tex;
 }
@@ -216,8 +217,8 @@ int main(int argc, char* argv[])
 
 	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
 
-	SDL_SetRenderVSync(g_renderer, 0);
-	SDL_SetRenderScale(g_renderer, 2, 2);
+	SDL_SetRenderVSync(g_renderer, 1);
+	//SDL_SetRenderScale(g_renderer, 2, 2);
 	
 
 	if (!g_window) {
@@ -237,11 +238,8 @@ int main(int argc, char* argv[])
 	};
 
 	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
-	emp_asset_manager_add_loader(g_asset_mgr, mesh_loader, EMP_ASSET_TYPE_OBJ);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_check_hot_reload(g_asset_mgr);
-
-	g_material = emp_material_create(g_assets->vert->cube.data, g_assets->frag->cube.data);
 
 	emp_entities_init();
 
