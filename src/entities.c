@@ -548,6 +548,7 @@ void emp_player_update(emp_player_t* player)
 
 	if (state[SDL_SCANCODE_A]) {
 		movement.x = -conf.speed;
+		player->flip = true;
 	}
 
 	if (state[SDL_SCANCODE_S]) {
@@ -556,6 +557,7 @@ void emp_player_update(emp_player_t* player)
 
 	if (state[SDL_SCANCODE_D]) {
 		movement.x = conf.speed;
+		player->flip = false;
 	}
 
 	movement = emp_vec2_normalize(movement);
@@ -564,6 +566,8 @@ void emp_player_update(emp_player_t* player)
 	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
 	SDL_FRect dst = player_rect(player->pos, tex);
+	dst.x = player->flip ? dst.x+dst.w : dst.x;
+	dst.w = player->flip ? -dst.w : dst.w;
 	SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
 
 	emp_vec2_t mouse_pos;
