@@ -176,9 +176,9 @@ static char* load_shader_from_asset(emp_buffer shader_data)
 	}
 
 	size_t header_len = strlen(SHADER_HEADER);
-	char* result = (char*)SDL_malloc(header_len + shader_data.size + 1);
+	char* result = (char*)SDL_malloc(header_len + (size_t)shader_data.size + 1llu);
 	memcpy(result, SHADER_HEADER, header_len);
-	memcpy(result + header_len, shader_data.data, shader_data.size);
+	memcpy(result + header_len, shader_data.data, (size_t)shader_data.size);
 	result[header_len + shader_data.size] = '\0';
 
 	return result;

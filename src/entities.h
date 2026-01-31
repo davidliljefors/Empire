@@ -41,7 +41,7 @@ typedef struct emp_weapon_conf_t
 	float delay_between_shots;
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
-	const char* path;
+	emp_asset_t* asset;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
@@ -139,6 +139,7 @@ typedef struct emp_level_t
 	emp_tile_health_t *health;
 } emp_level_t;
 
+struct MIX_Mixer;
 typedef struct emp_entities_t
 {
 	SDL_Renderer* renderer;
@@ -149,6 +150,7 @@ typedef struct emp_entities_t
 	emp_bullet_t* bullets;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
+	struct MIX_Mixer *mixer;
 } emp_G;
 
 extern emp_G* G;

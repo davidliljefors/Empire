@@ -215,7 +215,7 @@ emp_level_entity_t* emp_level_get(emp_level_asset_t* level, size_t at)
 void emp_load_level_asset(struct emp_asset_t* asset)
 {
 	emp_buffer* buffer = &asset->data;
-	yyjson_doc* doc = yyjson_read((const char*)buffer->data, buffer->size, 0);
+	yyjson_doc* doc = yyjson_read((const char*)buffer->data, (size_t)buffer->size, 0);
 
 	yyjson_val* root = yyjson_doc_get_root(doc);
 	yyjson_val* sublevels = yyjson_obj_get(root, "levels");
