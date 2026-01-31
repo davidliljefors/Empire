@@ -127,9 +127,15 @@ typedef struct emp_tile_t
 	emp_enemy_h first_in_tile;
 } emp_tile_t;
 
+typedef struct emp_tile_health_t
+{
+	u8 value;
+} emp_tile_health_t;
+
 typedef struct emp_level_t
 {
 	emp_tile_t* tiles;
+	emp_tile_health_t *health;
 } emp_level_t;
 
 typedef struct emp_entities_t

@@ -838,13 +838,16 @@ void emp_create_level(emp_asset_t* level_asset, int is_reload)
 {
 	if (!is_reload) {
 		G->level = SDL_malloc(sizeof(emp_level_t));
-		G->level->tiles = SDL_malloc(sizeof(emp_tile_t) * EMP_LEVEL_TILES);
+		G->level->tiles = SDL_malloc(sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
+		G->level->health = SDL_malloc(sizeof(*G->level->health) * EMP_LEVEL_TILES);
 	}
 	emp_tile_t* tiles = G->level->tiles;
-	SDL_memset(G->level->tiles, 0, sizeof(emp_tile_t) * EMP_LEVEL_TILES);
+	emp_tile_health_t* health = G->level->health;
+	SDL_memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
+	SDL_memset(G->level->health, 0, sizeof(*G->level->health) * EMP_LEVEL_TILES);
 	SDL_zerop(G->level);
 	G->level->tiles = tiles;
-
+	G->level->health = health;
 	setup_level(&G->assets->ldtk->world);
 }
 
