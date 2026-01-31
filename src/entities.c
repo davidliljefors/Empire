@@ -19,6 +19,7 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
+
 SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
 {
 	SDL_FRect rect;
@@ -27,6 +28,19 @@ SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
 	rect.w = (float)texture->width;
 	rect.h = (float)texture->height;
 	return rect;
+}
+
+
+void draw_rect_at(emp_vec2_t pos, float size)
+{
+	SDL_FRect rect;
+	rect.x = pos.x - (size / 2);
+	rect.y = pos.y - (size  / 2);
+	rect.w = size;
+	rect.h = size;
+
+	SDL_SetRenderDrawColor(G->renderer, 255, 0, 0, 255); 
+	SDL_RenderRect(G->renderer, &rect);
 }
 
 SDL_FRect source_rect(emp_asset_t* texture_asset)
@@ -202,6 +216,7 @@ emp_bullet_generator_h emp_create_bullet_generator()
 
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 {
+
 }
 
 void emp_player_update(emp_player_t* player)
@@ -243,8 +258,8 @@ void emp_player_update(emp_player_t* player)
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
 		if (player->shot_delay <= 0.0f) {
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player->pos);
-			spawn_bullets(player->pos, delta, wep2);
-			player->shot_delay = wep2->delay_between_shots;
+			spawn_bullets(player->pos, delta, wep1);
+			player->shot_delay = wep1->delay_between_shots;
 		}
 	}
 
@@ -255,7 +270,7 @@ void emp_enemy_uptdate(emp_enemy_t* enemy)
 {
 }
 
-void emp_bullet_uptdate(emp_bullet_t* bullet)
+void emp_bullet_update(emp_bullet_t* bullet)
 {
 	bullet->life_left -= G->args->dt;
 
@@ -266,32 +281,48 @@ void emp_bullet_uptdate(emp_bullet_t* bullet)
 		bullet->alive = false;
 	}
 
+	int tile_x = (int)(roundf(bullet->pos.x / (EMP_TILE_SIZE * 4.0f)));
+	int tile_y = (int)(roundf(bullet->pos.y / (EMP_TILE_SIZE * 4.0f)));
+
+	if (tile_x >= 0 && tile_x < (int)EMP_LEVEL_WIDTH && 
+		tile_y >= 0 && tile_y < (int)EMP_LEVEL_HEIGHT) 
+	{
+		u32 index = ((u32)tile_y * EMP_LEVEL_WIDTH) + (u32)tile_x;
+		emp_tile_t* tile = &G->level->tiles[index];
+
+		if (tile->occupied)
+		{
+			bullet->alive = false;
+		}
+	}
+
 	emp_texture_t* tex = bullet->texture_asset->handle;
-	SDL_FRect dstRect = (SDL_FRect) { bullet->pos.x, bullet->pos.y, (float)tex->width, (float)tex->height };
+	SDL_FRect dstRect = center_rect(bullet->pos, bullet->texture_asset->handle);
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
+	draw_rect_at(bullet->pos, 32);
 }
 
 void emp_level_update()
 {
 	for (u32 i = 0; i < EMP_LEVEL_TILES; ++i)
 	{
-		emp_tile_t* tiles = &G->level->tiles[i];
-		if (tiles->texture_asset)
+		emp_tile_t* tile = &G->level->tiles[i];
+		if (tile->texture_asset)
 		{
-			emp_texture_t* texture = tiles->texture_asset->handle;
+			emp_texture_t* texture = tile->texture_asset->handle;
+			u32 x = i % EMP_LEVEL_WIDTH;
+			u32 y = i / EMP_LEVEL_WIDTH;
 
-			u32 x = i / EMP_LEVEL_WIDTH;
-			u32 y = i % EMP_LEVEL_WIDTH;
-
-			if (x == 0 || y == 0)
+			if (x == 7)
 			{
-				SDL_FRect src = source_rect(tiles->texture_asset);
+				SDL_FRect src = source_rect(tile->texture_asset);
 				emp_vec2_t pos;
-				pos.x = x * 16.0f;
-				pos.y = y * 16.0f;
-
+				pos.x = (float)(x * 16.0f * 4.0);
+				pos.y = (float)(y * 16.0f * 4.0);
 				SDL_FRect dst = center_rect(pos, texture);
 				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+				draw_rect_at(pos, 16.0f*4.0f);
+				tile->occupied = true;
 			}
 		}
 	}
@@ -333,7 +364,7 @@ void emp_entities_update()
 	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i) {
 		emp_bullet_t* bullet = &G->bullets[i];
 		if (bullet->alive) {
-			emp_bullet_uptdate(bullet);
+			emp_bullet_update(bullet);
 		}
 	}
 
@@ -353,13 +384,10 @@ void emp_create_level(void)
 	SDL_zerop(G->level);
 	G->level->tiles = SDL_malloc(sizeof(emp_tile_t) * EMP_LEVEL_TILES);
 	SDL_memset(G->level->tiles, 0, sizeof(emp_tile_t) * EMP_LEVEL_TILES);
-
+	
 	for (u32 i = 0; i < EMP_LEVEL_TILES; ++i)
 	{
-		if (i % 16 == 0)
-		{
-			G->level->tiles[i].texture_asset = &G->assets->png->tilemap;
-		}
+		G->level->tiles[i].texture_asset = &G->assets->png->brick;
 	}
 }
 

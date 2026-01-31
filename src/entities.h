@@ -74,6 +74,7 @@ typedef struct emp_bullet_generator_h
 	u32 generation;
 } emp_bullet_generator_h;
 
+#define EMP_TILE_SIZE 16.0f
 #define EMP_LEVEL_WIDTH 1024
 #define EMP_LEVEL_HEIGHT 1024
 #define EMP_LEVEL_TILES EMP_LEVEL_WIDTH * EMP_LEVEL_HEIGHT
@@ -81,6 +82,7 @@ typedef struct emp_bullet_generator_h
 typedef struct emp_tile_t
 {
 	emp_asset_t* texture_asset;
+	bool occupied;
 } emp_tile_t;
 
 typedef struct emp_level_t
