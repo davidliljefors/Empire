@@ -17,7 +17,7 @@ typedef struct emp_weapon_conf_t
 {
 	float delay_between_shots;
 	u32 num_shots;
-	emp_bullet_conf_t shots[8];
+	emp_bullet_conf_t shots[36];
 } emp_weapon_conf_t;
 
 #define EMP_MAX_PLAYERS 1
