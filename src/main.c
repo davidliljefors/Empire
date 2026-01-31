@@ -2,6 +2,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <Empire/types.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -49,7 +53,7 @@ static void main_loop(void)
 
 	Uint64 current_time = SDL_GetTicks();
 	double delta_time = (current_time - g_last_time) / 1000.0;
-	delta_time = min(delta_time, 0.5f);
+	delta_time = SDL_min(delta_time, 0.5f);
 	g_last_time = current_time;
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;

@@ -737,7 +737,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 
 		if (tile_data->state != emp_tile_state_none) {
 			bullet->alive = false;
-			if(bullet->mask & emp_tile_state_breakable && G->level->health[index].value > 0)
+			if(bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0)
 			{
 				G->level->health[index].value--;
 			}
@@ -901,7 +901,7 @@ void setup_level(emp_asset_t* level_asset)
 	G->player[player].texture_asset = &G->assets->png->player_32;
 
 	emp_level_asset_t* level = (emp_level_asset_t*)level_asset->handle;
-	size_t found = emp_level_query(level, emp_entity_type_player, 0);
+	u32 found = emp_level_query(level, emp_entity_type_player, 0);
 	if (found) {
 		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
 		float half = level->entities.grid_size * 0.5f;
@@ -919,6 +919,7 @@ void setup_level(emp_asset_t* level_asset)
 		if (!found) {
 			break;
 		}
+		SDL_Log("%s", "looping");
 
 		float half = level->entities.grid_size * 0.5f;
 		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
@@ -947,6 +948,7 @@ void emp_create_level(emp_asset_t* level_asset, int is_reload)
 	G->level->tiles = tiles;
 	G->level->health = health;
 	G->level->enemy_in_tile = enemy_in_tile;
+	SDL_Log("%s", level_asset->path);
 	setup_level(&G->assets->ldtk->world);
 }
 

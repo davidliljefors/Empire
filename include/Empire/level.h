@@ -9,7 +9,7 @@ struct emp_asset_t;
 typedef struct emp_value_buffer_t
 {
 	u8 values[emp_value_buffer_capacity];
-	size_t count;
+	u32 count;
 } emp_value_buffer_t;
 
 typedef struct emp_tile_desc_t
@@ -24,14 +24,14 @@ typedef struct emp_value_grid_t
 	u32 grid_width;
 	u32 grid_height;
 	u8* entries;
-	size_t count;
+	u32 count;
 } emp_value_grid_t;
 
 typedef struct emp_tiles_data_t
 {
 	char* tilemap;
 	emp_tile_desc_t* values;
-	size_t count;
+	u32 count;
 } emp_tiles_data_t;
 
 typedef struct emp_sublevel_t
@@ -45,13 +45,13 @@ typedef struct emp_sublevel_t
 typedef struct emp_sublevel_list_t
 {
 	emp_sublevel_t entries[emp_sublevel_capacity];
-	size_t count;
+	u32 count;
 } emp_sublevel_list_t;
 
 typedef struct emp_tile_desc_list_t
 {
 	emp_tile_desc_t entries[emp_value_buffer_capacity];
-	size_t count;
+	u32 count;
 } emp_tile_desc_list_t;
 
 typedef enum emp_entity_type {
@@ -82,7 +82,7 @@ typedef struct emp_level_entities_list_t
 	float grid_size;
 
 	emp_level_entity_t entries[emo_entities_capacity];
-	size_t count;
+	u32 count;
 } emp_level_entities_list_t;
 
 typedef struct emp_level_asset_t
@@ -93,8 +93,8 @@ typedef struct emp_level_asset_t
 	emp_level_entities_list_t entities;
 } emp_level_asset_t;
 
-size_t emp_level_query(emp_level_asset_t* level, emp_entity_type type, size_t offset);
-emp_level_entity_t* emp_level_get(emp_level_asset_t* level, size_t at);
+u32 emp_level_query(emp_level_asset_t* level, emp_entity_type type, u32 offset);
+emp_level_entity_t* emp_level_get(emp_level_asset_t* level, u32 at);
 
 void emp_load_level_asset(struct emp_asset_t* asset);
 void emp_unload_level_asset(struct emp_asset_t* asset);
