@@ -71,9 +71,11 @@ typedef struct emp_enemy_t
 	int health;
 	float speed;
 	emp_vec2_t pos;
+	emp_vec2_t direction;
 	emp_asset_t* texture_asset;
 	emp_weapon_conf_t* weapon;
 	emp_enemy_update_f update;
+	double last_shot;
 	u8 dynamic_data[64];
 } emp_enemy_t;
 

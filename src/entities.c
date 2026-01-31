@@ -14,9 +14,10 @@ emp_weapon_conf_t* weapons[10];
 
 typedef struct emp_roamer_data_t
 {
-	emp_vec2_t direction;
-	float rotation_offset;
+	float time_until_change;
 } emp_roamer_data_t;
+
+u32 rng_state;
 
 typedef struct emp_player_conf_t
 {
@@ -147,36 +148,36 @@ SDL_FRect source_rect(emp_asset_t* texture_asset)
 }
 
 
+u32 simple_rng(u32* state)
+{
+	*state = *state * 1103515245u + 12345u;
+	return (*state >> 16) & 0x7FFF;
+}
+
 void enemy_roamer_update(emp_enemy_t* enemy)
 {
 	emp_roamer_data_t* data = (emp_roamer_data_t*)&enemy->dynamic_data[0];
 	float dt = G->args->dt;
 
-	u64 seed = (u64)enemy;
-
-	float base_rotation_speed = 30.0f + (float)((seed >> 4) % 40);
-	float direction_bias = ((seed >> 8) % 2 == 0) ? 1.0f : -1.0f;
-	float wobble_frequency = 0.5f + (float)((seed >> 12) % 10) * 0.1f;
-	float wobble_amplitude = 15.0f + (float)((seed >> 16) % 20);
-
-	data->rotation_offset += dt * wobble_frequency * 6.28318f;
-	if (data->rotation_offset > 6.28318f) {
-		data->rotation_offset -= 6.28318f;
+	data->time_until_change -= dt;
+	
+	if (data->time_until_change <= 0.0f) {
+		float angle = (float)(simple_rng(&rng_state) % 360);
+		enemy->direction = emp_vec2_rotate((emp_vec2_t){1.0f, 0.0f}, angle);
+		
+		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
 	}
 
-	float rotation_this_frame = (base_rotation_speed * direction_bias + sinf(data->rotation_offset) * wobble_amplitude) * dt;
-
-	data->direction = emp_vec2_rotate(data->direction, rotation_this_frame);
-	data->direction = emp_vec2_normalize(data->direction);
-
-	float move_speed = 80.0f + (float)((seed >> 20) % 40);
-	emp_vec2_t movement = emp_vec2_mul(data->direction, move_speed * dt);
+	float move_speed = 120.0f;
+	emp_vec2_t movement = emp_vec2_mul(enemy->direction, move_speed * dt);
 
 	emp_vec2_t new_pos = emp_vec2_add(enemy->pos, movement);
 	if (!check_overlap_map(new_pos)) {
 		enemy->pos = new_pos;
 	} else {
-		data->direction = emp_vec2_rotate(data->direction, 90.0f * direction_bias);
+		float angle = (float)(simple_rng(&rng_state) % 360);
+		enemy->direction = emp_vec2_rotate((emp_vec2_t){1.0f, 0.0f}, angle);
+		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
 	}
 }
 
@@ -459,6 +460,11 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 			emp_enemy_conf_t* conf = enemy_confs[enemy_conf_index];
 			SDL_memset(&enemy->dynamic_data, 0 , 64);
 			enemy->pos = pos;
+			
+			emp_vec2_t player_pos = G->player->pos;
+			emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(enemy->pos, player_pos));
+
+			enemy->direction = dir;
 			enemy->generation++;
 			enemy->health = conf->health;
 			enemy->update = conf->update;
@@ -634,14 +640,21 @@ void emp_enemy_update(emp_enemy_t* enemy)
 	}
 
 	emp_vec2_t player_pos = G->player->pos;
-	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(enemy->pos, player_pos));
+	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
 
-	spawn_bullets(enemy->pos, dir, enemy->weapon);
+	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time)
+	{
+		spawn_bullets(enemy->pos, dir, enemy->weapon);
+		enemy->last_shot = G->args->global_time;
+	}
+	emp_texture_t* texture = enemy->texture_asset->handle;
 
 	SDL_FRect src = source_rect(enemy->texture_asset);
-	SDL_FRect dst = render_rect(enemy->pos, enemy->texture_asset->handle);
+	SDL_FRect dst = render_rect(enemy->pos, texture);
 
-	SDL_RenderTexture(G->renderer, enemy->texture_asset->handle, &src, &dst);
+	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+
+	draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
 
 void emp_bullet_update(emp_bullet_t* bullet)
