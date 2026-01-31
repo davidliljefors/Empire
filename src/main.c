@@ -58,7 +58,7 @@ static void main_loop(void)
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;
 
-	SDL_SetRenderDrawColor(g_renderer, 108, 129, 161, 1);
+	SDL_SetRenderDrawColor(g_renderer, 17, 25, 45, 1);
 	SDL_RenderClear(g_renderer);
 
 	emp_draw_text(100, 100, "hello world", &g_assets->ttf->bauhs93);
