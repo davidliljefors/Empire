@@ -162,6 +162,15 @@
 							<File>
 								<Path>include/Empire/math.inl</Path>
 							</File>
+							<File>
+								<Path>include/Empire/stb_truetype.h</Path>
+							</File>
+							<File>
+								<Path>include/Empire/ui.h</Path>
+							</File>
+							<File>
+								<Path>include/Empire/text.h</Path>
+							</File>
 						</Children>
 					</Folder>
 				</Children>
@@ -228,6 +237,15 @@
 					</Folder>
 					<File>
 						<Path>src/stb_image.c</Path>
+					</File>
+					<File>
+						<Path>src/stb_truetype.c</Path>
+					</File>
+					<File>
+						<Path>src/ui.c</Path>
+					</File>
+					<File>
+						<Path>src/text.c</Path>
 					</File>
 				</Children>
 			</Folder>
