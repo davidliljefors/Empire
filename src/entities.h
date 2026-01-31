@@ -67,7 +67,7 @@ typedef struct emp_player_t
 #define EMP_MAX_ENEMIES 256
 typedef struct emp_enemy_t
 {
-	emp_enemy_h next_in_tile;
+	emp_enemy_t* next_in_tile;
 
 	bool alive;
 	u32 generation;
@@ -129,6 +129,7 @@ typedef struct emp_tile_t
 typedef struct emp_level_t
 {
 	emp_tile_t* tiles;
+	emp_enemy_t** enemy_in_tile;
 } emp_level_t;
 
 typedef struct emp_entities_t
