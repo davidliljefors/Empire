@@ -94,6 +94,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, emp_weapon_conf_t* conf
 			bullet->vel = emp_vec2_rotate(bullet->vel, bullet_conf.start_angle);
 		}
 		bullet->life_left = bullet_conf.lifetime;
+		bullet->damage = bullet_conf.damage;
 		bullet->pos = pos;
 		bullet->texture_asset = bullet_conf.texture_asset;
 	}
@@ -108,7 +109,7 @@ u32 emp_create_player()
 
 emp_enemy_h emp_create_enemy()
 {
-	for (u32 i = 0; i < EMP_MAX_PLAYERS; ++i) {
+	for (u32 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
 		if (!enemy->alive) {
 			enemy->generation++;
@@ -131,6 +132,12 @@ emp_bullet_h emp_create_bullet()
 		emp_bullet_t* bullet = &G->bullets[i];
 		if (!bullet->alive) {
 			bullet->generation++;
+			// Initialize fields BEFORE setting alive to prevent update with stale data
+			bullet->pos = (emp_vec2_t) { 0 };
+			bullet->vel = (emp_vec2_t) { 0 };
+			bullet->life_left = 0.0f;
+			bullet->damage = 0.0f;
+			bullet->texture_asset = NULL;
 			bullet->alive = true;
 			return (emp_bullet_h) { .index = i, .generation = bullet->generation };
 		}
@@ -223,6 +230,7 @@ void emp_bullet_uptdate(emp_update_args_t* args, emp_bullet_t* bullet)
 
 	if (bullet->life_left <= 0.0f) {
 		bullet->alive = false;
+		SDL_Log("destroy bullet");
 	}
 
 	emp_texture_t* tex = bullet->texture_asset->handle;
@@ -250,6 +258,8 @@ void emp_entities_init()
 
 void emp_entities_update(emp_update_args_t* args)
 {
+	SDL_Log("dt: %f", args->dt);
+	
 	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
 		if (player->alive) {
@@ -274,7 +284,7 @@ void emp_entities_update(emp_update_args_t* args)
 	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
 		emp_bullet_generator_t* generator = &G->generators[i];
 		if (generator->alive) {
-			emp_generator_uptdate(args, generator);
+			emp_generator_uptdate (args, generator);
 		}
 	}
 }
