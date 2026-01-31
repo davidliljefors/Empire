@@ -682,6 +682,10 @@ void emp_bullet_update(emp_bullet_t* bullet)
 
 		if (tile_data->state != emp_tile_state_none) {
 			bullet->alive = false;
+			if(tile_data->state == emp_tile_state_breakable)
+			{
+	
+			}
 		}
 	}
 
