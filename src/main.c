@@ -60,7 +60,7 @@ static void main_loop(void)
 	SDL_SetRenderDrawColor(g_renderer, 17, 25, 45, 1);
 	SDL_RenderClear(g_renderer);
 
-	emp_draw_text(100, 100, "hello world", &g_assets->ttf->bauhs93);
+	emp_draw_text(100, 100, "hello world", &g_assets->ttf->asepritefont);
 
 	emp_entities_update();
 
@@ -168,6 +168,7 @@ int main(int argc, char* argv[])
 	};
 
 	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
+	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_add_loader(g_asset_mgr, ldtk_loader, EMP_ASSET_TYPE_LDTK);
 
