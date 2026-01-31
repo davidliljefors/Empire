@@ -7,6 +7,16 @@ static inline emp_vec2_t emp_vec2_add(emp_vec2_t a, emp_vec2_t b)
     return (emp_vec2_t){ a.x + b.x, a.y + b.y };
 }
 
+static inline emp_vec2_t emp_vec2_addx(emp_vec2_t a, emp_vec2_t b)
+{
+    return (emp_vec2_t){ a.x + b.x, a.y };
+}
+
+static inline emp_vec2_t emp_vec2_addy(emp_vec2_t a, emp_vec2_t b)
+{
+    return (emp_vec2_t){ a.x, a.y + b.y };
+}
+
 static inline emp_vec2_t emp_vec2_sub(emp_vec2_t a, emp_vec2_t b)
 {
     return (emp_vec2_t){ a.x - b.x, a.y - b.y };

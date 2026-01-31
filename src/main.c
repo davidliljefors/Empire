@@ -180,6 +180,8 @@ int main(int argc, char* argv[])
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->player_32;
+	G->player[player].pos.x = 256.0f;
+	G->player[player].pos.y = 256.0f;
 	emp_create_level();
 	SDL_zerop(G->args);
 

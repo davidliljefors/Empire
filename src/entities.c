@@ -103,8 +103,19 @@ emp_vec2i_t get_tile(emp_vec2_t pos)
 {
 	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * 4.0f)));
 	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * 4.0f)));
-
+	
 	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
+}
+
+bool check_overlap_map(emp_vec2_t pos)
+{
+	emp_vec2i_t tile = get_tile(pos);
+
+	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
+		return G->level->tiles[tile.y * EMP_LEVEL_WIDTH + tile.x].occupied;
+	}
+
+	return true;
 }
 
 SDL_FRect source_rect(emp_asset_t* texture_asset)
@@ -484,8 +495,6 @@ void emp_player_update(emp_player_t* player)
 	movement = emp_vec2_normalize(movement);
 	movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
 
-	player->pos = emp_vec2_add(player->pos, movement);
-
 	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
 	SDL_FRect dst = player_rect(player->pos, tex);
@@ -494,6 +503,21 @@ void emp_player_update(emp_player_t* player)
 	emp_vec2_t mouse_pos;
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
 
+
+	emp_vec2_t pos_dx = emp_vec2_addx(player->pos, movement);
+	if (check_overlap_map(pos_dx))
+	{
+		movement.x = -movement.x;
+	}
+	
+	emp_vec2_t pos_dy = emp_vec2_addy(player->pos, movement);
+	if (check_overlap_map(pos_dy))
+	{
+		movement.y = -movement.y;
+	}
+
+	player->pos = emp_vec2_add(player->pos, movement);
+	
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
 		if (player->shot_delay <= 0.0f) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
