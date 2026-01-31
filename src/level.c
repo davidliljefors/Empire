@@ -73,22 +73,38 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 	{
 		yyjson_val* type = yyjson_obj_get(field, "__type");
 		if (type) {
-			if (SDL_strcmp(yyjson_get_str(type), "LocalEnum.enemy") == 0) {
+			const char* str = yyjson_get_str(type);
+			if (SDL_strcmp(str, "LocalEnum.behaviour") == 0) {
 				out_entity->type = emp_entity_type_spawner;
 				yyjson_val* value = yyjson_obj_get(field, "__value");
 				if (value) {
-					if (SDL_strcmp(yyjson_get_str(value), "crab") == 0) {
+					if (SDL_strcmp(yyjson_get_str(value), "roamer") == 0) {
 						out_entity->behaviour = emp_behaviour_type_roamer;
+						return 1;
+					}
+					if (SDL_strcmp(yyjson_get_str(value), "chaser") == 0) {
+						out_entity->behaviour = emp_behaviour_type_chaser;
 						return 1;
 					}
 				}
 			}
 
-			if (SDL_strcmp(yyjson_get_str(type), "LocalEnum.boss") == 0) {
+	/*		if (SDL_strcmp(str, "LocalEnum.weapon") == 0) {
+				out_entity->type = emp_entity_type_spawner;
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					if (SDL_strcmp(yyjson_get_str(value), "musket") == 0) {
+						out_entity->behaviour = emp_behaviour_type_roamer;
+						return 1;
+					}
+				}
+			}*/
+
+			if (SDL_strcmp(str, "LocalEnum.boss") == 0) {
 				out_entity->type = emp_entity_type_boss;
 				yyjson_val* value = yyjson_obj_get(field, "__value");
 				if (value) {
-					if (SDL_strcmp(yyjson_get_str(value), "crab") == 0) {
+					if (SDL_strcmp(yyjson_get_str(value), "octopus") == 0) {
 						out_entity->behaviour = emp_behaviour_type_roamer;
 						return 1;
 					}
@@ -118,10 +134,10 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 	{
 		emp_level_entity_t entity = { 0 };
 
-		float x = (float)yyjson_get_num(yyjson_obj_get(instance, "__worldX"));
-		float y = (float)yyjson_get_num(yyjson_obj_get(instance, "__worldY"));
-		entity.x = x;
-		entity.y = y;
+		entity.x = (float)yyjson_get_num(yyjson_obj_get(instance, "__worldX"));
+		entity.y = (float)yyjson_get_num(yyjson_obj_get(instance, "__worldY"));
+		entity.w = (float)yyjson_get_num(yyjson_obj_get(instance, "width"));
+		entity.h = (float)yyjson_get_num(yyjson_obj_get(instance, "height"));
 
 		yyjson_val* identifier = yyjson_obj_get(instance, "__identifier");
 
@@ -168,6 +184,7 @@ void emp_load_sublevel(emp_level_asset_t* level, size_t index, yyjson_val* data)
 		}
 
 		if (SDL_strcmp(str, "entities") == 0) {
+			level->entities.grid_size = (float)yyjson_get_num(yyjson_obj_get(layer, "__gridSize"));
 			yyjson_val* instances = yyjson_obj_get(layer, "entityInstances");
 			emp_level_add_entities(level, instances);
 		}

@@ -1,4 +1,5 @@
 #include "entities.h"
+
 #include "SDL3/SDL_scancode.h"
 
 #include <Empire/assets.h>
@@ -150,7 +151,6 @@ SDL_FRect source_rect(emp_asset_t* texture_asset)
 	return rect;
 }
 
-
 u32 simple_rng(u32* state)
 {
 	*state = *state * 1103515245u + 12345u;
@@ -163,11 +163,11 @@ void enemy_roamer_update(emp_enemy_t* enemy)
 	float dt = G->args->dt;
 
 	data->time_until_change -= dt;
-	
+
 	if (data->time_until_change <= 0.0f) {
 		float angle = (float)(simple_rng(&rng_state) % 360);
-		enemy->direction = emp_vec2_rotate((emp_vec2_t){1.0f, 0.0f}, angle);
-		
+		enemy->direction = emp_vec2_rotate((emp_vec2_t) { 1.0f, 0.0f }, angle);
+
 		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
 	}
 
@@ -179,12 +179,10 @@ void enemy_roamer_update(emp_enemy_t* enemy)
 		enemy->pos = new_pos;
 	} else {
 		float angle = (float)(simple_rng(&rng_state) % 360);
-		enemy->direction = emp_vec2_rotate((emp_vec2_t){1.0f, 0.0f}, angle);
+		enemy->direction = emp_vec2_rotate((emp_vec2_t) { 1.0f, 0.0f }, angle);
 		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
 	}
 }
-
-
 
 void emp_init_enemy_configs()
 {
@@ -461,9 +459,9 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 		emp_enemy_t* enemy = &G->enemies[i];
 		if (!enemy->alive) {
 			emp_enemy_conf_t* conf = enemy_confs[enemy_conf_index];
-			SDL_memset(&enemy->dynamic_data, 0 , 64);
+			SDL_memset(&enemy->dynamic_data, 0, 64);
 			enemy->pos = pos;
-			
+
 			emp_vec2_t player_pos = G->player->pos;
 			emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(enemy->pos, player_pos));
 
@@ -487,7 +485,6 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 
 void emp_destroy_enemy(emp_enemy_h handle)
 {
-
 }
 
 emp_bullet_h emp_create_bullet()
@@ -513,7 +510,6 @@ emp_bullet_h emp_create_bullet()
 
 void emp_destroy_bullet(emp_bullet_h handle)
 {
-
 }
 
 emp_bullet_generator_h emp_create_bullet_generator()
@@ -534,7 +530,6 @@ emp_bullet_generator_h emp_create_bullet_generator()
 
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 {
-
 }
 
 void emp_player_update(emp_player_t* player)
@@ -583,40 +578,23 @@ void emp_player_update(emp_player_t* player)
 
 	player->pos = emp_vec2_add(player->pos, movement);
 
-	if (state[SDL_SCANCODE_1])
-	{
+	if (state[SDL_SCANCODE_1]) {
 		player->weapon_index = 1;
-	}
-	else if (state[SDL_SCANCODE_2])
-	{
+	} else if (state[SDL_SCANCODE_2]) {
 		player->weapon_index = 2;
-	}
-	else if (state[SDL_SCANCODE_3])
-	{
+	} else if (state[SDL_SCANCODE_3]) {
 		player->weapon_index = 3;
-	}
-	else if (state[SDL_SCANCODE_4])
-	{
+	} else if (state[SDL_SCANCODE_4]) {
 		player->weapon_index = 4;
-	}
-	else if (state[SDL_SCANCODE_5])
-	{
+	} else if (state[SDL_SCANCODE_5]) {
 		player->weapon_index = 5;
-	}
-	else if (state[SDL_SCANCODE_6])
-	{
+	} else if (state[SDL_SCANCODE_6]) {
 		player->weapon_index = 6;
-	}
-	else if (state[SDL_SCANCODE_7])
-	{
+	} else if (state[SDL_SCANCODE_7]) {
 		player->weapon_index = 7;
-	}
-	else if (state[SDL_SCANCODE_8])
-	{
+	} else if (state[SDL_SCANCODE_8]) {
 		player->weapon_index = 8;
-	}
-	else if (state[SDL_SCANCODE_9])
-	{
+	} else if (state[SDL_SCANCODE_9]) {
 		player->weapon_index = 9;
 	}
 
@@ -634,16 +612,14 @@ void emp_enemy_update(emp_enemy_t* enemy)
 {
 	enemy->update(enemy);
 
-	if (enemy->health <= 0)
-	{
+	if (enemy->health <= 0) {
 		enemy->alive = false;
 	}
 
 	emp_vec2_t player_pos = G->player->pos;
 	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
 
-	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time)
-	{
+	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time) {
 		spawn_bullets(enemy->pos, dir, enemy->weapon);
 		enemy->last_shot = G->args->global_time;
 	}

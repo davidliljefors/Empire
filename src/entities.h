@@ -66,6 +66,8 @@ typedef struct emp_player_t
 #define EMP_MAX_ENEMIES 256
 typedef struct emp_enemy_t
 {
+	emp_enemy_h next_in_tile;
+
 	bool alive;
 	u32 generation;
 	int health;
@@ -113,6 +115,7 @@ typedef enum emp_tile_state {
 typedef struct emp_tile_t
 {
 	emp_tile_state state;
+	emp_enemy_h first_in_tile;
 } emp_tile_t;
 
 typedef struct emp_level_t

@@ -63,6 +63,7 @@ typedef enum emp_entity_type {
 typedef enum emp_behaviour_type {
 	emp_behaviour_type_none,
 	emp_behaviour_type_roamer,
+	emp_behaviour_type_chaser,
 } emp_behaviour_type;
 
 typedef struct emp_level_entity_t
@@ -71,10 +72,14 @@ typedef struct emp_level_entity_t
 	emp_behaviour_type behaviour;
 	float x;
 	float y;
+	float w;
+	float h;
 } emp_level_entity_t;
 
 typedef struct emp_level_entities_list_t
 {
+	float grid_size;
+
 	emp_level_entity_t entries[emo_entities_capacity];
 	size_t count;
 } emp_level_entities_list_t;

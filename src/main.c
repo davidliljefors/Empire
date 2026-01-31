@@ -53,6 +53,7 @@ static void main_loop(void)
 
 	Uint64 current_time = SDL_GetTicks();
 	double delta_time = (current_time - g_last_time) / 1000.0;
+	delta_time = min(delta_time, 0.5f);
 	g_last_time = current_time;
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;
@@ -190,8 +191,11 @@ int main(int argc, char* argv[])
 	size_t found = emp_level_query(level, emp_entity_type_player, 0);
 	if (found) {
 		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
-		G->player[player].pos.x = player_entity->x * SPRITE_MAGNIFICATION;
-		G->player[player].pos.y = player_entity->y * SPRITE_MAGNIFICATION;
+		float half = level->entities.grid_size * 0.5f;
+		float x = player_entity->x - half;
+		float y = player_entity->y - half;
+		G->player[player].pos.x = x * SPRITE_MAGNIFICATION;
+		G->player[player].pos.y = y * SPRITE_MAGNIFICATION;
 	} else {
 		SDL_Log("No Player config broke!");
 	}
@@ -202,15 +206,18 @@ int main(int argc, char* argv[])
 		if (!found) {
 			break;
 		}
-		SDL_Log("FOUND SPAWNER!");
-	}
 
+		float half = level->entities.grid_size * 0.5f;
+		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
+		float x = enemy->x - half;
+		float y = enemy->y - half;
+
+		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
+	}
 
 	emp_create_level();
 
-
 	SDL_zerop(G->args);
-
 
 	g_last_time = SDL_GetTicks();
 
