@@ -34,7 +34,7 @@ emp_player_conf_t get_player_conf()
 
 void PlayOneShot(emp_asset_t* asset)
 {
-	MIX_PlayAudio(G->mixer, (MIX_Audio *)asset->handle);
+	MIX_PlayAudio(G->mixer, (MIX_Audio*)asset->handle);
 }
 
 emp_vec2_t render_offset()
@@ -126,8 +126,7 @@ emp_vec2i_t get_tile(emp_vec2_t pos)
 
 bool tile_in_bounds(emp_vec2i_t tile)
 {
-	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT)
-	{
+	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
 		return true;
 	}
 	return false;
@@ -168,9 +167,7 @@ void add_enemy_to_tile(emp_enemy_t* enemy)
 		enemy->next_in_tile = *first_enemy;
 		*first_enemy = enemy;
 		G->level->enemy_in_tile[index] = enemy;
-	}
-	else
-	{
+	} else {
 		enemy->next_in_tile = NULL;
 	}
 }
@@ -690,15 +687,12 @@ void emp_enemy_update(emp_enemy_t* enemy)
 
 	double t = 0.3;
 	double has_taken_damage = enemy->last_damage_time + t - G->args->global_time;
-	if (has_taken_damage > 0.0)
-	{
+	if (has_taken_damage > 0.0) {
 		u8 mod_value = 255 - (u8)(600.0 * has_taken_damage);
 		SDL_SetTextureColorMod(texture->texture, 255, mod_value, mod_value);
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 		SDL_SetTextureColorMod(texture->texture, 255, 255, 255);
-	}
-	else
-	{
+	} else {
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	}
 
@@ -724,9 +718,10 @@ void emp_bullet_update(emp_bullet_t* bullet)
 
 		if (tile_data->state != emp_tile_state_none) {
 			bullet->alive = false;
-			if(bullet->mask & emp_tile_state_breakable && G->level->health[index].value > 0)
-			{
-				G->level->health[index].value--;
+			if (tile_data->state == emp_tile_state_breakable) {
+				if (bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0) {
+					G->level->health[index].value--;
+				}
 			}
 		}
 	}
@@ -735,21 +730,16 @@ void emp_bullet_update(emp_bullet_t* bullet)
 	SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
 	draw_rect_at(bullet->pos, 32, 255, 0, 0, 255);
-	
-	if (bullet->mask & emp_enemy_bullet_mask)
-	{
-		for (int y = -1; y <= 1; ++y)
-		{
-			for (int x = -1; x <= 1; ++x)
-			{
+
+	if (bullet->mask & emp_enemy_bullet_mask) {
+		for (int y = -1; y <= 1; ++y) {
+			for (int x = -1; x <= 1; ++x) {
 				emp_vec2i_t bullet_tile = get_tile(bullet->pos);
 				bullet_tile.x += x;
 				bullet_tile.y += y;
 				emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
-				while (enemy_in_tile != NULL)
-				{
-					if (check_overlap_bullet_enemy(bullet, enemy_in_tile))
-					{
+				while (enemy_in_tile != NULL) {
+					if (check_overlap_bullet_enemy(bullet, enemy_in_tile)) {
 						bullet->alive = false;
 						enemy_in_tile->health -= bullet->damage;
 						enemy_in_tile->last_damage_time = G->args->global_time;
@@ -760,7 +750,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			}
 		}
 	}
-	collision_done:;
+collision_done:;
 }
 
 static emp_texture_t* emp_texture_find(const char* path)
@@ -774,12 +764,11 @@ static emp_texture_t* emp_texture_find(const char* path)
 void emp_level_update(void)
 {
 	emp_level_asset_t* level_asset = (emp_level_asset_t*)G->assets->ldtk->world.handle;
-	
+
 	memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
 
-	for(u64 i = 0; i < EMP_LEVEL_TILES; ++i) 
-	{
-		if(G->level->enemy_in_tile[i] != NULL) {
+	for (u64 i = 0; i < EMP_LEVEL_TILES; ++i) {
+		if (G->level->enemy_in_tile[i] != NULL) {
 			emp_vec2_t pos;
 			pos.x = 64.0f * (i % EMP_LEVEL_WIDTH);
 			pos.y = 64.0f * (i / EMP_LEVEL_WIDTH);

@@ -46,7 +46,7 @@ typedef struct emp_weapon_conf_t
 
 typedef struct emp_enemy_conf_t
 {
-	int health;
+	float health;
 	float speed;
 	emp_asset_t* texture_asset;
 	emp_enemy_update_f update;
@@ -72,7 +72,7 @@ typedef struct emp_enemy_t
 
 	bool alive;
 	u32 generation;
-	int health;
+	float health;
 	float speed;
 	emp_vec2_t pos;
 	emp_vec2_t direction;
