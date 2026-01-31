@@ -588,7 +588,7 @@ void emp_player_update(emp_player_t* player)
 	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
 	SDL_FRect dst = player_rect(player->pos, tex);
-	dst.x = player->flip ? dst.x+dst.w : dst.x;
+	dst.x = player->flip ? dst.x + dst.w : dst.x;
 	dst.w = player->flip ? -dst.w : dst.w;
 	SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
 
@@ -625,6 +625,8 @@ void emp_player_update(emp_player_t* player)
 		player->weapon_index = 8;
 	} else if (state[SDL_SCANCODE_9]) {
 		player->weapon_index = 9;
+	} else if (state[SDL_SCANCODE_K]) {
+		emp_create_level(&G->assets->ldtk->world, 1);
 	}
 
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT) || state[SDL_SCANCODE_SPACE]) {
@@ -703,7 +705,7 @@ static emp_texture_t* emp_texture_find(const char* path)
 	return NULL;
 }
 
-void emp_level_update()
+void emp_level_update(void)
 {
 	emp_level_asset_t* level_asset = (emp_level_asset_t*)G->assets->ldtk->world.handle;
 
@@ -767,6 +769,8 @@ void emp_entities_init()
 
 void emp_entities_update()
 {
+	emp_level_update();
+
 	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
 		if (player->alive) {
@@ -794,18 +798,65 @@ void emp_entities_update()
 			emp_generator_uptdate(generator);
 		}
 	}
-
-	emp_level_update();
 }
 
-void emp_create_level(void)
+void setup_level(emp_asset_t* level_asset)
 {
-	G->level = SDL_malloc(sizeof(emp_level_t));
+	SDL_memset(G->enemies, 0, sizeof(emp_enemy_t) * EMP_MAX_ENEMIES);
+	SDL_memset(G->bullets, 0, sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
+	SDL_memset(G->generators, 0, sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
+
+	u32 player = emp_create_player();
+	G->player[player].texture_asset = &G->assets->png->player_32;
+
+	emp_level_asset_t* level = (emp_level_asset_t*)level_asset->handle;
+	size_t found = emp_level_query(level, emp_entity_type_player, 0);
+	if (found) {
+		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
+		float half = level->entities.grid_size * 0.5f;
+		float x = player_entity->x - half;
+		float y = player_entity->y - half;
+		G->player[player].pos.x = x * SPRITE_MAGNIFICATION;
+		G->player[player].pos.y = y * SPRITE_MAGNIFICATION;
+	} else {
+		SDL_Log("No Player config broke!");
+	}
+
+	found = 0;
+	for (;;) {
+		found = emp_level_query(level, emp_entity_type_spawner, found);
+		if (!found) {
+			break;
+		}
+
+		float half = level->entities.grid_size * 0.5f;
+		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
+		float x = enemy->x - half;
+		float y = enemy->y - half;
+
+		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
+	}
+}
+
+void emp_create_level(emp_asset_t* level_asset, int is_reload)
+{
+	if (!is_reload) {
+		G->level = SDL_malloc(sizeof(emp_level_t));
+		G->level->tiles = SDL_malloc(sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
+		G->level->health = SDL_malloc(sizeof(*G->level->health) * EMP_LEVEL_TILES);
+	}
+	emp_tile_t* tiles = G->level->tiles;
+	emp_tile_health_t* health = G->level->health;
+	SDL_memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
+	SDL_memset(G->level->health, 0, sizeof(*G->level->health) * EMP_LEVEL_TILES);
 	SDL_zerop(G->level);
-	G->level->tiles = SDL_malloc(sizeof(emp_tile_t) * EMP_LEVEL_TILES);
-	SDL_memset(G->level->tiles, 0, sizeof(emp_tile_t) * EMP_LEVEL_TILES);
+	G->level->tiles = tiles;
+	G->level->health = health;
+	setup_level(&G->assets->ldtk->world);
 }
 
 void emp_destroy_level(void)
 {
+	SDL_free(G->level->tiles);
+	SDL_free(G->level);
 }

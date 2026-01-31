@@ -69,8 +69,20 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 {
 	size_t idx, size;
 	yyjson_val* field;
+	int is_reasonably_constructed = 0;
 	yyjson_arr_foreach(fields, idx, size, field)
 	{
+		yyjson_val* identifier = yyjson_obj_get(field, "__identifier");
+		if (identifier) {
+			const char* str = yyjson_get_str(identifier);
+			if (SDL_strcmp(str, "weapon") == 0) {
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					out_entity->weapon_index = (uint32_t)yyjson_get_uint(value);
+				}
+			}
+		}
+
 		yyjson_val* type = yyjson_obj_get(field, "__type");
 		if (type) {
 			const char* str = yyjson_get_str(type);
@@ -80,25 +92,14 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 				if (value) {
 					if (SDL_strcmp(yyjson_get_str(value), "roamer") == 0) {
 						out_entity->behaviour = emp_behaviour_type_roamer;
-						return 1;
+						is_reasonably_constructed = 1;
 					}
 					if (SDL_strcmp(yyjson_get_str(value), "chaser") == 0) {
 						out_entity->behaviour = emp_behaviour_type_chaser;
-						return 1;
+						is_reasonably_constructed = 1;
 					}
 				}
 			}
-
-	/*		if (SDL_strcmp(str, "LocalEnum.weapon") == 0) {
-				out_entity->type = emp_entity_type_spawner;
-				yyjson_val* value = yyjson_obj_get(field, "__value");
-				if (value) {
-					if (SDL_strcmp(yyjson_get_str(value), "musket") == 0) {
-						out_entity->behaviour = emp_behaviour_type_roamer;
-						return 1;
-					}
-				}
-			}*/
 
 			if (SDL_strcmp(str, "LocalEnum.boss") == 0) {
 				out_entity->type = emp_entity_type_boss;
@@ -106,14 +107,14 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 				if (value) {
 					if (SDL_strcmp(yyjson_get_str(value), "octopus") == 0) {
 						out_entity->behaviour = emp_behaviour_type_roamer;
-						return 1;
+						is_reasonably_constructed = 1;
 					}
 				}
 			}
 		}
 	}
 	SDL_Log("No Entity mapping found");
-	return 0;
+	return is_reasonably_constructed;
 }
 
 static void emp_level_entities_list_add(emp_level_entities_list_t* list, emp_level_entity_t* value)
