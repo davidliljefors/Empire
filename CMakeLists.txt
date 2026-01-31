@@ -60,6 +60,7 @@ set(EMPIRE_SOURCES
     src/emp_gl.c
     src/entities.c
     src/fast_obj.c
+    src/level.c
     src/main.c
     src/stb_ds.c
     src/stb_image.c
@@ -76,6 +77,7 @@ set(EMPIRE_HEADERS
     include/Empire/emp_gl.h
     include/Empire/fast_obj.h
     include/Empire/hash.inl
+    include/Empire/level.h
     include/Empire/math.inl
     include/Empire/prototypes.h
     include/Empire/stb_ds.h
