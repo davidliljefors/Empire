@@ -41,10 +41,10 @@ SDL_FRect source_rect(emp_asset_t* texture_asset)
 
 	SDL_FRect rect;
 
-	rect.x = (float)(column * texture->atlas_size);
-	rect.y = (float)(row * texture->atlas_size);
-	rect.w = (float)texture->atlas_size;
-	rect.h = (float)texture->atlas_size;
+	rect.x = (float)(column * texture->source_size);
+	rect.y = (float)(row * texture->source_size);
+	rect.w = (float)texture->source_size;
+	rect.h = (float)texture->source_size;
 
 	return rect;
 }
@@ -271,13 +271,38 @@ void emp_bullet_uptdate(emp_bullet_t* bullet)
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
 }
 
+void emp_level_update()
+{
+	for (u32 i = 0; i < EMP_LEVEL_TILES; ++i)
+	{
+		emp_tile_t* tiles = &G->level->tiles[i];
+		if (tiles->texture_asset)
+		{
+			emp_texture_t* texture = tiles->texture_asset->handle;
+
+			u32 x = i / EMP_LEVEL_WIDTH;
+			u32 y = i % EMP_LEVEL_WIDTH;
+
+			if (x == 0 || y == 0)
+			{
+				SDL_FRect src = source_rect(tiles->texture_asset);
+				emp_vec2_t pos;
+				pos.x = x * 16.0f;
+				pos.y = y * 16.0f;
+
+				SDL_FRect dst = center_rect(pos, texture);
+				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+			}
+		}
+	}
+}
+
 void emp_generator_uptdate(emp_bullet_generator_t* generator)
 {
 }
 
 void emp_entities_init()
 {
-	G = SDL_malloc(sizeof(emp_G));
 	G->player = SDL_malloc(sizeof(emp_player_t) * EMP_MAX_PLAYERS);
 	G->enemies = SDL_malloc(sizeof(emp_enemy_t) * EMP_MAX_ENEMIES);
 	G->bullets = SDL_malloc(sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
@@ -318,4 +343,27 @@ void emp_entities_update()
 			emp_generator_uptdate (generator);
 		}
 	}
+
+	emp_level_update();
+}
+
+void emp_create_level(void)
+{
+	G->level = SDL_malloc(sizeof(emp_level_t));
+	SDL_zerop(G->level);
+	G->level->tiles = SDL_malloc(sizeof(emp_tile_t) * EMP_LEVEL_TILES);
+	SDL_memset(G->level->tiles, 0, sizeof(emp_tile_t) * EMP_LEVEL_TILES);
+
+	for (u32 i = 0; i < EMP_LEVEL_TILES; ++i)
+	{
+		if (i % 16 == 0)
+		{
+			G->level->tiles[i].texture_asset = &G->assets->png->tilemap;
+		}
+	}
+}
+
+void emp_destroy_level(void)
+{
+
 }
