@@ -70,6 +70,7 @@ typedef struct emp_level_entity_t
 {
 	emp_entity_type type;
 	emp_behaviour_type behaviour;
+	uint32_t weapon_index;
 	float x;
 	float y;
 	float w;
