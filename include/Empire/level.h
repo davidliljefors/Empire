@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Empire/types.h"
 struct emp_asset_t;
 
 #define emp_sublevel_capacity 16
