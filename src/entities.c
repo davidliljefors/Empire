@@ -31,23 +31,23 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
-void PlayOneShot(const char* filename) {
+void PlayOneShot(const char* filename)
+{
 
-	if(!filename)
-	{
+	if (!filename) {
 		return;
 	}
-    SDL_AudioSpec spec;
-    Uint8 *wav_data;
-    Uint32 wav_data_len;
+	SDL_AudioSpec spec;
+	Uint8* wav_data;
+	Uint32 wav_data_len;
 
-    if (SDL_LoadWAV(filename, &spec, &wav_data, &wav_data_len)) {
-        SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
-        if (stream) {
-            SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
-            SDL_ResumeAudioStreamDevice(stream);
-        }
-    }
+	if (SDL_LoadWAV(filename, &spec, &wav_data, &wav_data_len)) {
+		SDL_AudioStream* stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+		if (stream) {
+			SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
+			SDL_ResumeAudioStreamDevice(stream);
+		}
+	}
 }
 
 emp_vec2_t render_offset()
@@ -597,12 +597,12 @@ void emp_player_update(emp_player_t* player)
 
 	emp_vec2_t pos_dx = emp_vec2_addx(player->pos, movement);
 	if (check_overlap_map(pos_dx)) {
-		movement.x = -movement.x;
+		movement.x = 0;
 	}
 
 	emp_vec2_t pos_dy = emp_vec2_addy(player->pos, movement);
 	if (check_overlap_map(pos_dy)) {
-		movement.y = -movement.y;
+		movement.y = 0;
 	}
 
 	player->pos = emp_vec2_add(player->pos, movement);
