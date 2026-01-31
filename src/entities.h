@@ -154,5 +154,5 @@ void emp_destroy_bullet_generator(emp_bullet_generator_h handle);
 void emp_entities_init();
 void emp_entities_update();
 
-void emp_create_level(void);
+void emp_create_level(emp_asset_t* level_asset, int is_reload);
 void emp_destroy_level(void);

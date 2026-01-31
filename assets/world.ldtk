@@ -11,7 +11,7 @@
 	"iid": "413feb70-fa90-11f0-90ed-33a90f603be4",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 255,
+	"nextUid": 256,
 	"identifierStyle": "Lowercase",
 	"toc": [],
 	"worldLayout": "GridVania",
@@ -2148,6 +2148,25 @@
 			"customData": [],
 			"savedSelections": [],
 			"cachedPixelData": { "opaqueTiles": "000", "averageColors": "4da54da54da6" }
+		},
+		{
+			"__cWid": 1,
+			"__cHei": 1,
+			"identifier": "cave",
+			"uid": 255,
+			"relPath": "cave_32.png",
+			"embedAtlas": null,
+			"pxWid": 32,
+			"pxHei": 32,
+			"tileGridSize": 32,
+			"spacing": 0,
+			"padding": 0,
+			"tags": [],
+			"tagsSourceEnumUid": null,
+			"enumTags": [],
+			"customData": [],
+			"savedSelections": [],
+			"cachedPixelData": { "opaqueTiles": "0", "averageColors": "d456" }
 		}
 	], "enums": [
 		{ "identifier": "weapon", "uid": 132, "values": [

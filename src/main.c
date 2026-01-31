@@ -35,10 +35,6 @@ static emp_asset_manager_o* g_asset_mgr = NULL;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
-// typedef struct sprite_t {
-//
-// }sprite_t;
-
 static void main_loop(void)
 {
 	SDL_Event event;
@@ -184,38 +180,7 @@ int main(int argc, char* argv[])
 	emp_init_enemy_configs();
 	emp_init_weapon_configs();
 
-	u32 player = emp_create_player();
-	G->player[player].texture_asset = &g_assets->png->player_32;
-
-	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
-	size_t found = emp_level_query(level, emp_entity_type_player, 0);
-	if (found) {
-		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
-		float half = level->entities.grid_size * 0.5f;
-		float x = player_entity->x - half;
-		float y = player_entity->y - half;
-		G->player[player].pos.x = x * SPRITE_MAGNIFICATION;
-		G->player[player].pos.y = y * SPRITE_MAGNIFICATION;
-	} else {
-		SDL_Log("No Player config broke!");
-	}
-
-	found = 0;
-	for (;;) {
-		found = emp_level_query(level, emp_entity_type_spawner, found);
-		if (!found) {
-			break;
-		}
-
-		float half = level->entities.grid_size * 0.5f;
-		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
-		float x = enemy->x - half;
-		float y = enemy->y - half;
-
-		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
-	}
-
-	emp_create_level();
+	emp_create_level(&G->assets->ldtk->world, 0);
 
 	SDL_zerop(G->args);
 
@@ -226,8 +191,6 @@ int main(int argc, char* argv[])
 #else
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
-
-	// emp_load_level_asset(&g_assets->ldtk->world);
 
 	while (g_running) {
 		frame_count++;
