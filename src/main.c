@@ -13,9 +13,8 @@
 #include <string.h>
 
 #define WINDOW_WIDTH 2200
-#define WINDOW_HEIGHT 1400
+#define WINDOW_HEIGHT 1200
 
-#include "Empire/emp_gl.h"
 #include "entities.h"
 
 #include <Empire/fast_obj.h>
@@ -94,14 +93,14 @@ static SDL_Window* g_window = NULL;
 static SDL_Renderer* g_renderer = NULL;
 static emp_generated_assets_o* g_assets = NULL;
 static emp_asset_manager_o* g_asset_mgr = NULL;
-// static GLuint g_shader_program = 0;
-// static GLint g_mvp_loc = -1;
-// static GLint g_has_texture_loc = -1;
-static emp_material_t g_material;
 static float g_angle_x = 0.0f;
 static float g_angle_y = 0.0f;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
+
+//typedef struct sprite_t {
+//	
+//}sprite_t;
 
 static void main_loop(void)
 {
@@ -125,32 +124,8 @@ static void main_loop(void)
 	g_angle_y += 0.8f * delta_time;
 
 
-	SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 0);
+	SDL_SetRenderDrawColor(g_renderer, 0, 0, 0, 255);
 	SDL_RenderClear(g_renderer);
-
-	// glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-	emp_gl_clear(0.1f, 0.1f, 0.15f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	emp_ubo_clear(&g_material);
-
-	emp_mat4_t model = mat4_mul(mat4_make_rotation_x(g_angle_x), mat4_make_rotation_y(g_angle_y));
-	emp_mat4_t view = mat4_make_translation(0.0f, 0.0f, -3.0f);
-	emp_mat4_t proj = mat4_make_perspective((float)(M_PI / 4.0), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
-	emp_mat4_t mvp = mat4_mul(proj, mat4_mul(view, model));
-	emp_ubo_push_from_name(&g_material, emp_uniform_matrix4x4, "u_mvp", mvp.m);
-
-	int zero = 0;
-	emp_ubo_push_from_name(&g_material, emp_uniform_int, "u_has_texture", &zero);
-
-	emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->cylinder.handle;
-	emp_gpu_instance_list_t render_list = { 0 };
-	emp_gpu_instance_list_add(&render_list, &(emp_gpu_instance_t) { .mesh = cube_mesh });
-	emp_gpu_instance_list_render(&g_material, &render_list);
-
-	//SDL_SetRenderTarget()
-
-	//emp_gl_depth_test_disable();
 
 	update_args.dt = delta_time;
 	update_args.assets = g_assets;
@@ -158,11 +133,7 @@ static void main_loop(void)
 	G->args = &update_args;
 	emp_entities_update(&update_args);
 
-	//SDL_RenderPresent(g_renderer);
-
-	emp_gl_depth_test_enable();
-
-	SDL_GL_SwapWindow(g_window);
+	SDL_RenderPresent(g_renderer);
 }
 
 void emp_png_load_func(emp_asset_t* asset)
@@ -215,7 +186,9 @@ int main(int argc, char* argv[])
 
 	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
 
-	SDL_SetRenderVSync(g_renderer, 1);
+	SDL_SetRenderVSync(g_renderer, 0);
+	SDL_SetRenderScale(g_renderer, 2, 2);
+	
 
 	if (!g_window) {
 		SDL_Log("Failed to create window: %s", SDL_GetError());
@@ -223,31 +196,18 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if (emp_gl(g_window)) {
-		return 1;
-	}
-	emp_gl_depth_test_enable();
-
-
 	const char* root = get_asset_argument(argc, argv);
 
 	g_assets = emp_generated_assets_create(root);
 	g_asset_mgr = emp_asset_manager_create(g_assets);
-	emp_asset_loader_t mesh_loader = {
-		.load = &emp_mesh_load_func,
-		.unload = &emp_mesh_unload_func,
-	};
 
 	emp_asset_loader_t png_loader = {
 		.load = &emp_png_load_func,
 		.unload = &emp_png_unload_func,
 	};
 
-	emp_asset_manager_add_loader(g_asset_mgr, mesh_loader, EMP_ASSET_TYPE_OBJ);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_check_hot_reload(g_asset_mgr);
-
-	g_material = emp_material_create(g_assets->vert->cube.data, g_assets->frag->cube.data);
 
 
 	emp_entities_init();
@@ -280,9 +240,6 @@ int main(int argc, char* argv[])
 		emp_asset_manager_check_hot_reload(g_asset_mgr);
 	}
 #endif
-	emp_material_destroy(&g_material);
-
-	emp_gl(NULL);
 	SDL_DestroyWindow(g_window);
 	SDL_Quit();
 

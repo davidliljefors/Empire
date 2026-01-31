@@ -15,7 +15,7 @@ typedef struct emp_player_conf_t
 
 emp_player_conf_t get_player_conf()
 {
-	return (emp_player_conf_t) { .speed = 5.0f };
+	return (emp_player_conf_t) { .speed = 120.0f };
 }
 
 emp_weapon_conf_t* wep1;
@@ -177,7 +177,7 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 
 	// SDL_Log("%s, x:%f y:%f", "update enemy", player->x, player->y);
 
-	emp_vec2_t movement = {};
+	emp_vec2_t movement = {0};
 
 	if (state[SDL_SCANCODE_W]) {
 		movement.y = -conf.speed;
@@ -194,6 +194,8 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 	if (state[SDL_SCANCODE_D]) {
 		movement.x = conf.speed;
 	}
+	movement = emp_vec2_normalize(movement);
+	movement = emp_vec2_mul(movement, args->dt * conf.speed);
 
 	player->pos = emp_vec2_add(player->pos, movement);
 
