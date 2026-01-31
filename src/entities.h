@@ -61,6 +61,7 @@ typedef struct emp_player_t
 	emp_vec2_t pos;
 	emp_asset_t* texture_asset;
 	double last_shot;
+	bool flip;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256

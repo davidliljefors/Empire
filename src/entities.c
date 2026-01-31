@@ -8,7 +8,7 @@
 #include <Empire/math.inl>
 #include <SDL3/SDL.h>
 
-#define ANIMATION_SPEED 0.1f
+#define ANIMATION_SPEED 0.15f
 
 emp_G* G;
 emp_enemy_conf_t* enemy_confs[16];
@@ -545,6 +545,7 @@ void emp_player_update(emp_player_t* player)
 
 	if (state[SDL_SCANCODE_A]) {
 		movement.x = -conf.speed;
+		player->flip = true;
 	}
 
 	if (state[SDL_SCANCODE_S]) {
@@ -553,6 +554,7 @@ void emp_player_update(emp_player_t* player)
 
 	if (state[SDL_SCANCODE_D]) {
 		movement.x = conf.speed;
+		player->flip = false;
 	}
 
 	movement = emp_vec2_normalize(movement);
@@ -561,6 +563,8 @@ void emp_player_update(emp_player_t* player)
 	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
 	SDL_FRect dst = player_rect(player->pos, tex);
+	dst.x = player->flip ? dst.x+dst.w : dst.x;
+	dst.w = player->flip ? -dst.w : dst.w;
 	SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
 
 	emp_vec2_t mouse_pos;
@@ -600,7 +604,7 @@ void emp_player_update(emp_player_t* player)
 
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT) || state[SDL_SCANCODE_SPACE]) {
 		if (player->last_shot + weapons[player->weapon_index]->delay_between_shots < G->args->global_time) {
-			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
+			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x + dst.w / 2, .y = dst.y + dst.h / 2 };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
 			spawn_bullets(player->pos, delta, weapons[player->weapon_index]);
 			player->last_shot = G->args->global_time;
