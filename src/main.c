@@ -58,7 +58,7 @@ static void main_loop(void)
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;
 
-	SDL_SetRenderDrawColor(g_renderer, 108, 129, 161, 1);
+	SDL_SetRenderDrawColor(g_renderer, 17, 25, 45, 1);
 	SDL_RenderClear(g_renderer);
 
 	emp_draw_text(100, 100, "hello world", &g_assets->ttf->bauhs93);
@@ -180,6 +180,8 @@ int main(int argc, char* argv[])
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->player_32;
+	G->player[player].pos.x = 256.0f;
+	G->player[player].pos.y = 256.0f;
 	emp_create_level();
 	SDL_zerop(G->args);
 
