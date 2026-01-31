@@ -41,3 +41,9 @@ typedef struct emp_vec2_t
 	float x;
 	float y;
 } emp_vec2_t;
+
+typedef struct emp_vec2i_t
+{
+	int x;
+	int y;
+} emp_vec2i_t;
