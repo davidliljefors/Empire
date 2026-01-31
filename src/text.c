@@ -35,7 +35,7 @@ void emp_load_font(SDL_Renderer* renderer, emp_asset_t* font_asset, float size) 
 
 void emp_draw_text(float x, float y, const char* text, emp_asset_t* font_asset) {
 	emp_font_t* font = font_asset->handle;
-	SDL_Renderer* renderer = G->args->r;
+	SDL_Renderer* renderer = G->renderer;
 	SDL_SetTextureColorMod(font->texture, 255, 255, 255); 
 
     while (*text) {

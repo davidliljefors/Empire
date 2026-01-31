@@ -79,7 +79,7 @@ typedef struct emp_bullet_generator_h
 
 typedef struct emp_tile_t
 {
-
+	bool dummy;
 } emp_tile_t;
 
 typedef struct emp_level_t
@@ -90,6 +90,7 @@ typedef struct emp_level_t
 
 typedef struct emp_entities_t
 {
+	SDL_Renderer* renderer;
 	emp_update_args_t* args;
 	emp_generated_assets_o* assets;
 	emp_player_t* player;
@@ -113,4 +114,4 @@ emp_bullet_generator_h emp_create_bullet_generator();
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle);
 
 void emp_entities_init();
-void emp_entities_update(emp_update_args_t* args);
+void emp_entities_update();
