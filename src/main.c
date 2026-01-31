@@ -183,8 +183,28 @@ int main(int argc, char* argv[])
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->player_32;
-	G->player[player].pos.x = 256.0f;
-	G->player[player].pos.y = 256.0f;
+	// G->player[player].pos.x = 256.0f;
+	// G->player[player].pos.y = 256.0f;
+
+	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
+	size_t found = emp_level_query(level, emp_entity_type_player, 0);
+	if (found) {
+		emp_level_entities_t* player_entity = emp_level_get(level, found -1);
+		G->player[player].pos.x = player_entity->x * SPRITE_MAGNIFICATION;
+		G->player[player].pos.y = player_entity->y * SPRITE_MAGNIFICATION;
+	} else {
+		SDL_Log("No Player config broke!");
+	}
+
+	found = 0;
+	for (;;) {
+		found = emp_level_query(level, emp_entity_type_spawner, found);
+		if (!found) {
+			break;
+		}
+		SDL_Log("FOUND SPAWNER!");
+	}
+
 	emp_create_level();
 	SDL_zerop(G->args);
 

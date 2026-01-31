@@ -103,7 +103,7 @@ emp_vec2i_t get_tile(emp_vec2_t pos)
 {
 	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * 4.0f)));
 	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * 4.0f)));
-	
+
 	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
 }
 
@@ -112,7 +112,9 @@ bool check_overlap_map(emp_vec2_t pos)
 	emp_vec2i_t tile = get_tile(pos);
 
 	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
-		return G->level->tiles[tile.y * EMP_LEVEL_WIDTH + tile.x].occupied;
+		size_t index = tile.y * EMP_LEVEL_WIDTH + tile.x;
+		emp_tile_t* tile_data = G->level->tiles + index;
+		return tile_data->state != emp_tile_state_none;
 	}
 
 	return true;
@@ -503,21 +505,18 @@ void emp_player_update(emp_player_t* player)
 	emp_vec2_t mouse_pos;
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
 
-
 	emp_vec2_t pos_dx = emp_vec2_addx(player->pos, movement);
-	if (check_overlap_map(pos_dx))
-	{
+	if (check_overlap_map(pos_dx)) {
 		movement.x = -movement.x;
 	}
-	
+
 	emp_vec2_t pos_dy = emp_vec2_addy(player->pos, movement);
-	if (check_overlap_map(pos_dy))
-	{
+	if (check_overlap_map(pos_dy)) {
 		movement.y = -movement.y;
 	}
 
 	player->pos = emp_vec2_add(player->pos, movement);
-	
+
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
 		if (player->shot_delay <= 0.0f) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
@@ -551,7 +550,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		u32 index = ((u32)tile.y * EMP_LEVEL_WIDTH) + (u32)tile.x;
 		emp_tile_t* tile_data = &G->level->tiles[index];
 
-		if (tile_data->occupied) {
+		if (tile_data->state != emp_tile_state_none) {
 			bullet->alive = false;
 		}
 	}
@@ -562,22 +561,34 @@ void emp_bullet_update(emp_bullet_t* bullet)
 	draw_rect_at(bullet->pos, 32, 255, 0, 0, 255);
 }
 
+static emp_texture_t* emp_texture_find(const char* path)
+{
+	if (SDL_strstr(G->assets->png->tilemap.path, path)) {
+		return (emp_texture_t*)G->assets->png->tilemap.handle;
+	}
+	return NULL;
+}
+
 void emp_level_update()
 {
 	emp_level_asset_t* level_asset = (emp_level_asset_t*)G->assets->ldtk->world.handle;
 
 	memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
 
-	emp_texture_t* texture = (emp_texture_t*)G->assets->png->tilemap.handle;
 	for (size_t li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
+
+		emp_texture_t* texture = emp_texture_find(sublevel->tiles.tilemap);
+		if (texture == NULL) {
+			continue;
+		}
 		for (size_t ti = 0; ti < sublevel->tiles.count; ti++) {
-			float grid_size = sublevel->grid_size;
+			float grid_size = sublevel->values.grid_size;
 			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
 			size_t lx = (size_t)(desc->dst.x / grid_size);
 			size_t ly = (size_t)(desc->dst.y / grid_size);
 
-			size_t index = (ly * sublevel->grid_width) + lx;
+			size_t index = (ly * sublevel->values.grid_width) + lx;
 			u8 value = sublevel->values.entries[index];
 
 			SDL_FRect src = { desc->src.x, desc->src.y, grid_size, grid_size };
@@ -590,38 +601,17 @@ void emp_level_update()
 			SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 
 			emp_tile_t* tile = &G->level->tiles[(wy * EMP_LEVEL_WIDTH) + wx];
-			tile->occupied = 1;
 
-			if (value == 1)
-			{
+			if (value == 1) {
+				tile->state = emp_tile_state_occupied;
 				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
 			}
-			if (value == 2)
-			{
+			if (value == 2) {
+				tile->state = emp_tile_state_breakable;
 				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 255, 0, 255);
 			}
 		}
 	}
-
-	// for (u32 i = 0; i < EMP_LEVEL_TILES; ++i) {
-	//	emp_tile_t* tile = &G->level->tiles[i];
-	//	if (tile->texture_asset) {
-	//		emp_texture_t* texture = tile->texture_asset->handle;
-	//		u32 x = i % EMP_LEVEL_WIDTH;
-	//		u32 y = i / EMP_LEVEL_WIDTH;
-	// if (x == 7)
-	//{
-	//	SDL_FRect src = source_rect(tile->texture_asset);
-	//	emp_vec2_t pos;
-	//	pos.x = (float)(x * 16.0f * 4.0);
-	//	pos.y = (float)(y * 16.0f * 4.0);
-	//	SDL_FRect dst = render_rect(pos, texture);
-	//	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
-	//	draw_rect_at(pos, 16.0f * 4.0f);
-	//	tile->occupied = true;
-	//}
-	//	}
-	//}
 }
 
 void emp_generator_uptdate(emp_bullet_generator_t* generator)

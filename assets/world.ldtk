@@ -11,7 +11,7 @@
 	"iid": "413feb70-fa90-11f0-90ed-33a90f603be4",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 250,
+	"nextUid": 253,
 	"identifierStyle": "Lowercase",
 	"toc": [],
 	"worldLayout": "GridVania",
@@ -1505,7 +1505,7 @@
 		{
 			"identifier": "player",
 			"uid": 117,
-			"tags": [],
+			"tags": ["player"],
 			"exportToToc": false,
 			"allowOutOfBounds": false,
 			"doc": null,
@@ -1575,7 +1575,7 @@
 					"identifier": "enemy",
 					"doc": null,
 					"__type": "LocalEnum.enemy",
-					"uid": 228,
+					"uid": 252,
 					"type": "F_Enum(226)",
 					"isArray": false,
 					"canBeNull": false,
@@ -1633,9 +1633,9 @@
 			"color": "#EAD4AA",
 			"renderMode": "Tile",
 			"showName": true,
-			"tilesetId": 124,
+			"tilesetId": 251,
 			"tileRenderMode": "FitInside",
-			"tileRect": { "tilesetUid": 124, "x": 96, "y": 0, "w": 32, "h": 32 },
+			"tileRect": { "tilesetUid": 251, "x": 0, "y": 0, "w": 64, "h": 64 },
 			"uiTileRect": null,
 			"nineSliceBorders": [],
 			"maxCount": 0,
@@ -2092,6 +2092,25 @@
 				"opaqueTiles": "00000000000000000000000000000000",
 				"averageColors": "35632453289438940000000000000000745364536894789464536894978467840000000000000000000000000000000000000000000000000000000000000000"
 			}
+		},
+		{
+			"__cWid": 3,
+			"__cHei": 1,
+			"identifier": "octoboss",
+			"uid": 251,
+			"relPath": "boss2_64.png",
+			"embedAtlas": null,
+			"pxWid": 192,
+			"pxHei": 64,
+			"tileGridSize": 64,
+			"spacing": 0,
+			"padding": 0,
+			"tags": [],
+			"tagsSourceEnumUid": null,
+			"enumTags": [],
+			"customData": [],
+			"savedSelections": [],
+			"cachedPixelData": { "opaqueTiles": "000", "averageColors": "4da54da54da6" }
 		}
 	], "enums": [
 		{ "identifier": "weapon", "uid": 132, "values": [{ "id": "musket", "tileRect": null, "color": 12470831 }], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] },
@@ -2171,20 +2190,77 @@
 					"gridTiles": [],
 					"entityInstances": [
 						{
-							"__identifier": "player",
-							"__grid": [2,6],
+							"__identifier": "enemy",
+							"__grid": [6,6],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
+							"__tile": { "tilesetUid": 124, "x": 0, "y": 0, "w": 32, "h": 32 },
+							"__smartColor": "#D77643",
+							"iid": "e2a17bf0-fa90-11f0-90ed-01e43c0c15a4",
+							"width": 32,
+							"height": 32,
+							"defUid": 123,
+							"px": [104,104],
+							"fieldInstances": [{ "__identifier": "enemy", "__type": "LocalEnum.enemy", "__value": "crab", "__tile": null, "defUid": 252, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["crab"]
+							}] }],
+							"__worldX": 232,
+							"__worldY": 232
+						},
+						{
+							"__identifier": "player",
+							"__grid": [2,5],
+							"__pivot": [0.5,0.5],
+							"__tags": ["player"],
 							"__tile": { "tilesetUid": 118, "x": 0, "y": 0, "w": 32, "h": 32 },
 							"__smartColor": "#BE4A2F",
-							"iid": "5d976330-fa90-11f0-90ed-cb84b982d45f",
+							"iid": "1bd166d0-fa90-11f0-90ed-adeeb40c71bb",
 							"width": 32,
 							"height": 32,
 							"defUid": 117,
-							"px": [40,104],
+							"px": [40,88],
 							"fieldInstances": [],
 							"__worldX": 168,
-							"__worldY": 232
+							"__worldY": 216
+						},
+						{
+							"__identifier": "enemy",
+							"__grid": [11,3],
+							"__pivot": [0.5,0.5],
+							"__tags": [],
+							"__tile": { "tilesetUid": 124, "x": 0, "y": 0, "w": 32, "h": 32 },
+							"__smartColor": "#D77643",
+							"iid": "9eb03590-fa90-11f0-90ed-71e288cd9d28",
+							"width": 32,
+							"height": 32,
+							"defUid": 123,
+							"px": [184,56],
+							"fieldInstances": [{ "__identifier": "enemy", "__type": "LocalEnum.enemy", "__value": "crab", "__tile": null, "defUid": 252, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["crab"]
+							}] }],
+							"__worldX": 312,
+							"__worldY": 184
+						},
+						{
+							"__identifier": "enemy",
+							"__grid": [9,2],
+							"__pivot": [0.5,0.5],
+							"__tags": [],
+							"__tile": { "tilesetUid": 124, "x": 0, "y": 0, "w": 32, "h": 32 },
+							"__smartColor": "#D77643",
+							"iid": "9edc75b0-fa90-11f0-90ed-29469084e951",
+							"width": 32,
+							"height": 32,
+							"defUid": 123,
+							"px": [152,40],
+							"fieldInstances": [{ "__identifier": "enemy", "__type": "LocalEnum.enemy", "__value": "crab", "__tile": null, "defUid": 252, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["crab"]
+							}] }],
+							"__worldX": 280,
+							"__worldY": 168
 						}
 					]
 				},
@@ -2754,7 +2830,7 @@
 							"__grid": [6,8],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
-							"__tile": { "tilesetUid": 124, "x": 96, "y": 0, "w": 32, "h": 32 },
+							"__tile": { "tilesetUid": 251, "x": 0, "y": 0, "w": 64, "h": 64 },
 							"__smartColor": "#EAD4AA",
 							"iid": "fcd16fb0-fa90-11f0-90ed-2d8ba88db82f",
 							"width": 64,
