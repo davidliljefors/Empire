@@ -7,7 +7,7 @@
 #include <Empire/math.inl>
 #include <SDL3/SDL.h>
 
-#define ANIMATION_SPEED 0.1f
+#define ANIMATION_SPEED 0.15f
 
 emp_G* G;
 emp_enemy_conf_t* enemy_confs[16];
