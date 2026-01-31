@@ -137,7 +137,7 @@ const char* get_asset_argument(int argc, char* arguments[])
 
 int main(int argc, char* argv[])
 {
-	if (!SDL_Init(SDL_INIT_VIDEO)) {
+	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
 		SDL_Log("Failed to initialize SDL: %s", SDL_GetError());
 		return 1;
 	}
@@ -217,6 +217,26 @@ int main(int argc, char* argv[])
 
 	emp_create_level();
 
+	SDL_AudioSpec spec;
+    Uint8 *wav_data = NULL;
+    Uint32 wav_data_len = 0;
+
+    if (!SDL_LoadWAV( G->assets->wav->calm_music_loopable.path, &spec, &wav_data, &wav_data_len)) {
+        SDL_Log("Failed to load WAV: %s", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+	SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+    if (!stream) {
+        SDL_Log("Failed to open audio stream: %s", SDL_GetError());
+        SDL_free(wav_data);
+        SDL_Quit();
+        return 1;
+    }
+	SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
+    SDL_ResumeAudioStreamDevice(stream);
+
 	SDL_zerop(G->args);
 
 	g_last_time = SDL_GetTicks();
@@ -239,6 +259,10 @@ int main(int argc, char* argv[])
 			frame_count = 0;
 			last_time = currentTime;
 		}
+		
+		if (SDL_GetAudioStreamQueued(stream) == 0) {
+            SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
+        }
 
 		main_loop();
 		emp_asset_manager_check_hot_reload(g_asset_mgr);

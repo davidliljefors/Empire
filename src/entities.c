@@ -31,6 +31,25 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
+void PlayOneShot(const char* filename) {
+
+	if(!filename)
+	{
+		return;
+	}
+    SDL_AudioSpec spec;
+    Uint8 *wav_data;
+    Uint32 wav_data_len;
+
+    if (SDL_LoadWAV(filename, &spec, &wav_data, &wav_data_len)) {
+        SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
+        if (stream) {
+            SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
+            SDL_ResumeAudioStreamDevice(stream);
+        }
+    }
+}
+
 emp_vec2_t render_offset()
 {
 	int render_w, render_h;
@@ -206,6 +225,7 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
+	weapons[0]->path = G->assets->wav->shot1.path;
 
 	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[1]->delay_between_shots = 0.2f;
@@ -216,6 +236,7 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
+	weapons[1]->path = G->assets->wav->shot1.path;
 
 	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
 	weapons[2]->delay_between_shots = 0.3f;
@@ -238,6 +259,7 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
+	weapons[2]->path = G->assets->wav->shot2.path;
 
 	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
 	weapons[3]->delay_between_shots = 0.3f;
@@ -272,10 +294,12 @@ void emp_init_weapon_configs()
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8
 	};
+	weapons[3]->path = G->assets->wav->shot3.path;
 
 	weapons[4] = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
 	weapons[4]->delay_between_shots = 0.3f;
 	weapons[4]->num_shots = 12;
+	weapons[4]->path = G->assets->wav->shot1.path;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -359,7 +383,7 @@ void emp_init_weapon_configs()
 	weapons[5] = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
 	weapons[5]->delay_between_shots = 0.3f;
 	weapons[5]->num_shots = total_bullets;
-
+	weapons[5]->path = G->assets->wav->shot2.path;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -375,7 +399,7 @@ void emp_init_weapon_configs()
 	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
 	weapons[6]->delay_between_shots = 0.5f;
 	weapons[6]->num_shots = total_bullets;
-
+	weapons[6]->path = G->assets->wav->shot3.path;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -407,7 +431,7 @@ void emp_init_weapon_configs()
 	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
 	weapons[7]->delay_between_shots = 0.5f;
 	weapons[7]->num_shots = total_bullets / 2 + 1;
-
+	weapons[7]->path = G->assets->wav->shot3.path;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -443,6 +467,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->texture_asset = bullet_conf.texture_asset;
 		bullet->mask = mask;
 	}
+	PlayOneShot(conf->path);
 }
 
 u32 emp_create_player()
