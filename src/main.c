@@ -15,14 +15,13 @@
 #define WINDOW_WIDTH 2200
 #define WINDOW_HEIGHT 1200
 
-#define SPRITE_MAGNIFICATION 4.0f
-
 #include "entities.h"
 
 #include <Empire/fast_obj.h>
 #include <Empire/generated/assets_generated.h>
 #include <Empire/stb_image.h>
 #include <Empire/text.h>
+#include <Empire/level.h>
 
 typedef struct
 {
@@ -193,6 +192,8 @@ int main(int argc, char* argv[])
 #else
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
+
+	emp_load_level_asset(&g_assets->ldtk->world);
 
 	while (g_running) {
 		frame_count++;

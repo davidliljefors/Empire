@@ -2,6 +2,8 @@
 
 #include <Empire/types.h>
 
+#define SPRITE_MAGNIFICATION 4.0f
+
 typedef struct emp_asset_t emp_asset_t;
 
 typedef struct emp_bullet_conf_t
