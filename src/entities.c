@@ -19,6 +19,11 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
+emp_vec2_t get_tile(emp_vec2_t position)
+{
+	return emp_vec2_div(position, EMP_TILE_SIZE);
+}
+
 SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
 {
 	SDL_FRect rect;
@@ -266,6 +271,17 @@ void emp_bullet_uptdate(emp_bullet_t* bullet)
 		bullet->alive = false;
 	}
 
+	u32 tile_x = bullet->pos.x / EMP_TILE_SIZE;
+	u32 tile_y = bullet->pos.y / EMP_TILE_SIZE;
+
+	emp_tile_t* tile = &G->level->tiles[tile_x * EMP_LEVEL_WIDTH + tile_y];
+
+	if (tile->texture_asset)
+	{
+		bullet->alive = false;
+	}
+
+
 	emp_texture_t* tex = bullet->texture_asset->handle;
 	SDL_FRect dstRect = (SDL_FRect) { bullet->pos.x, bullet->pos.y, (float)tex->width, (float)tex->height };
 	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
@@ -279,7 +295,6 @@ void emp_level_update()
 		if (tiles->texture_asset)
 		{
 			emp_texture_t* texture = tiles->texture_asset->handle;
-
 			u32 x = i / EMP_LEVEL_WIDTH;
 			u32 y = i % EMP_LEVEL_WIDTH;
 
@@ -287,9 +302,8 @@ void emp_level_update()
 			{
 				SDL_FRect src = source_rect(tiles->texture_asset);
 				emp_vec2_t pos;
-				pos.x = x * 16.0f;
-				pos.y = y * 16.0f;
-
+				pos.x = x * 16.0f * 4.0;
+				pos.y = y * 16.0f * 4.0;
 				SDL_FRect dst = center_rect(pos, texture);
 				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 			}
@@ -356,10 +370,7 @@ void emp_create_level(void)
 
 	for (u32 i = 0; i < EMP_LEVEL_TILES; ++i)
 	{
-		if (i % 16 == 0)
-		{
-			G->level->tiles[i].texture_asset = &G->assets->png->tilemap;
-		}
+		G->level->tiles[i].texture_asset = &G->assets->png->brick;
 	}
 }
 

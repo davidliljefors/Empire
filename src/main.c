@@ -205,7 +205,6 @@ void emp_png_load_func(emp_asset_t* asset)
 		emp_tex->height = height * SPRITE_MAGNIFICATION;
 	}
 
-
 	asset->handle = emp_tex;
 }
 
