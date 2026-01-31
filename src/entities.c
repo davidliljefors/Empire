@@ -415,6 +415,7 @@ emp_enemy_h emp_create_enemy()
 
 void emp_destroy_enemy(emp_enemy_h handle)
 {
+
 }
 
 emp_bullet_h emp_create_bullet()
@@ -441,6 +442,7 @@ emp_bullet_h emp_create_bullet()
 
 void emp_destroy_bullet(emp_bullet_h handle)
 {
+
 }
 
 emp_bullet_generator_h emp_create_bullet_generator()
@@ -549,19 +551,18 @@ void emp_player_update(emp_player_t* player)
 	}
 
 	if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) {
-		if (player->shot_delay <= 0.0f) {
+		if (player->last_shot + wep1->delay_between_shots < G->args->global_time) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x, .y = dst.y };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
 			spawn_bullets(player->pos, delta, wep[player->weapon_index]);
 			player->shot_delay = wep[player->weapon_index]->delay_between_shots;
 		}
 	}
-
-	player->shot_delay -= G->args->dt;
 }
 
 void emp_enemy_uptdate(emp_enemy_t* enemy)
 {
+
 }
 
 void emp_bullet_update(emp_bullet_t* bullet)
