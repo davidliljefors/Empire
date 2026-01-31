@@ -55,6 +55,7 @@ typedef struct emp_player_t
 {
 	u32 generation;
 	bool alive;
+	u32 weapon_index;
 	emp_vec2_t pos;
 	emp_asset_t* texture_asset;
 	double last_shot;
