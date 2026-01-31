@@ -162,7 +162,7 @@ static void main_loop(void)
 
 	SDL_RenderPresent(g_renderer);
 
-	emp_gl_depth_test_enable();
+	//emp_gl_depth_test_enable();
 
 	SDL_GL_SwapWindow(g_window);
 }

@@ -177,7 +177,6 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 	const bool* state = SDL_GetKeyboardState(NULL);
 	emp_player_conf_t conf = get_player_conf();
 
-	// SDL_Log("%s, x:%f y:%f", "update enemy", player->x, player->y);
 
 	emp_vec2_t movement = {};
 
@@ -230,7 +229,6 @@ void emp_bullet_uptdate(emp_update_args_t* args, emp_bullet_t* bullet)
 
 	if (bullet->life_left <= 0.0f) {
 		bullet->alive = false;
-		SDL_Log("destroy bullet");
 	}
 
 	emp_texture_t* tex = bullet->texture_asset->handle;
@@ -258,8 +256,6 @@ void emp_entities_init()
 
 void emp_entities_update(emp_update_args_t* args)
 {
-	SDL_Log("dt: %f", args->dt);
-	
 	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
 		if (player->alive) {
