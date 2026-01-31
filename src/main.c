@@ -29,75 +29,10 @@ typedef struct
 	float m[16];
 } emp_mat4_t;
 
-static emp_mat4_t mat4_identity(void)
-{
-	emp_mat4_t r = { 0 };
-	r.m[0] = r.m[5] = r.m[10] = r.m[15] = 1.0f;
-	return r;
-}
-
-static emp_mat4_t mat4_mul(emp_mat4_t a, emp_mat4_t b)
-{
-	emp_mat4_t r = { 0 };
-	for (int col = 0; col < 4; col++) {
-		for (int row = 0; row < 4; row++) {
-			for (int k = 0; k < 4; k++) {
-				r.m[col * 4 + row] += a.m[k * 4 + row] * b.m[col * 4 + k];
-			}
-		}
-	}
-	return r;
-}
-
-static emp_mat4_t mat4_make_rotation_x(float angle)
-{
-	emp_mat4_t r = mat4_identity();
-	float c = cosf(angle), s = sinf(angle);
-	r.m[5] = c;
-	r.m[9] = -s;
-	r.m[6] = s;
-	r.m[10] = c;
-	return r;
-}
-
-static emp_mat4_t mat4_make_rotation_y(float angle)
-{
-	emp_mat4_t r = mat4_identity();
-	float c = cosf(angle), s = sinf(angle);
-	r.m[0] = c;
-	r.m[8] = s;
-	r.m[2] = -s;
-	r.m[10] = c;
-	return r;
-}
-
-static emp_mat4_t mat4_make_perspective(float fov, float aspect, float nearZ, float farZ)
-{
-	emp_mat4_t r = { 0 };
-	float f = 1.0f / tanf(fov / 2.0f);
-	r.m[0] = f / aspect;
-	r.m[5] = f;
-	r.m[10] = (farZ + nearZ) / (nearZ - farZ);
-	r.m[14] = (2.0f * farZ * nearZ) / (nearZ - farZ);
-	r.m[11] = -1.0f;
-	return r;
-}
-
-static emp_mat4_t mat4_make_translation(float x, float y, float z)
-{
-	emp_mat4_t r = mat4_identity();
-	r.m[12] = x;
-	r.m[13] = y;
-	r.m[14] = z;
-	return r;
-}
-
 static SDL_Window* g_window = NULL;
 static SDL_Renderer* g_renderer = NULL;
 static emp_generated_assets_o* g_assets = NULL;
 static emp_asset_manager_o* g_asset_mgr = NULL;
-static float g_angle_x = 0.0f;
-static float g_angle_y = 0.0f;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
@@ -127,36 +62,11 @@ static void main_loop(void)
 	SDL_SetRenderDrawColor(g_renderer, 108, 129, 161, 1);
 	SDL_RenderClear(g_renderer);
 
-	// glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-	//emp_gl_clear(0.1f, 0.1f, 0.15f, 1.0f);
-	// glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//emp_ubo_clear(&g_material);
-
-	emp_mat4_t model = mat4_mul(mat4_make_rotation_x(g_angle_x), mat4_make_rotation_y(g_angle_y));
-	emp_mat4_t view = mat4_make_translation(0.0f, 0.0f, -3.0f);
-	emp_mat4_t proj = mat4_make_perspective((float)(M_PI / 4.0), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.1f, 100.0f);
-	emp_mat4_t mvp = mat4_mul(proj, mat4_mul(view, model));
-	(void)mvp;
-	//emp_ubo_push_from_name(&g_material, emp_uniform_matrix4x4, "u_mvp", mvp.m);
-
-	//int zero = 0;
-	//emp_ubo_push_from_name(&g_material, emp_uniform_int, "u_has_texture", &zero);
-
-	//emp_mesh_gpu_t* cube_mesh = (emp_mesh_gpu_t*)g_assets->obj->cylinder.handle;
-	//emp_gpu_instance_list_t render_list = { 0 };
-	//emp_gpu_instance_list_add(&render_list, &(emp_gpu_instance_t) { .mesh = cube_mesh });
-	//emp_gpu_instance_list_render(&g_material, &render_list);
-
 	emp_draw_text(100, 100, "hello world", &g_assets->ttf->bauhs93);
-
-	//emp_gl_depth_test_disable();
 
 	emp_entities_update();
 
 	SDL_RenderPresent(g_renderer);
-
-	//emp_gl_depth_test_enable();
 
 	SDL_GL_SwapWindow(g_window);
 }
