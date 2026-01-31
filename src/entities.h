@@ -74,6 +74,20 @@ typedef struct emp_bullet_generator_h
 	u32 generation;
 } emp_bullet_generator_h;
 
+#define EMP_LEVEL_WIDTH 1024;
+#define EMP_LEVEL_HEIGHT 1024;
+
+typedef struct emp_tile_t
+{
+
+} emp_tile_t;
+
+typedef struct emp_level_t
+{
+
+	emp_tile_t* tiles;
+} emp_level_t;
+
 typedef struct emp_entities_t
 {
 	emp_update_args_t* args;
