@@ -15,6 +15,8 @@
 #define WINDOW_WIDTH 2200
 #define WINDOW_HEIGHT 1200
 
+#define SPRITE_MAGNIFICATION 4.0f
+
 #include "entities.h"
 
 #include <Empire/fast_obj.h>
@@ -117,17 +119,10 @@ static void main_loop(void)
 
 
 	Uint64 current_time = SDL_GetTicks();
-	float delta_time = (current_time - g_last_time) / 1000.0f;
+	double delta_time = (current_time - g_last_time) / 1000.0;
 	g_last_time = current_time;
-
-	emp_update_args_t update_args;
-	update_args.dt = delta_time;
-	update_args.assets = g_assets;
-	update_args.r = g_renderer;
-	G->args = &update_args;
-
-	g_angle_x += 0.5f * delta_time;
-	g_angle_y += 0.8f * delta_time;
+	G->args->dt = (float)delta_time;
+	G->args->global_time += delta_time;
 
 	SDL_SetRenderDrawColor(g_renderer, 108, 129, 161, 1);
 	SDL_RenderClear(g_renderer);
@@ -157,13 +152,23 @@ static void main_loop(void)
 
 	//emp_gl_depth_test_disable();
 
-	emp_entities_update(&update_args);
+	emp_entities_update();
 
 	SDL_RenderPresent(g_renderer);
 
 	//emp_gl_depth_test_enable();
 
 	SDL_GL_SwapWindow(g_window);
+}
+
+int parse_atlas_width_from_path_name(const char* path)
+{
+	const char* dot = SDL_strrchr(path, '.');
+	const char* underscore = SDL_strrchr(path, '_');
+	if (underscore && (!dot || underscore < dot)) {
+		return SDL_atoi(underscore + 1);
+	}
+	return 0;
 }
 
 void emp_png_load_func(emp_asset_t* asset)
@@ -181,8 +186,25 @@ void emp_png_load_func(emp_asset_t* asset)
 	emp_texture_t* emp_tex = SDL_malloc(sizeof(emp_texture_t));
 
 	emp_tex->texture = texture;
-	emp_tex->width = width * 4.0f;
-	emp_tex->height = height * 4.0f;
+	
+	int atlas_size = parse_atlas_width_from_path_name(asset->path);
+	if (atlas_size)
+	{
+		emp_tex->atlas_size = (u32)(atlas_size);
+		emp_tex->columns = width / atlas_size;
+		emp_tex->rows = height / atlas_size;
+		emp_tex->width = atlas_size * SPRITE_MAGNIFICATION;
+		emp_tex->height = atlas_size * SPRITE_MAGNIFICATION;
+	}
+	else
+	{
+		emp_tex->atlas_size = 1;
+		emp_tex->rows = 1;
+		emp_tex->columns = 1;
+		emp_tex->width = width * SPRITE_MAGNIFICATION;
+		emp_tex->height = height * SPRITE_MAGNIFICATION;
+	}
+
 
 	asset->handle = emp_tex;
 }
@@ -244,8 +266,11 @@ int main(int argc, char* argv[])
 	emp_entities_init();
 
 	u32 player = emp_create_player();
-	G->player[player].texture_asset = &g_assets->png->base;
+	G->player[player].texture_asset = &g_assets->png->player_32;
 	G->assets = g_assets;
+	G->args = SDL_malloc(sizeof(emp_update_args_t));
+	G->renderer = g_renderer;
+	SDL_zerop(G->args);
 
 	emp_init_weapon_configs();
 
@@ -256,6 +281,7 @@ int main(int argc, char* argv[])
 #else
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
+
 	while (g_running) {
 		frame_count++;
 		u64 currentTime = SDL_GetTicks();
