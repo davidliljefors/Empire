@@ -18,7 +18,7 @@ emp_values_slice_t emp_level_reserve_values(emp_level_asset_t* level, size_t cou
 {
 	u8* data = level->values.values + level->values.count;
 	level->values.count = level->values.count + count;
-	return (emp_values_slice_t) { .values = data, .count = count };
+	return (emp_values_slice_t) { .entries = data, .count = count };
 }
 
 emp_tile_desc_slice_t emp_level_reserve_tiles(emp_level_asset_t* level, size_t count)
@@ -39,7 +39,7 @@ void emp_level_parse_int_grid_data(emp_level_asset_t* level, yyjson_val* layer, 
 	yyjson_val* value;
 	yyjson_arr_foreach(int_grid, idx, size, value)
 	{
-		values->values[idx] = (u8)yyjson_get_int(value);
+		values->entries[idx] = (u8)yyjson_get_int(value);
 	}
 }
 

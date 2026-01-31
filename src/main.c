@@ -15,8 +15,6 @@
 #define WINDOW_WIDTH 2200
 #define WINDOW_HEIGHT 1200
 
-#define SPRITE_MAGNIFICATION 4.0f
-
 #include "entities.h"
 
 #include <Empire/fast_obj.h>

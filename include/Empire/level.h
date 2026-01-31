@@ -19,7 +19,7 @@ typedef struct emp_tile_desc_t
 
 typedef struct emp_values_slice_t
 {
-	u8* values;
+	u8* entries;
 	size_t count;
 } emp_values_slice_t;
 
