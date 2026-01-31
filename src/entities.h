@@ -7,7 +7,7 @@
 typedef struct emp_asset_t emp_asset_t;
 typedef struct emp_enemy_t emp_enemy_t;
 
-typedef void (*enemy_update_f)(emp_enemy_t*);
+typedef void (*emp_enemy_update_f)(emp_enemy_t*);
 
 typedef struct emp_enemy_h
 {
@@ -45,9 +45,11 @@ typedef struct emp_weapon_conf_t
 
 typedef struct emp_enemy_conf_t
 {
-	float hp;
-	float movement_speed;
+	int health;
+	float speed;
 	emp_asset_t* texture_asset;
+	emp_enemy_update_f update;
+	u32 data_size;
 } emp_enemy_conf_t;
 
 #define EMP_MAX_PLAYERS 1
@@ -66,9 +68,13 @@ typedef struct emp_enemy_t
 {
 	bool alive;
 	u32 generation;
+	int health;
+	float speed;
 	emp_vec2_t pos;
 	emp_asset_t* texture_asset;
-	emp_bullet_generator_h bullet_generator;
+	emp_weapon_conf_t* weapon;
+	emp_enemy_update_f update;
+	u8 dynamic_data[64];
 } emp_enemy_t;
 
 #define EMP_MAX_BULLETS 65535
@@ -121,10 +127,11 @@ typedef struct emp_entities_t
 
 extern emp_G* G;
 
+void emp_init_enemy_configs();
 void emp_init_weapon_configs();
 u32 emp_create_player();
 
-emp_enemy_h emp_create_enemy();
+emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index);
 void emp_destroy_enemy(emp_enemy_h handle);
 
 emp_bullet_h emp_create_bullet();
