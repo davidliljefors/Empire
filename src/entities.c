@@ -5,6 +5,8 @@
 #include <Empire/math.inl>
 #include <SDL3/SDL.h>
 
+#define ANIMATION_SPEED 0.1f
+
 emp_G* G;
 
 typedef struct emp_player_conf_t
@@ -14,7 +16,37 @@ typedef struct emp_player_conf_t
 
 emp_player_conf_t get_player_conf()
 {
-	return (emp_player_conf_t) { .speed = 120.0f };
+	return (emp_player_conf_t) { .speed = 620.0f };
+}
+
+SDL_FRect center_rect(emp_vec2_t pos, emp_texture_t* texture)
+{
+	SDL_FRect rect;
+	rect.x = pos.x - (texture->width / 2);
+	rect.y = pos.y - (texture->height / 2);
+	rect.w = (float)texture->width;
+	rect.h = (float)texture->height;
+	return rect;
+}
+
+SDL_FRect source_rect(emp_asset_t* texture_asset)
+{
+	emp_texture_t* texture = texture_asset->handle;
+
+	u32 total_frames = texture->columns * texture->rows;
+	u32 slot = (u32)(G->args->global_time / ANIMATION_SPEED) % total_frames;
+
+	u32 column = slot % texture->columns;
+	u32 row = slot / texture->columns;
+
+	SDL_FRect rect;
+
+	rect.x = (float)(column * texture->atlas_size);
+	rect.y = (float)(row * texture->atlas_size);
+	rect.w = (float)texture->atlas_size;
+	rect.h = (float)texture->atlas_size;
+
+	return rect;
 }
 
 emp_weapon_conf_t* wep1;
@@ -31,7 +63,7 @@ void emp_init_weapon_configs()
 		.speed = 500.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet,
+		.texture_asset = &G->assets->png->bullet_8,
 	};
 
 	wep2 = SDL_malloc(sizeof(emp_weapon_conf_t));
@@ -41,35 +73,35 @@ void emp_init_weapon_configs()
 		.speed = 500.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[1] = (emp_bullet_conf_t) {
 		.speed = 500.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[2] = (emp_bullet_conf_t) {
 		.speed = 600.0f,
 		.start_angle = 25.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[3] = (emp_bullet_conf_t) {
 		.speed = 600.0f,
 		.start_angle = -25.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep2->shots[4] = (emp_bullet_conf_t) {
 		.speed = 800.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
-		.texture_asset = &G->assets->png->bullet
+		.texture_asset = &G->assets->png->bullet_8
 	};
 
 	wep3 = SDL_malloc(sizeof(emp_weapon_conf_t));
@@ -78,7 +110,7 @@ void emp_init_weapon_configs()
 
 emp_bullet_conf_t get_bullet1()
 {
-	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 1000.0f, .texture_asset = &G->args->assets->png->bullet };
+	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 1000.0f, .texture_asset = &G->assets->png->bullet_8 };
 	return bullet;
 }
 
@@ -172,7 +204,7 @@ void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 {
 }
 
-void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
+void emp_player_update(emp_player_t* player)
 {
 	const bool* state = SDL_GetKeyboardState(NULL);
 	emp_player_conf_t conf = get_player_conf();
@@ -196,13 +228,14 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 		movement.x = conf.speed;
 	}
 	movement = emp_vec2_normalize(movement);
-	movement = emp_vec2_mul(movement, args->dt * conf.speed);
+	movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
 
 	player->pos = emp_vec2_add(player->pos, movement);
 
+	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
-	SDL_FRect dstRect = (SDL_FRect) { player->pos.x, player->pos.y, (float)tex->width, (float)tex->height };
-	SDL_RenderTexture(args->r, tex->texture, NULL, &dstRect);
+	SDL_FRect dstRect = center_rect(player->pos, tex);
+	SDL_RenderTexture(G->renderer, tex->texture, &src, &dstRect);
 
 	emp_vec2_t mouse_pos;
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
@@ -215,19 +248,19 @@ void emp_player_uptdate(emp_update_args_t* args, emp_player_t* player)
 		}
 	}
 
-	player->shot_delay -= args->dt;
+	player->shot_delay -= G->args->dt;
 }
 
-void emp_enemy_uptdate(emp_update_args_t* args, emp_enemy_t* enemy)
+void emp_enemy_uptdate(emp_enemy_t* enemy)
 {
 }
 
-void emp_bullet_uptdate(emp_update_args_t* args, emp_bullet_t* bullet)
+void emp_bullet_uptdate(emp_bullet_t* bullet)
 {
-	bullet->life_left -= args->dt;
+	bullet->life_left -= G->args->dt;
 
-	bullet->pos.x += bullet->vel.x * args->dt;
-	bullet->pos.y += bullet->vel.y * args->dt;
+	bullet->pos.x += bullet->vel.x * G->args->dt;
+	bullet->pos.y += bullet->vel.y * G->args->dt;
 
 	if (bullet->life_left <= 0.0f) {
 		bullet->alive = false;
@@ -235,10 +268,10 @@ void emp_bullet_uptdate(emp_update_args_t* args, emp_bullet_t* bullet)
 
 	emp_texture_t* tex = bullet->texture_asset->handle;
 	SDL_FRect dstRect = (SDL_FRect) { bullet->pos.x, bullet->pos.y, (float)tex->width, (float)tex->height };
-	SDL_RenderTexture(args->r, tex->texture, NULL, &dstRect);
+	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
 }
 
-void emp_generator_uptdate(emp_update_args_t* args, emp_bullet_generator_t* generator)
+void emp_generator_uptdate(emp_bullet_generator_t* generator)
 {
 }
 
@@ -256,33 +289,33 @@ void emp_entities_init()
 	SDL_memset(G->generators, 0, sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
 }
 
-void emp_entities_update(emp_update_args_t* args)
+void emp_entities_update()
 {
 	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
 		if (player->alive) {
-			emp_player_uptdate(args, player);
+			emp_player_update(player);
 		}
 	}
 
 	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
 		if (enemy->alive) {
-			emp_enemy_uptdate(args, enemy);
+			emp_enemy_uptdate(enemy);
 		}
 	}
 
 	for (u64 i = 0; i < EMP_MAX_BULLETS; ++i) {
 		emp_bullet_t* bullet = &G->bullets[i];
 		if (bullet->alive) {
-			emp_bullet_uptdate(args, bullet);
+			emp_bullet_uptdate(bullet);
 		}
 	}
 
 	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
 		emp_bullet_generator_t* generator = &G->generators[i];
 		if (generator->alive) {
-			emp_generator_uptdate (args, generator);
+			emp_generator_uptdate (generator);
 		}
 	}
 }

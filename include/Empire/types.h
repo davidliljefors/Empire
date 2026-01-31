@@ -21,15 +21,17 @@ typedef struct emp_generated_assets_o emp_generated_assets_o;
 
 typedef struct emp_update_args_t
 {
-	emp_generated_assets_o* assets;
-	SDL_Renderer* r;
 	float dt;
+	double global_time;
 } emp_update_args_t;
 
 typedef struct
 {
-	u32 width;
-	u32 height;
+	float width;
+	float height;
+	u32 atlas_size;
+	u32 rows;
+	u32 columns;
 	SDL_Texture* texture;
 } emp_texture_t;
 
