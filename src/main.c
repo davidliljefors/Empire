@@ -19,9 +19,9 @@
 
 #include <Empire/fast_obj.h>
 #include <Empire/generated/assets_generated.h>
+#include <Empire/level.h>
 #include <Empire/stb_image.h>
 #include <Empire/text.h>
-#include <Empire/level.h>
 
 typedef struct
 {
@@ -35,9 +35,9 @@ static emp_asset_manager_o* g_asset_mgr = NULL;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
-//typedef struct sprite_t {
-//	
-//}sprite_t;
+// typedef struct sprite_t {
+//
+// }sprite_t;
 
 static void main_loop(void)
 {
@@ -51,9 +51,9 @@ static void main_loop(void)
 		}
 	}
 
-
 	Uint64 current_time = SDL_GetTicks();
 	double delta_time = (current_time - g_last_time) / 1000.0;
+	delta_time = min(delta_time, 0.5f);
 	g_last_time = current_time;
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;
@@ -95,18 +95,15 @@ void emp_png_load_func(emp_asset_t* asset)
 	emp_texture_t* emp_tex = SDL_malloc(sizeof(emp_texture_t));
 
 	emp_tex->texture = texture;
-	
+
 	int atlas_size = parse_atlas_width_from_path_name(asset->path);
-	if (atlas_size)
-	{
+	if (atlas_size) {
 		emp_tex->source_size = (u32)(atlas_size);
 		emp_tex->columns = width / atlas_size;
 		emp_tex->rows = height / atlas_size;
 		emp_tex->width = atlas_size * SPRITE_MAGNIFICATION;
 		emp_tex->height = atlas_size * SPRITE_MAGNIFICATION;
-	}
-	else
-	{
+	} else {
 		emp_tex->source_size = width;
 		emp_tex->rows = 1;
 		emp_tex->columns = 1;
@@ -148,8 +145,7 @@ int main(int argc, char* argv[])
 	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
 
 	SDL_SetRenderVSync(g_renderer, 1);
-	//SDL_SetRenderScale(g_renderer, 2, 2);
-	
+	// SDL_SetRenderScale(g_renderer, 2, 2);
 
 	if (!g_window) {
 		SDL_Log("Failed to create window: %s", SDL_GetError());
@@ -167,30 +163,61 @@ int main(int argc, char* argv[])
 		.unload = &emp_png_unload_func,
 	};
 
+	emp_asset_loader_t ldtk_loader = {
+		.load = &emp_load_level_asset,
+		.unload = &emp_unload_level_asset,
+	};
+
+	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
+	emp_asset_manager_add_loader(g_asset_mgr, ldtk_loader, EMP_ASSET_TYPE_LDTK);
+
 	emp_asset_manager_check_hot_reload(g_asset_mgr);
 
 	G = SDL_malloc(sizeof(emp_G));
 	G->assets = g_assets;
 	G->args = SDL_malloc(sizeof(emp_update_args_t));
 	G->renderer = g_renderer;
-	
+
 	emp_entities_init();
 	emp_init_enemy_configs();
 	emp_init_weapon_configs();
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &g_assets->png->player_32;
-	G->player[player].pos.x = 256.0f;
-	G->player[player].pos.y = 256.0f;
 
-	emp_create_enemy((emp_vec2_t){512.0f, 256.0f}, 0);
+	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
+	size_t found = emp_level_query(level, emp_entity_type_player, 0);
+	if (found) {
+		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
+		float half = level->entities.grid_size * 0.5f;
+		float x = player_entity->x - half;
+		float y = player_entity->y - half;
+		G->player[player].pos.x = x * SPRITE_MAGNIFICATION;
+		G->player[player].pos.y = y * SPRITE_MAGNIFICATION;
+	} else {
+		SDL_Log("No Player config broke!");
+	}
+
+	found = 0;
+	for (;;) {
+		found = emp_level_query(level, emp_entity_type_spawner, found);
+		if (!found) {
+			break;
+		}
+
+		float half = level->entities.grid_size * 0.5f;
+		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
+		float x = enemy->x - half;
+		float y = enemy->y - half;
+
+		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
+	}
+
 	emp_create_level();
 
-
 	SDL_zerop(G->args);
-
 
 	g_last_time = SDL_GetTicks();
 
@@ -200,7 +227,7 @@ int main(int argc, char* argv[])
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
 
-	emp_load_level_asset(&g_assets->ldtk->world);
+	// emp_load_level_asset(&g_assets->ldtk->world);
 
 	while (g_running) {
 		frame_count++;

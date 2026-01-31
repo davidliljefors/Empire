@@ -61,11 +61,14 @@ typedef struct emp_player_t
 	emp_vec2_t pos;
 	emp_asset_t* texture_asset;
 	double last_shot;
+	bool flip;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
 typedef struct emp_enemy_t
 {
+	emp_enemy_h next_in_tile;
+
 	bool alive;
 	u32 generation;
 	int health;
@@ -109,12 +112,18 @@ typedef struct emp_bullet_generator_t
 #define EMP_TILE_SIZE 16.0f
 #define EMP_LEVEL_WIDTH 1024
 #define EMP_LEVEL_HEIGHT 1024
-#define EMP_LEVEL_TILES EMP_LEVEL_WIDTH * EMP_LEVEL_HEIGHT
+#define EMP_LEVEL_TILES EMP_LEVEL_WIDTH* EMP_LEVEL_HEIGHT
+
+typedef enum emp_tile_state {
+	emp_tile_state_none,
+	emp_tile_state_occupied,
+	emp_tile_state_breakable
+} emp_tile_state;
 
 typedef struct emp_tile_t
 {
-	emp_asset_t* texture_asset;
-	bool occupied;
+	emp_tile_state state;
+	emp_enemy_h first_in_tile;
 } emp_tile_t;
 
 typedef struct emp_level_t
