@@ -5,6 +5,9 @@
 #define SPRITE_MAGNIFICATION 4.0f
 
 typedef struct emp_asset_t emp_asset_t;
+typedef struct emp_enemy_t emp_enemy_t;
+
+typedef void (*enemy_update_f)(emp_enemy_t*);
 
 typedef struct emp_enemy_h
 {
@@ -39,6 +42,13 @@ typedef struct emp_weapon_conf_t
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
 } emp_weapon_conf_t;
+
+typedef struct emp_enemy_conf_t 
+{
+	float hp;
+	float movement_speed;
+	emp_asset_t* texture_asset;
+} emp_enemy_conf_t;
 
 #define EMP_MAX_PLAYERS 1
 typedef struct emp_player_t

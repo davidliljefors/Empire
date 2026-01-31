@@ -494,6 +494,7 @@ void emp_player_update(emp_player_t* player)
 	if (state[SDL_SCANCODE_D]) {
 		movement.x = conf.speed;
 	}
+
 	movement = emp_vec2_normalize(movement);
 	movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
 
