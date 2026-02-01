@@ -20,7 +20,7 @@ emp_asset_manager_o* emp_asset_manager_create(emp_generated_assets_o* assets)
 
 	emp_generated_generic_t** generic_assets = (emp_generated_generic_t**)assets;
 
-	for (u64 i = 0; i < sizeof(emp_generated_assets_o) / 8; ++i) {
+	for (u64 i = 0; i < sizeof(emp_generated_assets_o) / sizeof(void*); ++i) {
 		emp_generated_generic_t* generic = generic_assets[i];
 		emp_asset_type_t asset_type = { .count = generic->count, .assets = generic->asset, .loader = {0} };
 		hmput(mgr->assets_by_ext, generic->type_hash, asset_type);
@@ -46,22 +46,28 @@ void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr)
 		if (loader.load && loader.unload) {
 			for (u64 j = 0; j < pair->value.count; ++j) {
 				emp_asset_t* asset = &pair->value.assets[j];
+				SDL_PathInfo info;
+				SDL_GetPathInfo(asset->path, &info);
 
 				if (asset->handle == NULL) {
 					loader.load(asset);
+					asset->last_modified = info.modify_time;
 				}
-
-				emp_buffer new_data = emp_read_entire_file(asset->path);
-				u64 new_hash = emp_hash_data(new_data);
-				if (new_hash != 0 && new_hash != asset->hash) {
-					loader.unload(asset);
-					SDL_free(asset->data.data);
-					asset->data = new_data;
-					asset->hash = new_hash;
-					loader.load(asset);
-				} else {
-					SDL_free(new_data.data);
+#ifndef __EMSCRIPTEN__
+				if (asset->last_modified != info.modify_time) {
+					emp_buffer new_data = emp_read_entire_file(asset->path);
+					u64 new_hash = emp_hash_data(new_data);
+					if (new_hash != 0 && new_hash != asset->hash) {
+						loader.unload(asset);
+						SDL_free(asset->data.data);
+						asset->data = new_data;
+						asset->hash = new_hash;
+						loader.load(asset);
+					} else {
+						SDL_free(new_data.data);
+					}
 				}
+#endif
 			}
 		}
 	}

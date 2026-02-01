@@ -14,8 +14,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 
 #define WINDOW_WIDTH 2200
 #define WINDOW_HEIGHT 1200
@@ -183,6 +181,7 @@ int main(int argc, char* argv[])
 
 	G = SDL_malloc(sizeof(emp_G));
 	SDL_AudioSpec spec;
+	MIX_Init();
 	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
     if (!G->mixer) {
         SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());

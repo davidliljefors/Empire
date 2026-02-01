@@ -221,7 +221,7 @@ void emp_load_level_asset(struct emp_asset_t* asset)
 	yyjson_val* sublevels = yyjson_obj_get(root, "levels");
 
 	emp_level_asset_t* level = SDL_malloc(sizeof(*level));
-	memset(level, 0, sizeof(*level));
+	SDL_memset(level, 0, sizeof(*level));
 
 	u64 idx, size;
 	yyjson_val* current;
