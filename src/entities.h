@@ -82,6 +82,7 @@ typedef struct emp_enemy_t
 	u32 generation;
 	float health;
 	float speed;
+	float enemy_shot_delay;
 	emp_vec2_t pos;
 	emp_vec2_t direction;
 	emp_asset_t* texture_asset;
