@@ -35,12 +35,20 @@ typedef struct emp_tiles_data_t
 	u32 count;
 } emp_tiles_data_t;
 
+
+typedef struct emp_decoration_data_t
+{
+	float grid_size;
+	emp_tiles_data_t tiles;
+} emp_decoration_data_t;
+
 typedef struct emp_sublevel_t
 {
 	emp_vec2_t offset;
 
 	emp_tiles_data_t tiles;
 	emp_value_grid_t values;
+	emp_decoration_data_t decoration;
 } emp_sublevel_t;
 
 typedef struct emp_sublevel_list_t

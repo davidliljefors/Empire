@@ -168,6 +168,14 @@ typedef struct emp_level_t
 	emp_tile_health_t* health;
 } emp_level_t;
 
+#define EMP_MAX_CHESTS 32
+typedef struct emp_chest_t
+{
+	emp_vec2_t pos;
+	u32 weapon_index;
+	bool alive;
+} emp_chest_t;
+
 struct MIX_Mixer;
 typedef struct emp_entities_t
 {
@@ -178,6 +186,7 @@ typedef struct emp_entities_t
 	emp_enemy_t* enemies;
 	emp_bullet_t* bullets;
 	emp_spawner_t* spawners;
+	emp_chest_t* chests;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
 	struct MIX_Mixer* mixer;

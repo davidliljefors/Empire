@@ -42,18 +42,18 @@ void PlayOneShot(emp_asset_t* asset)
 	MIX_PlayAudio(G->mixer, (MIX_Audio*)asset->handle);
 }
 
-void PlayOneShotBullet( emp_weapon_conf_t* weapon)
+void PlayOneShotBullet(emp_weapon_conf_t* weapon)
 {
-	uint32_t current_time =(uint32_t) SDL_GetTicks(); 
+	uint32_t current_time = (uint32_t)SDL_GetTicks();
 
-    if (current_time - weapon->last_played_ms < weapon->cooldown_ms) {
+	if (current_time - weapon->last_played_ms < weapon->cooldown_ms) {
 		SDL_Log("Current Health: ");
-        return;
-    }
+		return;
+	}
 
-    MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->asset->handle);
-	
-    weapon->last_played_ms = current_time;
+	MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->asset->handle);
+
+	weapon->last_played_ms = current_time;
 }
 
 emp_vec2_t render_offset()
@@ -619,6 +619,21 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 	return (emp_enemy_h) { 0 };
 }
 
+void emp_create_chest(emp_vec2_t pos, u32 weapon_index)
+{
+	for (u32 i = 0; i < EMP_MAX_CHESTS; ++i) {
+		emp_chest_t* spawner = &G->chests[i];
+		if (!spawner->alive) {
+			SDL_memset(spawner, 0, sizeof(*spawner));
+			spawner->weapon_index = weapon_index;
+			spawner->pos = pos;
+			spawner->alive = true;
+			return;
+		}
+	}
+	assert(false && "out of enemies");
+}
+
 void emp_create_spawner(emp_vec2_t pos, float health, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit)
 {
 	for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
@@ -766,8 +781,7 @@ void emp_player_update(emp_player_t* player)
 void emp_enemy_update(emp_enemy_t* enemy)
 {
 	float dist = emp_vec2_dist(G->player->pos, enemy->pos);
-	if( dist > 1000.0f )
-	{
+	if (dist > 1000.0f) {
 		return;
 	}
 	enemy->update(enemy);
@@ -832,11 +846,10 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			if (tile_data->state == emp_tile_state_breakable) {
 				if (bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0) {
 					G->level->health[index].value--;
-					if( G->level->health[index].value == 0) {
+					if (G->level->health[index].value == 0) {
 						PlayOneShot(&G->assets->wav->obj_break);
-					}
-					else {
-					
+					} else {
+
 						PlayOneShot(&G->assets->wav->obj_damage);
 					}
 				}
@@ -897,6 +910,9 @@ static emp_texture_t* emp_texture_find(const char* path)
 	if (SDL_strstr(G->assets->png->tilemap.path, path)) {
 		return (emp_texture_t*)G->assets->png->tilemap.handle;
 	}
+	if (SDL_strstr(G->assets->png->env2_32.path, path)) {
+		return (emp_texture_t*)G->assets->png->env2_32.handle;
+	}
 	return NULL;
 }
 
@@ -920,44 +936,57 @@ void emp_level_update(void)
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
 
 		emp_texture_t* texture = emp_texture_find(sublevel->tiles.tilemap);
-		if (texture == NULL) {
-			continue;
-		}
-		for (u64 ti = 0; ti < sublevel->tiles.count; ti++) {
-			float grid_size = sublevel->values.grid_size;
-			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
-			u64 lx = (u64)(desc->dst.x / grid_size);
-			u64 ly = (u64)(desc->dst.y / grid_size);
+		emp_texture_t* deco = emp_texture_find(sublevel->decoration.tiles.tilemap);
+		if (texture != NULL) {
+			for (u64 ti = 0; ti < sublevel->tiles.count; ti++) {
+				float grid_size = sublevel->values.grid_size;
+				emp_tile_desc_t* desc = sublevel->tiles.values + ti;
+				u64 lx = (u64)(desc->dst.x / grid_size);
+				u64 ly = (u64)(desc->dst.y / grid_size);
 
-			size_t index = (size_t)(ly * sublevel->values.grid_width) + (size_t)lx;
-			u8 value = sublevel->values.entries[index];
+				size_t index = (size_t)(ly * sublevel->values.grid_width) + (size_t)lx;
+				u8 value = sublevel->values.entries[index];
 
-			SDL_FRect src = { desc->src.x, desc->src.y, grid_size, grid_size };
-			emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
-			u64 wx = (u64)(pos.x / grid_size);
-			u64 wy = (u64)(pos.y / grid_size);
+				SDL_FRect src = { desc->src.x, desc->src.y, grid_size, grid_size };
+				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
+				u64 wx = (u64)(pos.x / grid_size);
+				u64 wy = (u64)(pos.y / grid_size);
 
-			u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
-			emp_tile_t* tile = &G->level->tiles[di];
-			emp_tile_health_t* health = &G->level->health[di];
+				u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
+				emp_tile_t* tile = &G->level->tiles[di];
+				emp_tile_health_t* health = &G->level->health[di];
 
-			if (value == 2) {
-				if (health->value == 0) {
-					continue;
+				if (value == 2) {
+					if (health->value == 0) {
+						continue;
+					}
+				}
+
+				pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
+				SDL_FRect dst = render_rect_with_size(pos, grid_size * SPRITE_MAGNIFICATION);
+				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+
+				if (value == 1) {
+					tile->state = emp_tile_state_occupied;
+					draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
+				}
+				if (value == 2) {
+					tile->state = emp_tile_state_breakable;
+					draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 255, 0, 255);
 				}
 			}
+		}
+		if(deco != NULL) {
+			for (u64 ti = 0; ti < sublevel->decoration.tiles.count; ti++) {
+				//float grid_size = sublevel->decoration.grid_size;
+				emp_tile_desc_t* desc = sublevel->decoration.tiles.values + ti;
+				SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size,(float)deco->source_size };
+				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
 
-			pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
-			SDL_FRect dst = render_rect_with_size(pos, grid_size * SPRITE_MAGNIFICATION);
-			SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
-
-			if (value == 1) {
-				tile->state = emp_tile_state_occupied;
-				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
-			}
-			if (value == 2) {
-				tile->state = emp_tile_state_breakable;
-				draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 255, 0, 255);
+				pos.y = pos.y - 4.0f;
+				pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
+				SDL_FRect dst = render_rect_with_size(pos, (float)deco->source_size * SPRITE_MAGNIFICATION);
+				SDL_RenderTexture(G->renderer, deco->texture, &src, &dst);
 			}
 		}
 	}
@@ -968,6 +997,15 @@ void emp_generator_uptdate(emp_bullet_generator_t* generator)
 {
 }
 
+void emp_chest_uptdate(emp_chest_t* chest)
+{
+	emp_asset_t* texture_asset = &G->assets->png->chest2_32;
+	emp_texture_t* texture = texture_asset->handle;
+	SDL_FRect src = source_rect(texture_asset);
+	SDL_FRect dst = render_rect(chest->pos, texture);
+	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+}
+
 void emp_entities_init()
 {
 	G->player = SDL_malloc(sizeof(emp_player_t) * EMP_MAX_PLAYERS);
@@ -975,12 +1013,14 @@ void emp_entities_init()
 	G->bullets = SDL_malloc(sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
 	G->generators = SDL_malloc(sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
 	G->spawners = SDL_malloc(sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS);
+	G->chests = SDL_malloc(sizeof(emp_chest_t) * EMP_MAX_CHESTS);
 
 	SDL_memset(G->player, 0, sizeof(emp_player_t) * EMP_MAX_PLAYERS);
 	SDL_memset(G->enemies, 0, sizeof(emp_enemy_t) * EMP_MAX_ENEMIES);
 	SDL_memset(G->bullets, 0, sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
 	SDL_memset(G->generators, 0, sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
 	SDL_memset(G->spawners, 0, sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS);
+	SDL_memset(G->chests, 0, sizeof(emp_chest_t) * EMP_MAX_CHESTS);
 }
 
 int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
@@ -1029,7 +1069,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					PlayOneShot(&G->assets->wav->teleport);
 				}
 			}
-			
+
 			G->player->is_teleporting = 1;
 			on_teleporter = G->player->is_teleporting;
 		}
@@ -1082,6 +1122,13 @@ void emp_entities_update()
 	}
 	G->player->is_teleporting = is_teleporting;
 
+	for (u32 i = 0; i < EMP_MAX_CHESTS; ++i) {
+		emp_chest_t* chest = &G->chests[i];
+		if (chest->alive) {
+			emp_chest_uptdate(chest);
+		}
+	}
+
 	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
 		if (player->alive) {
@@ -1091,7 +1138,7 @@ void emp_entities_update()
 
 	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
-		if (enemy->alive ) {
+		if (enemy->alive) {
 			emp_enemy_update(enemy);
 		}
 	}
@@ -1179,20 +1226,19 @@ void setup_level(emp_asset_t* level_asset)
 		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 	}
 
-	//found = 0;
-	//for (;;) {
-	//	found = emp_level_query(level, emp_entity_type_chest, found);
-	//	if (!found) {
-	//		break;
-	//	}
+	found = 0;
+	for (;;) {
+		found = emp_level_query(level, emp_entity_type_chest, found);
+		if (!found) {
+			break;
+		}
 
-	//	float half = level->entities.grid_size * 0.5f;
-	//	emp_level_entity_t* chest = emp_level_get(level, found - 1);
-	//	float x = chest->x - half;
-	//	float y = chest->y - half;
-
-	//}
-
+		float half = level->entities.grid_size * 0.5f;
+		emp_level_entity_t* chest = emp_level_get(level, found - 1);
+		float x = chest->x - half;
+		float y = chest->y - half;
+		emp_create_chest((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, chest->weapon_index);
+	}
 
 	for (u64 li = 0; li < level->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level->sublevels.entries + li;
