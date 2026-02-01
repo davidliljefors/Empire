@@ -152,6 +152,18 @@ bool check_overlap_bullet_enemy(emp_bullet_t* bullet, emp_enemy_t* enemy)
 	return emp_vec2_dist_sq(bullet->pos, enemy->pos) < size * size;
 }
 
+bool check_overlap_bullet_player(emp_bullet_t* bullet, emp_player_t* player)
+{
+	emp_texture_t* texture = player->texture_asset->handle;
+	float size = texture->width / 2.0f;
+	return emp_vec2_dist_sq(bullet->pos, player->pos) < size * size;
+}
+
+bool check_overlap_bullet(emp_bullet_t* bullet, emp_vec2_t pos, float size)
+{
+	return emp_vec2_dist_sq(bullet->pos, pos) < size * size;
+}
+
 u64 index_from_tile(emp_vec2i_t tile)
 {
 	return tile.y * EMP_LEVEL_WIDTH + tile.x;
@@ -804,8 +816,28 @@ void emp_bullet_update(emp_bullet_t* bullet)
 				}
 			}
 		}
+
+		for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
+			emp_spawner_t* spawner = &G->spawners[i];
+			if (spawner->alive) {
+				emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
+				SDL_FRect dst = render_rect(pos, G->assets->png->cave2_32.handle);
+				emp_vec2_t centre = (emp_vec2_t) { .x = dst.x + (dst.w / 2), .y = dst.y + (dst.h / 2) };
+				if (check_overlap_bullet(bullet, centre, dst.w)) {
+					spawner->health = spawner->health - bullet->damage;
+					if (spawner->health == 0) {
+						bullet->alive = false;
+					}
+				}
+			}
+		}
 	}
 collision_done:;
+	if (bullet->mask & emp_player_bullet_mask) {
+		if (check_overlap_bullet_player(bullet, G->player)) {
+			G->player->health = G->player->health -= bullet->damage;
+		}
+	}
 }
 
 static emp_texture_t* emp_texture_find(const char* path)
