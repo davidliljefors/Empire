@@ -61,7 +61,7 @@ void draw_rect_at(emp_vec2_t pos, float size, u8 r, u8 g, u8 b, u8 a)
 	rect.y += offset.y;
 
 	SDL_SetRenderDrawColor(G->renderer, r, g, b, a);
-	SDL_RenderRect(G->renderer, &rect);
+	//SDL_RenderRect(G->renderer, &rect);
 }
 
 SDL_FRect player_rect(emp_vec2_t pos, emp_texture_t* texture)
@@ -751,7 +751,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	}
 
-	draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
+	//draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
 
 void emp_bullet_update(emp_bullet_t* bullet)

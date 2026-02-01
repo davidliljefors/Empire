@@ -15,8 +15,8 @@
 #include <math.h>
 #include <stddef.h>
 
-#define WINDOW_WIDTH 2200
-#define WINDOW_HEIGHT 1200
+#define WINDOW_WIDTH 1080
+#define WINDOW_HEIGHT 920
 
 #include "entities.h"
 
@@ -60,11 +60,15 @@ static void main_loop(void)
 	SDL_SetRenderDrawColor(g_renderer, 17, 25, 45, 1);
 	SDL_RenderClear(g_renderer);
 
+	emp_entities_update();
+	
+	char buffer2[64];
+	SDL_snprintf( buffer2, sizeof(buffer2), "Under the C" );
+	emp_draw_text(WINDOW_WIDTH / 2 - 200, 100, buffer2, &g_assets->ttf->asepritefont);
+
 	char buffer[64];
 	SDL_snprintf( buffer, sizeof(buffer), "Health: %d/%d", G->player->health, G->player->max_health );
-	emp_draw_text(100, 100, buffer, &g_assets->ttf->asepritefont);
-
-	emp_entities_update();
+	emp_draw_text(50, WINDOW_HEIGHT - 50, buffer, &g_assets->ttf->asepritefont);
 
 	SDL_RenderPresent(g_renderer);
 
@@ -150,7 +154,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
+	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
 
 	SDL_SetRenderVSync(g_renderer, 1);
 	// SDL_SetRenderScale(g_renderer, 2, 2);
