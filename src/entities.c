@@ -7,6 +7,7 @@
 #include <Empire/generated/assets_generated.h>
 #include <Empire/level.h>
 #include <Empire/math.inl>
+#include <Empire/text.h>
 #include <SDL3/SDL.h>
 
 #define ANIMATION_SPEED 0.15f
@@ -21,7 +22,7 @@ emp_weapon_conf_t* particle_config;
 emp_weapon_conf_t* text_particle_config;
 
 void emp_ka_ching(emp_vec2_t pos);
-void emp_damage_number(emp_vec2_t pos);
+void emp_damage_number(emp_vec2_t pos, u32 number);
 
 typedef struct emp_music_player
 {
@@ -286,7 +287,7 @@ u32 simple_rng(u32* state)
 }
 
 float random_float(float min, float max) {
-    float normalized = (float)simple_rng(&rng_state) / 4294967295.0f;
+    float normalized = (float)simple_rng(&rng_state) / 32767.0f;
 	return min + normalized * (max - min);
 }
 
@@ -343,9 +344,11 @@ void enemy_roamer_update(emp_enemy_t* enemy)
 
 void bullet_text_render(emp_bullet_t* bullet)
 {
-	
+	SDL_FRect target = render_rect(bullet->pos, G->assets->png->bullet2_8.handle);
+	char buf[64];
+	SDL_snprintf(buf, 64, "%.0f", bullet->damage);
+	emp_draw_text(target.x, target.y, buf, 255, 255, 180, &G->assets->ttf->asepritefont);
 }
-
 
 #define ENEMY_CONF_CHEST 4
 
@@ -675,15 +678,14 @@ void emp_init_weapon_configs()
 	text_particle_config = SDL_malloc(sizeof(emp_weapon_conf_t));
 	text_particle_config->num_shots = 1;
 	text_particle_config->sound_asset = NULL;
-
-	float angle = random_float(-45.0, 45);
 	float current_speed = 300.0f;
 	text_particle_config->shots[0] = (emp_bullet_conf_t) {
 		.speed = current_speed,
-		.start_angle = angle,
-		.lifetime = 3.0f,
-		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet4_8
+		.start_angle = 0.0,
+		.lifetime = 1.5f,
+		.damage = 0.0,
+		.texture_asset = &G->assets->png->bullet4_8,
+		.custom_render = bullet_text_render,
 	};
 }
 
@@ -708,6 +710,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->pos = pos;
 		bullet->texture_asset = bullet_conf.texture_asset;
 		bullet->mask = mask;
+		bullet->custom_render = bullet_conf.custom_render;
 	}
 	if(conf->sound_asset) { 
 		play_one_shot_bullet(conf);
@@ -874,10 +877,6 @@ void emp_player_update(emp_player_t* player)
 		player->flip = false;
 	}
 
-	if (state[SDL_SCANCODE_P]) {
-		emp_damage_number(player->pos);
-	}
-
 	movement = emp_vec2_normalize(movement);
 	movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
 
@@ -1016,8 +1015,6 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		bullet->alive = false;
 	}
 
-
-
 	emp_vec2i_t tile = get_tile(bullet->pos);
 
 	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
@@ -1065,6 +1062,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 							enemy_in_tile->health -= bullet->damage;
 							enemy_in_tile->last_damage_time = G->args->global_time;
 							play_one_shot(&G->assets->wav->wall_hit_ball);
+							emp_damage_number(enemy_in_tile->pos, (u32)bullet->damage);
 							goto collision_done;
 						}
 						enemy_in_tile = enemy_in_tile->next_in_tile;
@@ -1092,6 +1090,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		collision_done:;
 		if (bullet->mask & emp_player_bullet_mask) {
 			if (check_overlap_bullet_player(bullet, G->player)) {
+				emp_damage_number(G->player->pos, (u32)bullet->damage);
 				G->player->health = G->player->health -= bullet->damage;
 				G->player->last_damage_time = G->args->global_time;
 				bullet->alive = false;
@@ -1197,9 +1196,11 @@ void emp_ka_ching(emp_vec2_t pos)
 	spawn_bullets(pos, (emp_vec2_t) { 1.0f, 1.0f }, 0, particle_config);
 }
 
-void emp_damage_number(emp_vec2_t pos)
+void emp_damage_number(emp_vec2_t pos, u32 number)
 {
-	spawn_bullets(pos, (emp_vec2_t) { 0.0f, 1.0f }, 0, text_particle_config);
+	text_particle_config->shots[0].damage = (float)number;
+	text_particle_config->shots[0].start_angle = random_float(-25.0, 25);
+	spawn_bullets(pos, (emp_vec2_t) { 0.0f, -1.0f }, emp_particle_bullet_mask, text_particle_config);
 }
 
 void emp_entities_init()

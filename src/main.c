@@ -65,7 +65,7 @@ static void main_loop(void)
 
 	char buffer2[64];
 	SDL_snprintf(buffer2, sizeof(buffer2), "Under the C");
-	emp_draw_text(WINDOW_WIDTH / 2 - 200, 100, buffer2, &g_assets->ttf->asepritefont);
+	emp_draw_text(WINDOW_WIDTH / 2 - 200, 100, buffer2, 150, 150, 255, &g_assets->ttf->asepritefont);
 
 	/*char buffer[64];
 	SDL_snprintf(buffer, sizeof(buffer), "Health: %.0f/%.0f", G->player->health, G->player->max_health);
