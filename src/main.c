@@ -1,7 +1,8 @@
-#include "SDL3_mixer/SDL_mixer.h"
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
+#include <Empire/miniaudio.h>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -21,7 +22,6 @@
 
 #include "entities.h"
 
-#include <Empire/fast_obj.h>
 #include <Empire/generated/assets_generated.h>
 #include <Empire/level.h>
 #include <Empire/stb_image.h>
@@ -38,6 +38,7 @@ static emp_generated_assets_o* g_assets = NULL;
 static emp_asset_manager_o* g_asset_mgr = NULL;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
+static ma_engine g_audio_engine;
 
 void update_sprite_magnification(void)
 {
@@ -155,18 +156,35 @@ const char* get_asset_argument(int argc, char* arguments[])
 	return "";
 }
 
+typedef struct emp_audio_t {
+	ma_decoder decoder;
+	const void* data;
+	size_t size;
+} emp_audio_t;
+
 void emp_load_ogg_asset(struct emp_asset_t* asset)
 {
-	SDL_IOStream* io = SDL_IOFromConstMem(asset->data.data, asset->data.size);
-	asset->handle = MIX_LoadAudio_IO(G->mixer, io, false, true);
-	if (!asset->handle) {
-		SDL_Log("Failed to load OGG asset '%s': %s (data=%p, size=%u)", 
-			asset->path, SDL_GetError(), (void*)asset->data.data, (unsigned)asset->data.size);
+	emp_audio_t* audio = SDL_malloc(sizeof(emp_audio_t));
+	audio->data = asset->data.data;
+	audio->size = asset->data.size;
+	
+	ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, g_audio_engine.sampleRate);
+	ma_result result = ma_decoder_init_memory(audio->data, audio->size, &config, &audio->decoder);
+	if (result != MA_SUCCESS) {
+		SDL_Log("Failed to load OGG asset '%s': miniaudio error %d", asset->path, result);
+		SDL_free(audio);
+		asset->handle = NULL;
+		return;
 	}
+	asset->handle = audio;
 }
 void emp_unload_ogg_asset(struct emp_asset_t* asset)
 {
-	MIX_DestroyAudio(asset->handle);
+	emp_audio_t* audio = asset->handle;
+	if (audio) {
+		ma_decoder_uninit(&audio->decoder);
+		SDL_free(audio);
+	}
 }
 
 
@@ -225,11 +243,12 @@ int main(int argc, char* argv[])
 	};
 
 	G = SDL_malloc(sizeof(emp_G));
-	MIX_Init();
-	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
-	if (!G->mixer) {
-		SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
+	
+	ma_result result = ma_engine_init(NULL, &g_audio_engine);
+	if (result != MA_SUCCESS) {
+		SDL_Log("Failed to initialize miniaudio engine: %d", result);
 	}
+	G->mixer = &g_audio_engine;
 
 	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);

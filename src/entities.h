@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Empire/types.h>
+#include <Empire/miniaudio.h>
 
 extern float SPRITE_MAGNIFICATION;
 
@@ -177,7 +178,6 @@ typedef struct emp_level_t
 } emp_level_t;
 
 typedef struct emp_music_player emp_music_player;
-typedef struct MIX_Mixer MIX_Mixer;
 
 typedef struct emp_entities_t
 {
@@ -191,7 +191,7 @@ typedef struct emp_entities_t
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
 	emp_music_player* music_player;
-	MIX_Mixer* mixer;
+	ma_engine* mixer;
 } emp_G;
 
 extern emp_G* G;

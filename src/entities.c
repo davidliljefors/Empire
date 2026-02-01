@@ -1,8 +1,6 @@
 #include "entities.h"
 
-#include "SDL3/SDL_scancode.h"
-#include "SDL3_mixer/SDL_mixer.h"
-
+#include <Empire/miniaudio.h>
 #include <Empire/assets.h>
 #include <Empire/generated/assets_generated.h>
 #include <Empire/level.h>
@@ -27,26 +25,19 @@ void emp_damage_number(emp_vec2_t pos, u32 number);
 
 typedef struct emp_music_player
 {
-	SDL_PropertiesID options;
-
-	MIX_Track* tracks[2];
+	ma_sound sounds[2];
+	ma_decoder decoders[2];
 	i32 track_steps[2];
-
 	i32 current_track;
+	bool initialized;
 } emp_music_player;
 
 void emp_music_player_init(void)
 {
 	G->music_player = (emp_music_player*)SDL_malloc(sizeof(*G->music_player));
 	emp_music_player* music = G->music_player;
-	music->options = 0;
-	SDL_SetNumberProperty(music->options, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, 1000); /* fade-in the first loop over five seconds. No fade on the loops, unless the initial fade is still in progress! */
+	SDL_memset(music, 0, sizeof(*music));
 
-	MIX_Track* tracks[] = {
-		MIX_CreateTrack(G->mixer),
-		MIX_CreateTrack(G->mixer),
-		MIX_CreateTrack(G->mixer),
-	};
 	i32 track_steps[] = {
 		2300,
 		9000,
@@ -54,15 +45,32 @@ void emp_music_player_init(void)
 
 	music->track_steps[0] = track_steps[0];
 	music->track_steps[1] = track_steps[1];
-
-	MIX_SetTrackAudio(tracks[0], (MIX_Audio*)G->assets->ogg->calm_music_loopable.handle);
-	MIX_SetTrackAudio(tracks[1], (MIX_Audio*)G->assets->ogg->intense_music_loopable.handle);
-
-	music->tracks[0] = tracks[0];
-	music->tracks[1] = tracks[1];
-
 	music->current_track = 0;
-	MIX_PlayTrack(music->tracks[music->current_track], music->options);
+	music->initialized = false;
+
+	if (!G->mixer) return;
+
+	typedef struct { ma_decoder decoder; const void* data; size_t size; } emp_audio_t;
+	
+	emp_asset_t* tracks[] = {
+		&G->assets->ogg->calm_music_loopable,
+		&G->assets->ogg->intense_music_loopable,
+	};
+
+	for (int i = 0; i < 2; i++) {
+		emp_audio_t* audio = tracks[i]->handle;
+		
+		ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, G->mixer->sampleRate);
+		ma_result result = ma_decoder_init_memory(audio->data, audio->size, &config, &music->decoders[i]);
+		SDL_assert(result == MA_SUCCESS && "Failed to init music decoder");
+		result = ma_sound_init_from_data_source(G->mixer, &music->decoders[i], 0, NULL, &music->sounds[i]);
+		SDL_assert(result == MA_SUCCESS && "Failed to init music sound");
+		ma_sound_set_looping(&music->sounds[i], MA_TRUE);
+	}
+
+	music->initialized = true;
+	ma_sound_set_fade_in_milliseconds(&music->sounds[0], 0, 1, 1000);
+	ma_sound_start(&music->sounds[0]);
 }
 
 typedef struct emp_roamer_data_t
@@ -92,20 +100,64 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 60.0f };
 }
 
+#define SOUND_POOL_SIZE 32
+
+typedef struct {
+	ma_sound sound;
+	ma_decoder decoder;
+	bool in_use;
+} emp_sound_slot_t;
+
+static emp_sound_slot_t g_sound_pool[SOUND_POOL_SIZE];
+
 void play_one_shot(emp_asset_t* asset)
 {
-	MIX_PlayAudio(G->mixer, (MIX_Audio*)asset->handle);
+	if (!asset || !asset->handle || !G->mixer) return;
+	
+	typedef struct { ma_decoder decoder; const void* data; size_t size; } emp_audio_t;
+	emp_audio_t* audio = asset->handle;
+	
+	// Find a free slot (not playing)
+	emp_sound_slot_t* slot = NULL;
+	for (int i = 0; i < SOUND_POOL_SIZE; i++) {
+		if (!g_sound_pool[i].in_use) {
+			slot = &g_sound_pool[i];
+			break;
+		}
+		// Check if a slot finished playing
+		if (!ma_sound_is_playing(&g_sound_pool[i].sound)) {
+			ma_sound_uninit(&g_sound_pool[i].sound);
+			ma_decoder_uninit(&g_sound_pool[i].decoder);
+			g_sound_pool[i].in_use = false;
+			slot = &g_sound_pool[i];
+			break;
+		}
+	}
+	
+	if (!slot) return; // All slots busy
+	
+	ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, G->mixer->sampleRate);
+	ma_result result = ma_decoder_init_memory(audio->data, audio->size, &config, &slot->decoder);
+	if (result != MA_SUCCESS) return;
+	
+	result = ma_sound_init_from_data_source(G->mixer, &slot->decoder, 0, NULL, &slot->sound);
+	if (result != MA_SUCCESS) {
+		ma_decoder_uninit(&slot->decoder);
+		return;
+	}
+	
+	slot->in_use = true;
+	ma_sound_start(&slot->sound);
 }
 
 void play_one_shot_bullet(emp_weapon_conf_t* weapon)
 {
 	double current_time = G->args->global_time;
 	if (current_time - weapon->last_played_ms < weapon->delay_between_shots) {
-		SDL_Log("Current Health: ");
 		return;
 	}
 
-	MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->sound_asset->handle);
+	play_one_shot(weapon->sound_asset);
 
 	weapon->last_played_ms = G->args->global_time;
 }
@@ -850,6 +902,8 @@ void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 
 void emp_music_player_update(emp_music_player* music)
 {
+	if (!music->initialized) return;
+
 	i32 preferred_track = 0;
 	for (i32 index = 0; index < SDL_arraysize(music->track_steps); index++) {
 		if (G->player->pos.x < music->track_steps[index]) {
@@ -857,17 +911,17 @@ void emp_music_player_update(emp_music_player* music)
 			break;
 		}
 	}
-	preferred_track = SDL_min(preferred_track, SDL_arraysize(music->tracks));
+	preferred_track = SDL_min(preferred_track, SDL_arraysize(music->track_steps));
 	if (preferred_track != music->current_track) {
-		MIX_StopTrack(music->tracks[music->current_track], MIX_TrackMSToFrames(music->tracks[music->current_track], 1000));
+		// Fade out current track
+		ma_sound_set_fade_in_milliseconds(&music->sounds[music->current_track], -1, 0, 1000);
+		ma_sound_set_stop_time_in_milliseconds(&music->sounds[music->current_track], 1000);
+		
+		// Start and fade in new track
 		music->current_track = preferred_track;
-		MIX_PlayTrack(music->tracks[music->current_track], music->options);
-	}
-
-	Sint64 remaining = MIX_GetTrackRemaining(music->tracks[music->current_track]);
-	Sint64 ms = MIX_TrackFramesToMS(music->tracks[music->current_track], remaining);
-	if (ms == 0) {
-		MIX_PlayTrack(music->tracks[music->current_track], 0);
+		ma_sound_seek_to_pcm_frame(&music->sounds[music->current_track], 0);
+		ma_sound_set_fade_in_milliseconds(&music->sounds[music->current_track], 0, 1, 1000);
+		ma_sound_start(&music->sounds[music->current_track]);
 	}
 }
 

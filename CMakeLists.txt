@@ -9,16 +9,8 @@ set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
 set(SDL_TESTS OFF CACHE BOOL "" FORCE)
 set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(SDL_DISABLE_INSTALL ON CACHE BOOL "" FORCE)
-set(SDLMIXER_VENDORED OFF)
 add_subdirectory(soy/SDL)
-add_subdirectory(soy/SDL_mixer)
 
-
-# gl loader for win/macos
-if(NOT EMSCRIPTEN)
-    add_library(glad STATIC soy/glad/src/gl.c)
-    target_include_directories(glad PUBLIC soy/glad/include)
-endif()
 
 # Codegen tool (native only)
 if(NOT EMSCRIPTEN)
@@ -65,13 +57,15 @@ set(EMPIRE_SOURCES
     src/level.c
     src/lz4.c
     src/main.c
-    src/stb_ds.c
-    src/stb_image.c
-    src/stb_truetype.c
     src/text.c
     src/ui.c
     src/util.c
     src/yyjson.c
+)
+
+# compiled with no warnings/errors
+set(EMPIRE_EXTERNAL
+    src/external.c
 )
 
 set(EMPIRE_HEADERS
@@ -81,6 +75,7 @@ set(EMPIRE_HEADERS
     include/Empire/level.h
     include/Empire/lz4.h
     include/Empire/math.inl
+    include/Empire/miniaudio.h
     include/Empire/prototypes.h
     include/Empire/stb_ds.h
     include/Empire/stb_image.h
@@ -95,13 +90,17 @@ set(EMPIRE_HEADERS
 
 add_executable(Empire
     ${EMPIRE_SOURCES}
+    ${EMPIRE_EXTERNAL}
     ${EMPIRE_HEADERS}
     ${EMPIRE_GENERATED}
 )
 
+set_source_files_properties(${EMPIRE_EXTERNAL} PROPERTIES
+    COMPILE_OPTIONS "$<$<C_COMPILER_ID:MSVC>:/W0>$<$<NOT:$<C_COMPILER_ID:MSVC>>:-w>"
+)
+
 target_include_directories(Empire PRIVATE include)
 target_link_libraries(Empire PRIVATE SDL3::SDL3)
-target_link_libraries(Empire PRIVATE SDL3_mixer::SDL3_mixer)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     target_compile_definitions(Empire PRIVATE FLORENCE_PACKAGE_ASSETS)
@@ -137,7 +136,6 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
 endif()
 
 if(NOT EMSCRIPTEN)
-    target_link_libraries(Empire PRIVATE glad)
     add_dependencies(Empire RunFlorence)
     set_target_properties(Empire PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
@@ -152,11 +150,6 @@ if(WIN32 AND NOT EMSCRIPTEN)
     add_custom_command(TARGET Empire POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:SDL3::SDL3>
-        $<TARGET_FILE_DIR:Empire>
-    )
-        add_custom_command(TARGET Empire POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:SDL3_mixer::SDL3_mixer>
         $<TARGET_FILE_DIR:Empire>
     )
 endif()
