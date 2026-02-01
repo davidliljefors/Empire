@@ -18,8 +18,10 @@ emp_enemy_conf_t* enemy_confs[16];
 emp_weapon_conf_t* weapons[10];
 
 emp_weapon_conf_t* particle_config;
+emp_weapon_conf_t* text_particle_config;
 
 void emp_ka_ching(emp_vec2_t pos);
+void emp_damage_number(emp_vec2_t pos);
 
 typedef struct emp_music_player
 {
@@ -283,6 +285,11 @@ u32 simple_rng(u32* state)
 	return (*state >> 16) & 0x7FFF;
 }
 
+float random_float(float min, float max) {
+    float normalized = (float)simple_rng(&rng_state) / 4294967295.0f;
+	return min + normalized * (max - min);
+}
+
 void enemy_chaser_update(emp_enemy_t* enemy)
 {
 	float dt = G->args->dt;
@@ -333,6 +340,12 @@ void enemy_roamer_update(emp_enemy_t* enemy)
 		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
 	}
 }
+
+void bullet_text_render(emp_bullet_t* bullet)
+{
+	
+}
+
 
 #define ENEMY_CONF_CHEST 4
 
@@ -389,6 +402,7 @@ void emp_init_enemy_configs()
 
 void emp_init_weapon_configs()
 {
+	SDL_memset(weapons, 0, sizeof(weapons));
 	// 0 is NUll config
 	weapons[0] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[0]->delay_between_shots = 1000.0f;
@@ -657,6 +671,20 @@ void emp_init_weapon_configs()
 			.texture_asset = &G->assets->png->bullet4_8
 		};
 	}
+
+	text_particle_config = SDL_malloc(sizeof(emp_weapon_conf_t));
+	text_particle_config->num_shots = 1;
+	text_particle_config->sound_asset = NULL;
+
+	float angle = random_float(-45.0, 45);
+	float current_speed = 300.0f;
+	text_particle_config->shots[0] = (emp_bullet_conf_t) {
+		.speed = current_speed,
+		.start_angle = angle,
+		.lifetime = 3.0f,
+		.damage = 1.0,
+		.texture_asset = &G->assets->png->bullet4_8
+	};
 }
 
 emp_bullet_conf_t get_bullet1()
@@ -681,7 +709,9 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->texture_asset = bullet_conf.texture_asset;
 		bullet->mask = mask;
 	}
-	play_one_shot_bullet(conf);
+	if(conf->sound_asset) { 
+		play_one_shot_bullet(conf);
+	}
 }
 
 u32 emp_create_player()
@@ -844,6 +874,10 @@ void emp_player_update(emp_player_t* player)
 		player->flip = false;
 	}
 
+	if (state[SDL_SCANCODE_P]) {
+		emp_damage_number(player->pos);
+	}
+
 	movement = emp_vec2_normalize(movement);
 	movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
 
@@ -982,6 +1016,8 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		bullet->alive = false;
 	}
 
+
+
 	emp_vec2i_t tile = get_tile(bullet->pos);
 
 	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
@@ -1004,53 +1040,62 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		}
 	}
 
-	emp_texture_t* tex = bullet->texture_asset->handle;
-	SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
-	SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
-	draw_rect_at(bullet->pos, 32, 255, 0, 0, 255);
-
-	if (bullet->mask & emp_enemy_bullet_mask) {
-		for (int y = -1; y <= 1; ++y) {
-			for (int x = -1; x <= 1; ++x) {
-				emp_vec2i_t bullet_tile = get_tile(bullet->pos);
-				bullet_tile.x += x;
-				bullet_tile.y += y;
-				emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
-				while (enemy_in_tile != NULL) {
-					if (check_overlap_bullet_enemy(bullet, enemy_in_tile)) {
-						bullet->alive = false;
-						enemy_in_tile->health -= bullet->damage;
-						enemy_in_tile->last_damage_time = G->args->global_time;
-						play_one_shot(&G->assets->wav->wall_hit_ball);
-						goto collision_done;
-					}
-					enemy_in_tile = enemy_in_tile->next_in_tile;
-				}
-			}
-		}
-
-		for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
-			emp_spawner_t* spawner = &G->spawners[i];
-			if (spawner->alive) {
-				emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
-				SDL_FRect dst = render_rect(pos, G->assets->png->cave2_32.handle);
-				emp_vec2_t centre = (emp_vec2_t) { .x = pos.x + (dst.w / 2), .y = pos.y + (dst.h / 2) };
-				if (check_overlap_bullet(bullet, centre, dst.w)) {
-					spawner->health = spawner->health - bullet->damage;
-					bullet->alive = false;
-					if (spawner->health == 0) {
-						spawner->alive = false;
-					}
-				}
-			}
-		}
+	if (bullet->custom_render)
+	{
+		bullet->custom_render(bullet);
 	}
-collision_done:;
-	if (bullet->mask & emp_player_bullet_mask) {
-		if (check_overlap_bullet_player(bullet, G->player)) {
-			G->player->health = G->player->health -= bullet->damage;
-			G->player->last_damage_time = G->args->global_time;
-			bullet->alive = false;
+
+	if ((bullet->mask & emp_particle_bullet_mask) == 0)
+	{
+		emp_texture_t* tex = bullet->texture_asset->handle;
+		SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
+		SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
+		draw_rect_at(bullet->pos, 32, 255, 0, 0, 255);
+
+		if (bullet->mask & emp_enemy_bullet_mask) {
+			for (int y = -1; y <= 1; ++y) {
+				for (int x = -1; x <= 1; ++x) {
+					emp_vec2i_t bullet_tile = get_tile(bullet->pos);
+					bullet_tile.x += x;
+					bullet_tile.y += y;
+					emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
+					while (enemy_in_tile != NULL) {
+						if (check_overlap_bullet_enemy(bullet, enemy_in_tile)) {
+							bullet->alive = false;
+							enemy_in_tile->health -= bullet->damage;
+							enemy_in_tile->last_damage_time = G->args->global_time;
+							play_one_shot(&G->assets->wav->wall_hit_ball);
+							goto collision_done;
+						}
+						enemy_in_tile = enemy_in_tile->next_in_tile;
+					}
+				}
+			}
+
+			for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
+				emp_spawner_t* spawner = &G->spawners[i];
+				if (spawner->alive) {
+					emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
+					SDL_FRect dst = render_rect(pos, G->assets->png->cave2_32.handle);
+					emp_vec2_t centre = (emp_vec2_t) { .x = pos.x + (dst.w / 2), .y = pos.y + (dst.h / 2) };
+					if (check_overlap_bullet(bullet, centre, dst.w)) {
+						spawner->health = spawner->health - bullet->damage;
+						bullet->alive = false;
+						if (spawner->health == 0) {
+							spawner->alive = false;
+						}
+					}
+				}
+			}
+		}
+
+		collision_done:;
+		if (bullet->mask & emp_player_bullet_mask) {
+			if (check_overlap_bullet_player(bullet, G->player)) {
+				G->player->health = G->player->health -= bullet->damage;
+				G->player->last_damage_time = G->args->global_time;
+				bullet->alive = false;
+			}
 		}
 	}
 }
@@ -1150,6 +1195,11 @@ void emp_generator_uptdate(emp_bullet_generator_t* generator)
 void emp_ka_ching(emp_vec2_t pos)
 {
 	spawn_bullets(pos, (emp_vec2_t) { 1.0f, 1.0f }, 0, particle_config);
+}
+
+void emp_damage_number(emp_vec2_t pos)
+{
+	spawn_bullets(pos, (emp_vec2_t) { 0.0f, 1.0f }, 0, text_particle_config);
 }
 
 void emp_entities_init()
