@@ -35,12 +35,20 @@ typedef struct emp_tiles_data_t
 	u32 count;
 } emp_tiles_data_t;
 
+
+typedef struct emp_decoration_data_t
+{
+	float grid_size;
+	emp_tiles_data_t tiles;
+} emp_decoration_data_t;
+
 typedef struct emp_sublevel_t
 {
 	emp_vec2_t offset;
 
 	emp_tiles_data_t tiles;
 	emp_value_grid_t values;
+	emp_decoration_data_t decoration;
 } emp_sublevel_t;
 
 typedef struct emp_sublevel_list_t
@@ -59,6 +67,7 @@ typedef enum emp_entity_type {
 	emp_entity_type_player,
 	emp_entity_type_spawner,
 	emp_entity_type_boss,
+	emp_entity_type_chest,
 } emp_entity_type;
 
 typedef enum emp_behaviour_type {

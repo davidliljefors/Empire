@@ -5,6 +5,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #endif
 
 #include <Empire/types.h>
@@ -15,8 +16,8 @@
 #include <math.h>
 #include <stddef.h>
 
-#define WINDOW_WIDTH 2200
-#define WINDOW_HEIGHT 1200
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 #include "entities.h"
 
@@ -60,11 +61,15 @@ static void main_loop(void)
 	SDL_SetRenderDrawColor(g_renderer, 17, 25, 45, 1);
 	SDL_RenderClear(g_renderer);
 
-	char buffer[64];
-	SDL_snprintf( buffer, sizeof(buffer), "Health: %d/%d", G->player->health, G->player->max_health );
-	emp_draw_text(100, 100, buffer, &g_assets->ttf->asepritefont);
-
 	emp_entities_update();
+
+	char buffer2[64];
+	SDL_snprintf(buffer2, sizeof(buffer2), "Under the C");
+	emp_draw_text(WINDOW_WIDTH / 2 - 200, 100, buffer2, &g_assets->ttf->asepritefont);
+
+	char buffer[64];
+	SDL_snprintf(buffer, sizeof(buffer), "Health: %.0f/%.0f", G->player->health, G->player->max_health);
+	emp_draw_text(50, WINDOW_HEIGHT - 50, buffer, &g_assets->ttf->asepritefont);
 
 	SDL_RenderPresent(g_renderer);
 
@@ -136,12 +141,27 @@ const char* get_asset_argument(int argc, char* arguments[])
 	return "";
 }
 
-void emp_load_wav_asset(struct emp_asset_t* asset){
+void emp_load_wav_asset(struct emp_asset_t* asset)
+{
 	asset->handle = MIX_LoadAudio(G->mixer, asset->path, 0);
 }
-void emp_unload_wav_asset(struct emp_asset_t* asset){
+void emp_unload_wav_asset(struct emp_asset_t* asset)
+{
 	MIX_DestroyAudio(asset->handle);
 }
+
+
+#ifdef __EMSCRIPTEN__
+EM_BOOL on_canv_resize(int eventType, const EmscriptenUiEvent* uiEvent, void* userData) {
+	
+	SDL_SetWindowSize(g_window, (int)uiEvent->windowInnerWidth, (int)uiEvent->windowInnerHeight);
+	
+	emscripten_set_element_css_size("#canvas", uiEvent->windowInnerWidth, uiEvent->windowInnerHeight);
+    
+	SDL_Log("Resized to: %d x %d", (int)uiEvent->windowInnerWidth, (int)uiEvent->windowInnerHeight);
+    return EM_TRUE;
+}
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -150,7 +170,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL, &g_window, &g_renderer);
+	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
 
 	SDL_SetRenderVSync(g_renderer, 1);
 	// SDL_SetRenderScale(g_renderer, 2, 2);
@@ -182,12 +202,12 @@ int main(int argc, char* argv[])
 	};
 
 	G = SDL_malloc(sizeof(emp_G));
-	SDL_AudioSpec spec;
+	// SDL_AudioSpec spec;
 	MIX_Init();
 	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
-    if (!G->mixer) {
-        SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
-    }
+	if (!G->mixer) {
+		SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
+	}
 
 	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
@@ -201,37 +221,19 @@ int main(int argc, char* argv[])
 	G->args = SDL_malloc(sizeof(emp_update_args_t));
 	G->renderer = g_renderer;
 
-
 	emp_entities_init();
 	emp_init_enemy_configs();
 	emp_init_weapon_configs();
 
 	emp_create_level(&G->assets->ldtk->world, 0);
 
-    Uint8 *wav_data = NULL;
-    Uint32 wav_data_len = 0;
-
-    if (!SDL_LoadWAV( G->assets->wav->calm_music_loopable.path, &spec, &wav_data, &wav_data_len)) {
-        SDL_Log("Failed to load WAV: %s", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-	SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
-    if (!stream) {
-        SDL_Log("Failed to open audio stream: %s", SDL_GetError());
-        SDL_free(wav_data);
-        SDL_Quit();
-        return 1;
-    }
-	SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
-    SDL_ResumeAudioStreamDevice(stream);
+	emp_music_player_init();
 
 	SDL_zerop(G->args);
-
 	g_last_time = SDL_GetTicks();
 
 #ifdef __EMSCRIPTEN__
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, on_canv_resize);
 	emscripten_set_main_loop(main_loop, 0, 1);
 #else
 	u64 last_time = SDL_GetTicks() - 900;
@@ -246,10 +248,6 @@ int main(int argc, char* argv[])
 			frame_count = 0;
 			last_time = currentTime;
 		}
-		
-		if (SDL_GetAudioStreamQueued(stream) == 0) {
-            SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
-        }
 
 		main_loop();
 		emp_asset_manager_check_hot_reload(g_asset_mgr, G->args->dt);

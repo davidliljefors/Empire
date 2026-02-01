@@ -46,7 +46,8 @@ typedef struct emp_weapon_conf_t
 	float delay_between_shots;
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
-	emp_asset_t* asset;
+	emp_asset_t* sound_asset;
+	double last_played_ms;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
@@ -55,6 +56,7 @@ typedef struct emp_enemy_conf_t
 	float speed;
 	emp_asset_t* texture_asset;
 	emp_enemy_update_f update;
+	emp_enemy_update_f late_update;
 	u32 data_size;
 } emp_enemy_conf_t;
 
@@ -69,8 +71,9 @@ typedef struct emp_player_t
 	bool is_teleporting;
 	bool flip;
 	bool alive;
-	u32 health;
-	u32 max_health;
+	float health;
+	float max_health;
+	double last_damage_time;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
@@ -82,15 +85,17 @@ typedef struct emp_enemy_t
 	u32 generation;
 	float health;
 	float speed;
+	float enemy_shot_delay;
 	emp_vec2_t pos;
 	emp_vec2_t direction;
 	emp_asset_t* texture_asset;
 	emp_weapon_conf_t* weapon;
 	emp_enemy_update_f update;
+	emp_enemy_update_f late_update;
 	double last_shot;
 	double last_damage_time;
 	emp_spawner_h spawned_by;
-
+	bool flip;
 	u8 dynamic_data[64];
 } emp_enemy_t;
 
@@ -166,6 +171,8 @@ typedef struct emp_level_t
 } emp_level_t;
 
 struct MIX_Mixer;
+struct emp_music_player;
+
 typedef struct emp_entities_t
 {
 	SDL_Renderer* renderer;
@@ -177,11 +184,13 @@ typedef struct emp_entities_t
 	emp_spawner_t* spawners;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
+	struct emp_music_player* music_player;
 	struct MIX_Mixer* mixer;
 } emp_G;
 
 extern emp_G* G;
 
+void emp_music_player_init(void);
 void emp_init_enemy_configs();
 void emp_init_weapon_configs();
 u32 emp_create_player();

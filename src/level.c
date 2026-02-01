@@ -6,12 +6,13 @@
 #include <SDL3/SDL_log.h>
 #include <SDL3/SDL_stdinc.h>
 
-emp_sublevel_t* emp_level_create_sublevel(emp_level_asset_t* level, emp_value_grid_t* values, emp_tiles_data_t* tiles)
+emp_sublevel_t* emp_level_create_sublevel(emp_level_asset_t* level, emp_value_grid_t* values, emp_tiles_data_t* tiles, emp_decoration_data_t* decoration)
 {
 	emp_sublevel_t* sublevel = level->sublevels.entries + level->sublevels.count;
 	level->sublevels.count = level->sublevels.count + 1;
 	sublevel->values = *values;
 	sublevel->tiles = *tiles;
+	sublevel->decoration = *decoration;
 	return sublevel;
 }
 
@@ -44,9 +45,9 @@ void emp_level_parse_int_grid_data(emp_level_asset_t* level, yyjson_val* layer, 
 	}
 }
 
-void emp_level_parse_tile_data(emp_level_asset_t* level, yyjson_val* layer, emp_tiles_data_t* tiles)
+void emp_level_parse_tile_data(emp_level_asset_t* level, const char* name, yyjson_val* layer, emp_tiles_data_t* tiles)
 {
-	yyjson_val* layer_tiles = yyjson_obj_get(layer, "autoLayerTiles");
+	yyjson_val* layer_tiles = yyjson_obj_get(layer, name);
 
 	u64 idx, size;
 	size = yyjson_arr_size(layer_tiles);
@@ -80,6 +81,7 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 				yyjson_val* value = yyjson_obj_get(field, "__value");
 				if (value) {
 					out_entity->weapon_index = (uint32_t)yyjson_get_uint(value);
+					is_reasonably_constructed = 1;
 				}
 			}
 
@@ -103,7 +105,6 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 					out_entity->health = (float)yyjson_get_num(value);
 				}
 			}
-
 		}
 
 		yyjson_val* type = yyjson_obj_get(field, "__type");
@@ -128,8 +129,12 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 				out_entity->type = emp_entity_type_boss;
 				yyjson_val* value = yyjson_obj_get(field, "__value");
 				if (value) {
-					if (SDL_strcmp(yyjson_get_str(value), "octopus") == 0) {
+					if (SDL_strcmp(yyjson_get_str(value), "jelly") == 0) {
 						out_entity->behaviour = emp_behaviour_type_roamer;
+						is_reasonably_constructed = 1;
+					}
+					if (SDL_strcmp(yyjson_get_str(value), "octi") == 0) {
+						out_entity->behaviour = emp_behaviour_type_chaser;
 						is_reasonably_constructed = 1;
 					}
 				}
@@ -174,7 +179,7 @@ u32 emp_level_teleporter_list_find(emp_level_teleporter_list_t* set, u64 id)
 		if (teleporter->id == 0) {
 			return 0;
 		}
-		if(teleporter->id == id) {
+		if (teleporter->id == id) {
 			return slot + 1;
 		}
 		slot = (slot + 1) % SDL_arraysize(set->entries);
@@ -221,6 +226,11 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 				emp_level_teleporter_list_add(&level->teleporters, &tp);
 				continue;
 			}
+
+			if (SDL_strcmp(str, "chest") == 0) {
+				entity.type = emp_entity_type_chest;
+				entity.behaviour = emp_behaviour_type_none;
+			}
 		}
 
 		yyjson_val* fields = yyjson_obj_get(instance, "fieldInstances");
@@ -240,6 +250,7 @@ void emp_load_sublevel(emp_level_asset_t* level, u32 index, yyjson_val* data)
 
 	emp_tiles_data_t tiles = { 0 };
 	emp_value_grid_t values = { 0 };
+	emp_decoration_data_t decoration = { 0 };
 
 	yyjson_arr_foreach(layerInstances, idx, size, layer)
 	{
@@ -248,7 +259,7 @@ void emp_load_sublevel(emp_level_asset_t* level, u32 index, yyjson_val* data)
 
 		if (SDL_strcmp(str, "world") == 0) {
 			emp_level_parse_int_grid_data(level, layer, &values);
-			emp_level_parse_tile_data(level, layer, &tiles);
+			emp_level_parse_tile_data(level, "autoLayerTiles", layer, &tiles);
 			tiles.tilemap = SDL_strdup(yyjson_get_str(yyjson_obj_get(layer, "__tilesetRelPath")));
 			values.grid_size = (float)yyjson_get_num(yyjson_obj_get(layer, "__gridSize"));
 			values.grid_width = (u32)yyjson_get_uint(yyjson_obj_get(layer, "__cWid"));
@@ -260,9 +271,15 @@ void emp_load_sublevel(emp_level_asset_t* level, u32 index, yyjson_val* data)
 			yyjson_val* instances = yyjson_obj_get(layer, "entityInstances");
 			emp_level_add_entities(level, instances);
 		}
+
+		if (SDL_strcmp(str, "decoration") == 0) {
+			decoration.grid_size = (float)yyjson_get_num(yyjson_obj_get(layer, "__gridSize"));
+			emp_level_parse_tile_data(level, "gridTiles", layer, &decoration.tiles);
+			decoration.tiles.tilemap = SDL_strdup(yyjson_get_str(yyjson_obj_get(layer, "__tilesetRelPath")));
+		}
 	}
 
-	emp_sublevel_t* sublevel = emp_level_create_sublevel(level, &values, &tiles);
+	emp_sublevel_t* sublevel = emp_level_create_sublevel(level, &values, &tiles, &decoration);
 	// sublevel->id = SDL_strdup(yyjson_get_str(yyjson_obj_get(data, "iid")));
 	sublevel->offset.x = (float)yyjson_get_num(yyjson_obj_get(data, "worldX"));
 	sublevel->offset.y = (float)yyjson_get_num(yyjson_obj_get(data, "worldY"));
@@ -313,6 +330,7 @@ void emp_unload_level_asset(struct emp_asset_t* asset)
 	for (u32 li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
 		SDL_free(sublevel->tiles.tilemap);
+		SDL_free(sublevel->decoration.tiles.tilemap);
 	}
 
 	SDL_free(asset->handle);
