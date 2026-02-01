@@ -823,11 +823,12 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			if (spawner->alive) {
 				emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
 				SDL_FRect dst = render_rect(pos, G->assets->png->cave2_32.handle);
-				emp_vec2_t centre = (emp_vec2_t) { .x = dst.x + (dst.w / 2), .y = dst.y + (dst.h / 2) };
+				emp_vec2_t centre = (emp_vec2_t) { .x = pos.x + (dst.w / 2), .y = pos.y + (dst.h / 2) };
 				if (check_overlap_bullet(bullet, centre, dst.w)) {
 					spawner->health = spawner->health - bullet->damage;
 					if (spawner->health == 0) {
 						bullet->alive = false;
+						spawner->alive = false;
 					}
 				}
 			}
