@@ -1161,6 +1161,8 @@ void setup_level(emp_asset_t* level_asset)
 		case emp_behaviour_type_chaser:
 			emp_create_spawner(pos, 10, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
+		default:
+			break;
 		}
 	}
 
