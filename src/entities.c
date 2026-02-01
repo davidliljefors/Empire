@@ -37,6 +37,20 @@ void PlayOneShot(emp_asset_t* asset)
 	MIX_PlayAudio(G->mixer, (MIX_Audio*)asset->handle);
 }
 
+void PlayOneShotBullet( emp_weapon_conf_t* weapon)
+{
+	uint32_t current_time =(uint32_t) SDL_GetTicks(); 
+
+    if (current_time - weapon->last_played_ms < weapon->cooldown_ms) {
+		SDL_Log("Current Health: ");
+        return;
+    }
+
+    MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->asset->handle);
+	
+    weapon->last_played_ms = current_time;
+}
+
 emp_vec2_t render_offset()
 {
 	int render_w, render_h;
@@ -258,6 +272,7 @@ void emp_init_enemy_configs()
 
 void emp_init_weapon_configs()
 {
+	u32 cooldown = 200;
 	weapons[0] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[0]->delay_between_shots = 0.2f;
 	weapons[0]->num_shots = 1;
@@ -269,6 +284,8 @@ void emp_init_weapon_configs()
 		.damage = 1.0,
 	};
 	weapons[0]->asset = &G->assets->wav->shot1;
+	weapons[0]->last_played_ms = 0;
+	weapons[0]->cooldown_ms = cooldown;
 
 	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[1]->delay_between_shots = 0.4f;
@@ -281,10 +298,14 @@ void emp_init_weapon_configs()
 		.texture_asset = &G->assets->png->bullet_8,
 	};
 	weapons[1]->asset = &G->assets->wav->shot1;
+	weapons[1]->last_played_ms = 0;
+	weapons[1]->cooldown_ms = cooldown;
 
 	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
 	weapons[2]->delay_between_shots = 0.3f;
 	weapons[2]->num_shots = 3;
+	weapons[2]->last_played_ms = 0;
+	weapons[2]->cooldown_ms = cooldown;
 	weapons[2]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -311,6 +332,8 @@ void emp_init_weapon_configs()
 	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
 	weapons[3]->delay_between_shots = 0.3f;
 	weapons[3]->num_shots = 5;
+	weapons[3]->last_played_ms = 0;
+	weapons[3]->cooldown_ms = cooldown;
 	weapons[3]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -352,6 +375,8 @@ void emp_init_weapon_configs()
 	weapons[4]->delay_between_shots = 0.3f;
 	weapons[4]->num_shots = 12;
 	weapons[4]->asset = &G->assets->wav->shot1;
+	weapons[4]->last_played_ms = 0;
+	weapons[4]->cooldown_ms = cooldown;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -449,6 +474,8 @@ void emp_init_weapon_configs()
 	weapons[5]->delay_between_shots = 0.3f;
 	weapons[5]->num_shots = total_bullets;
 	weapons[5]->asset = &G->assets->wav->shot2;
+	weapons[5]->last_played_ms = 0;
+	weapons[5]->cooldown_ms = cooldown;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -465,6 +492,8 @@ void emp_init_weapon_configs()
 	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
 	weapons[6]->delay_between_shots = 0.5f;
 	weapons[6]->num_shots = total_bullets;
+	weapons[6]->last_played_ms = 0;
+	weapons[6]->cooldown_ms = cooldown;
 	weapons[6]->asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
@@ -482,7 +511,8 @@ void emp_init_weapon_configs()
 	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
 	weapons[7]->delay_between_shots = 0.5f;
 	weapons[7]->num_shots = total_bullets / 2 + 1;
-
+	weapons[7]->last_played_ms = 0;
+	weapons[7]->cooldown_ms = cooldown;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -493,23 +523,6 @@ void emp_init_weapon_configs()
 			.lifetime = 3.0f,
 			.damage = 1.0,
 			.texture_asset = &G->assets->png->bullet3_8
-		};
-	}
-
-	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
-	weapons[7]->delay_between_shots = 0.5f;
-	weapons[7]->num_shots = total_bullets / 2 + 1;
-	weapons[7]->asset = &G->assets->wav->shot3;
-	for (int i = 0; i < total_bullets; i++) {
-		float angle = 90 - i * 15.0f;
-		float current_speed = (i % 2) ? 300.0f : 400.0f;
-
-		weapons[7]->shots[i] = (emp_bullet_conf_t) {
-			.speed = current_speed,
-			.start_angle = angle,
-			.lifetime = 3.0f,
-			.damage = 1.0,
-			.texture_asset = &G->assets->png->bullet2_8
 		};
 	}
 }
@@ -536,7 +549,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->texture_asset = bullet_conf.texture_asset;
 		bullet->mask = mask;
 	}
-	PlayOneShot(conf->asset);
+	PlayOneShotBullet(conf);
 }
 
 u32 emp_create_player()
@@ -726,6 +739,11 @@ void emp_player_update(emp_player_t* player)
 
 void emp_enemy_update(emp_enemy_t* enemy)
 {
+	float dist = emp_vec2_dist(G->player->pos, enemy->pos);
+	if( dist > 1000.0f )
+	{
+		return;
+	}
 	enemy->update(enemy);
 
 	if (enemy->health <= 0) {
@@ -788,7 +806,13 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			if (tile_data->state == emp_tile_state_breakable) {
 				if (bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0) {
 					G->level->health[index].value--;
-					PlayOneShot(&G->assets->wav->obj_break);
+					if( G->level->health[index].value == 0) {
+						PlayOneShot(&G->assets->wav->obj_break);
+					}
+					else {
+					
+						PlayOneShot(&G->assets->wav->obj_damage);
+					}
 				}
 			}
 		}
@@ -975,8 +999,10 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
 					G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
 					G->player->is_teleporting = 1;
+					PlayOneShot(&G->assets->wav->teleport);
 				}
 			}
+			
 			G->player->is_teleporting = 1;
 			on_teleporter = G->player->is_teleporting;
 		}
@@ -1038,7 +1064,7 @@ void emp_entities_update()
 
 	for (u64 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
-		if (enemy->alive) {
+		if (enemy->alive ) {
 			emp_enemy_update(enemy);
 		}
 	}
