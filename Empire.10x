@@ -160,9 +160,6 @@
 								<Path>include/Empire/stb_image.h</Path>
 							</File>
 							<File>
-								<Path>include/Empire/math.inl</Path>
-							</File>
-							<File>
 								<Path>include/Empire/stb_truetype.h</Path>
 							</File>
 							<File>
@@ -173,6 +170,9 @@
 							</File>
 							<File>
 								<Path>include/Empire/yyjson.h</Path>
+							</File>
+							<File>
+								<Path>include/Empire/math.inl</Path>
 							</File>
 							<File>
 								<Path>include/Empire/level.h</Path>

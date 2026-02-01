@@ -46,9 +46,8 @@ typedef struct emp_weapon_conf_t
 	float delay_between_shots;
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
-	emp_asset_t* asset;
-	uint32_t last_played_ms;
-    uint32_t cooldown_ms;
+	emp_asset_t* sound_asset;
+	double last_played_ms;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
@@ -57,6 +56,7 @@ typedef struct emp_enemy_conf_t
 	float speed;
 	emp_asset_t* texture_asset;
 	emp_enemy_update_f update;
+	emp_enemy_update_f late_update;
 	u32 data_size;
 } emp_enemy_conf_t;
 
@@ -73,6 +73,7 @@ typedef struct emp_player_t
 	bool alive;
 	float health;
 	float max_health;
+	double last_damage_time;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
@@ -90,6 +91,7 @@ typedef struct emp_enemy_t
 	emp_asset_t* texture_asset;
 	emp_weapon_conf_t* weapon;
 	emp_enemy_update_f update;
+	emp_enemy_update_f late_update;
 	double last_shot;
 	double last_damage_time;
 	emp_spawner_h spawned_by;
@@ -168,14 +170,6 @@ typedef struct emp_level_t
 	emp_tile_health_t* health;
 } emp_level_t;
 
-#define EMP_MAX_CHESTS 32
-typedef struct emp_chest_t
-{
-	emp_vec2_t pos;
-	u32 weapon_index;
-	bool alive;
-} emp_chest_t;
-
 struct MIX_Mixer;
 struct emp_music_player;
 
@@ -188,7 +182,6 @@ typedef struct emp_entities_t
 	emp_enemy_t* enemies;
 	emp_bullet_t* bullets;
 	emp_spawner_t* spawners;
-	emp_chest_t* chests;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
 	struct emp_music_player* music_player;
