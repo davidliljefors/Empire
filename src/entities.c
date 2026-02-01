@@ -300,7 +300,7 @@ void emp_init_weapon_configs()
 {
 	u32 cooldown = 200;
 	weapons[0] = SDL_malloc(sizeof(emp_weapon_conf_t));
-	weapons[0]->delay_between_shots = 0.2f;
+	weapons[0]->delay_between_shots = 0.5f;
 	weapons[0]->num_shots = 1;
 	weapons[0]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 300.0f,
@@ -609,7 +609,7 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 			enemy->weapon = weapons[weapon_index];
 			enemy->alive = true;
 			enemy->spawned_by = spawned_by;
-			enemy->enemy_shot_delay = 3.0;
+			enemy->enemy_shot_delay = 4.0;
 			return (emp_enemy_h) { .index = i, .generation = enemy->generation };
 		}
 	}
@@ -876,8 +876,8 @@ void emp_bullet_update(emp_bullet_t* bullet)
 				emp_vec2_t centre = (emp_vec2_t) { .x = pos.x + (dst.w / 2), .y = pos.y + (dst.h / 2) };
 				if (check_overlap_bullet(bullet, centre, dst.w)) {
 					spawner->health = spawner->health - bullet->damage;
+					bullet->alive = false;
 					if (spawner->health == 0) {
-						bullet->alive = false;
 						spawner->alive = false;
 					}
 				}
@@ -1053,9 +1053,9 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 {
 	emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
 	if (spawner->count < spawner->limit) {
-		spawner->accumulator = spawner->accumulator + G->args->dt;
-		if (spawner->accumulator > spawner->frequency) {
-			spawner->accumulator = spawner->accumulator - spawner->frequency;
+		spawner->accumulator = spawner->accumulator - G->args->dt;
+		if (spawner->accumulator <= 0.0f) {
+			spawner->accumulator = spawner->accumulator + spawner->frequency;
 			spawner->count = spawner->count + 1;
 			emp_create_enemy(pos, spawner->enemy_conf_index, spawner->weapon_index, (emp_spawner_h) { .index = index });
 		}

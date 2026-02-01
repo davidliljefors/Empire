@@ -2563,54 +2563,6 @@
 							"fieldInstances": [],
 							"__worldX": 168,
 							"__worldY": 216
-						},
-						{
-							"__identifier": "teleporter",
-							"__grid": [3,2],
-							"__pivot": [0.5,0.5],
-							"__tags": [],
-							"__tile": { "tilesetUid": 255, "x": 0, "y": 0, "w": 32, "h": 32 },
-							"__smartColor": "#FEAE34",
-							"iid": "7e03f4c0-fa90-11f0-90ed-09336596db80",
-							"width": 32,
-							"height": 32,
-							"defUid": 257,
-							"px": [56,40],
-							"fieldInstances": [{ "__identifier": "other", "__type": "EntityRef", "__value": {
-								"entityIid": "7e6a30a0-fa90-11f0-90ed-ed4c84b2cd56",
-								"layerIid": "23625270-fa90-11f0-90ed-fbd9054a0de7",
-								"levelIid": "41403990-fa90-11f0-90ed-1742f2cac5ba",
-								"worldIid": "413feb71-fa90-11f0-90ed-c70116ce90c0"
-							}, "__tile": null, "defUid": 260, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["7e6a30a0-fa90-11f0-90ed-ed4c84b2cd56"]
-							}] }],
-							"__worldX": 184,
-							"__worldY": 168
-						},
-						{
-							"__identifier": "teleporter",
-							"__grid": [13,3],
-							"__pivot": [0.5,0.5],
-							"__tags": [],
-							"__tile": { "tilesetUid": 255, "x": 0, "y": 0, "w": 32, "h": 32 },
-							"__smartColor": "#FEAE34",
-							"iid": "7e6a30a0-fa90-11f0-90ed-ed4c84b2cd56",
-							"width": 32,
-							"height": 32,
-							"defUid": 257,
-							"px": [216,56],
-							"fieldInstances": [{ "__identifier": "other", "__type": "EntityRef", "__value": {
-								"entityIid": "7e03f4c0-fa90-11f0-90ed-09336596db80",
-								"layerIid": "23625270-fa90-11f0-90ed-fbd9054a0de7",
-								"levelIid": "41403990-fa90-11f0-90ed-1742f2cac5ba",
-								"worldIid": "413feb71-fa90-11f0-90ed-c70116ce90c0"
-							}, "__tile": null, "defUid": 260, "realEditorValues": [{
-								"id": "V_String",
-								"params": ["7e03f4c0-fa90-11f0-90ed-09336596db80"]
-							}] }],
-							"__worldX": 344,
-							"__worldY": 184
 						}
 					]
 				},
@@ -4212,7 +4164,33 @@
 					"seed": 3001716,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "spawner",
+							"__grid": [2,3],
+							"__pivot": [0.5,0.5],
+							"__tags": [],
+							"__tile": { "tilesetUid": 256, "x": 0, "y": 0, "w": 32, "h": 32 },
+							"__smartColor": "#D77643",
+							"iid": "dd3b70b0-fa90-11f0-90ed-096986b30cb5",
+							"width": 32,
+							"height": 32,
+							"defUid": 123,
+							"px": [40,56],
+							"fieldInstances": [
+								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "chaser", "__tile": null, "defUid": 252, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["chaser"]
+								}] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [] },
+								{ "__identifier": "frequency", "__type": "Float", "__value": 4, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [4] }] },
+								{ "__identifier": "health", "__type": "Float", "__value": 8, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [8] }] },
+								{ "__identifier": "limit", "__type": "Int", "__value": 10, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [10] }] }
+							],
+							"__worldX": 168,
+							"__worldY": 312
+						}
+					]
 				},
 				{
 					"__identifier": "world",
