@@ -224,7 +224,7 @@ bool check_overlap_map(emp_vec2_t pos)
 bool check_overlap_bullet_enemy(emp_bullet_t* bullet, emp_enemy_t* enemy)
 {
 	emp_texture_t* texture = enemy->texture_asset->handle;
-	float size = texture->width / 2.0f;
+	float size = texture->width / 3.0f;
 	return emp_vec2_dist_sq(bullet->pos, enemy->pos) < size * size;
 }
 
@@ -299,8 +299,13 @@ void enemy_chaser_update(emp_enemy_t* enemy)
 	enemy->direction = emp_vec2_normalize(enemy->direction);
 
 	enemy->flip = enemy->direction.x > 0.0f;
-	float move_speed = 120.0f;
-	emp_vec2_t movement = emp_vec2_mul(enemy->direction, move_speed * dt);
+	emp_vec2_t movement = emp_vec2_mul(enemy->direction, enemy->speed * dt);
+
+	float osc_amplitude = 50.0f;
+	float osc_frequency = 1.5f;
+	float phase_offset = (float)((uintptr_t)enemy % 1000) * 0.01f;
+	movement.y += SDL_sinf((float)G->args->global_time * osc_frequency + phase_offset) * osc_amplitude * dt;
+
 	emp_vec2_t new_pos = emp_vec2_add(enemy->pos, movement);
 	enemy->pos = new_pos;
 }
@@ -329,8 +334,7 @@ void enemy_roamer_update(emp_enemy_t* enemy)
 		data->time_until_change = 0.3f + (float)(simple_rng(&rng_state) % 100) * 0.005f;
 	}
 
-	float move_speed = 120.0f;
-	emp_vec2_t movement = emp_vec2_mul(enemy->direction, move_speed * dt);
+	emp_vec2_t movement = emp_vec2_mul(enemy->direction, enemy->speed * dt);
 
 	emp_vec2_t new_pos = emp_vec2_add(enemy->pos, movement);
 	if (!check_overlap_map(new_pos)) {
@@ -357,7 +361,7 @@ void emp_init_enemy_configs()
 	enemy_confs[0] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e0 = enemy_confs[0];
 	e0->health = 10;
-	e0->speed = 300.0f;
+	e0->speed = 120.0f;
 	e0->texture_asset = &G->assets->png->enemy1_32;
 	e0->data_size = sizeof(emp_roamer_data_t);
 	e0->update = enemy_roamer_update;
@@ -366,7 +370,7 @@ void emp_init_enemy_configs()
 	enemy_confs[1] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e1 = enemy_confs[1];
 	e1->health = 50;
-	e1->speed = 300.0f;
+	e1->speed = 120.0f;
 	e1->texture_asset = &G->assets->png->boss2_64;
 	e1->data_size = sizeof(emp_roamer_data_t);
 	e1->update = enemy_roamer_update;
@@ -375,7 +379,7 @@ void emp_init_enemy_configs()
 	enemy_confs[2] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e2 = enemy_confs[2];
 	e2->health = 12;
-	e2->speed = 300.0f;
+	e2->speed = 120.0f;
 	e2->texture_asset = &G->assets->png->enemy3_32;
 	e2->data_size = sizeof(emp_chaser_data_t);
 	e2->update = enemy_chaser_update;
@@ -384,7 +388,7 @@ void emp_init_enemy_configs()
 	enemy_confs[3] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e3 = enemy_confs[3];
 	e3->health = 100;
-	e3->speed = 300.0f;
+	e3->speed = 120.0f;
 	e3->texture_asset = &G->assets->png->boss1_64;
 	e3->data_size = sizeof(emp_roamer_data_t);
 	e3->update = enemy_chaser_update;
@@ -744,7 +748,7 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 			enemy->health = conf->health;
 			enemy->update = conf->update;
 			enemy->late_update = conf->late_update;
-			enemy->speed = conf->speed;
+			enemy->speed = random_float(conf->speed * 0.8, conf->speed * 1.2);
 			enemy->texture_asset = conf->texture_asset;
 			enemy->weapon = weapons[weapon_index];
 			enemy->alive = true;
