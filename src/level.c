@@ -80,6 +80,7 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 				yyjson_val* value = yyjson_obj_get(field, "__value");
 				if (value) {
 					out_entity->weapon_index = (uint32_t)yyjson_get_uint(value);
+					is_reasonably_constructed = 1;
 				}
 			}
 
@@ -220,6 +221,11 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 				tp.other = hash_str(yyjson_get_str(eid));
 				emp_level_teleporter_list_add(&level->teleporters, &tp);
 				continue;
+			}
+
+			if (SDL_strcmp(str, "chest") == 0) {
+				entity.type = emp_entity_type_chest;
+				entity.behaviour = emp_behaviour_type_none;
 			}
 		}
 

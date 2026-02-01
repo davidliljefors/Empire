@@ -1869,7 +1869,7 @@
 			]
 		},
 		{
-			"identifier": "weapon",
+			"identifier": "chest",
 			"uid": 133,
 			"tags": [],
 			"exportToToc": false,
@@ -2954,7 +2954,7 @@
 					"gridTiles": [],
 					"entityInstances": [
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [3,1],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -3172,7 +3172,7 @@
 							"__worldY": 520
 						},
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [24,3],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -3188,7 +3188,7 @@
 							"__worldY": 440
 						},
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [4,1],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -3252,7 +3252,7 @@
 							"__worldY": 472
 						},
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [29,13],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -3686,7 +3686,7 @@
 					"gridTiles": [],
 					"entityInstances": [
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [2,30],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -4183,7 +4183,7 @@
 									"params": ["chaser"]
 								}] },
 								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [] },
-								{ "__identifier": "frequency", "__type": "Float", "__value": 4, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [4] }] },
+								{ "__identifier": "frequency", "__type": "Float", "__value": 1, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [1] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 8, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [8] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 10, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [10] }] }
 							],
@@ -5148,7 +5148,7 @@
 					"gridTiles": [],
 					"entityInstances": [
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [67,3],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -5611,7 +5611,7 @@
 							"__worldY": 392
 						},
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [18,6],
 							"__pivot": [0.5,0.5],
 							"__tags": [],
@@ -5725,7 +5725,7 @@
 							"__worldY": 344
 						},
 						{
-							"__identifier": "weapon",
+							"__identifier": "chest",
 							"__grid": [26,11],
 							"__pivot": [0.5,0.5],
 							"__tags": [],

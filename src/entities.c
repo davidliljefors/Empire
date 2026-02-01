@@ -1179,6 +1179,21 @@ void setup_level(emp_asset_t* level_asset)
 		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 	}
 
+	//found = 0;
+	//for (;;) {
+	//	found = emp_level_query(level, emp_entity_type_chest, found);
+	//	if (!found) {
+	//		break;
+	//	}
+
+	//	float half = level->entities.grid_size * 0.5f;
+	//	emp_level_entity_t* chest = emp_level_get(level, found - 1);
+	//	float x = chest->x - half;
+	//	float y = chest->y - half;
+
+	//}
+
+
 	for (u64 li = 0; li < level->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level->sublevels.entries + li;
 		for (u64 ti = 0; ti < sublevel->tiles.count; ti++) {
