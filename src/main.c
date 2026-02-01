@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
 	emp_asset_manager_add_loader(g_asset_mgr, ldtk_loader, EMP_ASSET_TYPE_LDTK);
 	emp_asset_manager_add_loader(g_asset_mgr, wav_loader, EMP_ASSET_TYPE_WAV);
 
-	emp_asset_manager_check_hot_reload(g_asset_mgr);
+	emp_asset_manager_check_hot_reload(g_asset_mgr, 10.0f);
 
 	G->assets = g_assets;
 	G->args = SDL_malloc(sizeof(emp_update_args_t));
@@ -234,7 +234,6 @@ int main(int argc, char* argv[])
 #else
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
-
 	while (g_running) {
 		frame_count++;
 		u64 currentTime = SDL_GetTicks();
@@ -251,7 +250,7 @@ int main(int argc, char* argv[])
         }
 
 		main_loop();
-		emp_asset_manager_check_hot_reload(g_asset_mgr);
+		emp_asset_manager_check_hot_reload(g_asset_mgr, G->args->dt);
 	}
 #endif
 	SDL_DestroyWindow(g_window);

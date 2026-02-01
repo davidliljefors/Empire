@@ -22,7 +22,7 @@ emp_asset_manager_o* emp_asset_manager_create(emp_generated_assets_o* assets)
 
 	for (u64 i = 0; i < sizeof(emp_generated_assets_o) / sizeof(void*); ++i) {
 		emp_generated_generic_t* generic = generic_assets[i];
-		emp_asset_type_t asset_type = { .count = generic->count, .assets = generic->asset, .loader = {0} };
+		emp_asset_type_t asset_type = { .count = generic->count, .assets = generic->asset, .loader = { 0 } };
 		hmput(mgr->assets_by_ext, generic->type_hash, asset_type);
 	}
 
@@ -37,8 +37,14 @@ void emp_asset_manager_add_loader(emp_asset_manager_o* mgr, emp_asset_loader_t l
 	}
 }
 
-void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr)
+void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr, float dt)
 {
+	mgr->accumulator = mgr->accumulator + dt;
+	if (mgr->accumulator < 1.0f) {
+		return;
+	}
+	mgr->accumulator = 0;
+
 	u64 len = hmlen(mgr->assets_by_ext);
 	for (u64 i = 0; i < len; ++i) {
 		emp_asset_kvp* pair = &mgr->assets_by_ext[i];

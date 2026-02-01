@@ -10,7 +10,7 @@ typedef struct emp_asset_t
 	u64 size;
 	u64 hash;
 	void* handle;
-	u64 last_modified;
+	i64 last_modified;
 } emp_asset_t;
 
 typedef struct emp_asset_loader_t
@@ -42,10 +42,11 @@ typedef struct emp_asset_manager_o
 {
 	emp_asset_kvp* assets_by_ext;
 	emp_asset_by_path_t* assets_by_path;
+	float accumulator;
 } emp_asset_manager_o;
 
 emp_asset_manager_o* emp_asset_manager_create(struct emp_generated_assets_o* assets);
 
 void emp_asset_manager_add_loader(emp_asset_manager_o* mgr, emp_asset_loader_t loader, u64 type);
 
-void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr);
+void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr, float dt);
