@@ -2,12 +2,14 @@
 
 #include <Empire/types.h>
 
-#define SPRITE_MAGNIFICATION 4.0f
+#define SPRITE_MAGNIFICATION 8.0f
 
 typedef struct emp_asset_t emp_asset_t;
 typedef struct emp_enemy_t emp_enemy_t;
+typedef struct emp_bullet_t emp_bullet_t;
 
 typedef void (*emp_enemy_update_f)(emp_enemy_t*);
+typedef void (*emp_bullet_render_f)(emp_bullet_t*);
 
 typedef struct emp_enemy_h
 {
@@ -39,6 +41,7 @@ typedef struct emp_bullet_conf_t
 	float lifetime;
 	float damage;
 	emp_asset_t* texture_asset;
+	emp_bullet_render_f custom_render;
 } emp_bullet_conf_t;
 
 typedef struct emp_weapon_conf_t
@@ -118,6 +121,7 @@ typedef enum bullet_mask {
 	emp_player_bullet_mask = 1 << 1,
 	emp_enemy_bullet_mask = 1 << 2,
 	emp_heavy_bullet_mask = 1 << 3,
+	emp_particle_bullet_mask = 1 << 4,
 } bullet_mask;
 
 #define EMP_MAX_BULLETS 65535
@@ -131,6 +135,7 @@ typedef struct emp_bullet_t
 	float damage;
 	emp_asset_t* texture_asset;
 	bullet_mask mask;
+	emp_bullet_render_f custom_render;
 } emp_bullet_t;
 
 #define EMP_MAX_BULLET_GENERATORS 1024
