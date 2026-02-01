@@ -93,7 +93,7 @@ typedef struct emp_enemy_t
 	double last_shot;
 	double last_damage_time;
 	emp_spawner_h spawned_by;
-
+	bool flip;
 	u8 dynamic_data[64];
 } emp_enemy_t;
 

@@ -15,6 +15,8 @@ emp_G* G;
 emp_enemy_conf_t* enemy_confs[16];
 emp_weapon_conf_t* weapons[10];
 
+emp_weapon_conf_t* particle_config;
+
 typedef struct emp_roamer_data_t
 {
 	float time_until_change;
@@ -236,6 +238,7 @@ void enemy_chaser_update(emp_enemy_t* enemy)
 	enemy->direction = emp_vec2_sub(G->player->pos, enemy->pos);
 	enemy->direction = emp_vec2_normalize(enemy->direction);
 
+	enemy->flip = enemy->direction.x > 0.0f;
 	float move_speed = 120.0f;
 	emp_vec2_t movement = emp_vec2_mul(enemy->direction, move_speed * dt);
 	emp_vec2_t new_pos = emp_vec2_add(enemy->pos, movement);
@@ -551,6 +554,26 @@ void emp_init_weapon_configs()
 			.texture_asset = &G->assets->png->bullet3_8
 		};
 	}
+
+
+	particle_config = SDL_malloc(sizeof(emp_weapon_conf_t));
+	particle_config->delay_between_shots = 0.5f;
+	particle_config->num_shots = total_bullets;
+	particle_config->last_played_ms = 0;
+	particle_config->cooldown_ms = cooldown;
+	particle_config->asset = &G->assets->wav->shot3;
+	for (int i = 0; i < total_bullets; i++) {
+		float angle = i * 15.0f;
+		float current_speed = (i % 2) ? 300.0f : 400.0f;
+
+		particle_config->shots[i] = (emp_bullet_conf_t){
+			.speed = current_speed,
+			.start_angle = angle,
+			.lifetime = 3.0f,
+			.damage = 1.0,
+			.texture_asset = &G->assets->png->bullet4_8
+		};
+	}
 }
 
 emp_bullet_conf_t get_bullet1()
@@ -809,6 +832,8 @@ void emp_enemy_update(emp_enemy_t* enemy)
 
 	SDL_FRect src = source_rect(enemy->texture_asset);
 	SDL_FRect dst = render_rect(enemy->pos, texture);
+	dst.x = enemy->flip ? dst.x + dst.w : dst.x;
+	dst.w = enemy->flip ? -dst.w : dst.w;
 
 	double t = 0.3;
 	double has_taken_damage = enemy->last_damage_time + t - G->args->global_time;
@@ -901,6 +926,7 @@ collision_done:;
 	if (bullet->mask & emp_player_bullet_mask) {
 		if (check_overlap_bullet_player(bullet, G->player)) {
 			G->player->health = G->player->health -= bullet->damage;
+			bullet->alive = false;
 		}
 	}
 }
@@ -976,11 +1002,11 @@ void emp_level_update(void)
 				}
 			}
 		}
-		if(deco != NULL) {
+		if (deco != NULL) {
 			for (u64 ti = 0; ti < sublevel->decoration.tiles.count; ti++) {
-				//float grid_size = sublevel->decoration.grid_size;
+				// float grid_size = sublevel->decoration.grid_size;
 				emp_tile_desc_t* desc = sublevel->decoration.tiles.values + ti;
-				SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size,(float)deco->source_size };
+				SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size, (float)deco->source_size };
 				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
 
 				pos.y = pos.y - 4.0f;
@@ -995,6 +1021,11 @@ void emp_level_update(void)
 
 void emp_generator_uptdate(emp_bullet_generator_t* generator)
 {
+}
+
+void emp_ka_ching(float x, float y)
+{
+	spawn_bullets((emp_vec2_t) { x, y }, (emp_vec2_t) { 1.0f, 1.0f }, 0, particle_config);
 }
 
 void emp_chest_uptdate(emp_chest_t* chest)
@@ -1067,6 +1098,8 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
 					G->player->is_teleporting = 1;
 					PlayOneShot(&G->assets->wav->teleport);
+
+					emp_ka_ching(G->player->pos.x, G->player->pos.y);
 				}
 			}
 
