@@ -20,6 +20,11 @@ typedef struct emp_roamer_data_t
 	float time_until_change;
 } emp_roamer_data_t;
 
+typedef struct emp_shader_data_t
+{
+	float radius;
+} emp_shader_data_t;
+
 u32 rng_state;
 
 typedef struct emp_player_conf_t
@@ -61,7 +66,7 @@ void draw_rect_at(emp_vec2_t pos, float size, u8 r, u8 g, u8 b, u8 a)
 	rect.y += offset.y;
 
 	SDL_SetRenderDrawColor(G->renderer, r, g, b, a);
-	//SDL_RenderRect(G->renderer, &rect);
+	// SDL_RenderRect(G->renderer, &rect);
 }
 
 SDL_FRect player_rect(emp_vec2_t pos, emp_texture_t* texture)
@@ -210,6 +215,19 @@ u32 simple_rng(u32* state)
 	return (*state >> 16) & 0x7FFF;
 }
 
+void enemy_chaser_update(emp_enemy_t* enemy)
+{
+	float dt = G->args->dt;
+
+	enemy->direction = emp_vec2_sub(G->player->pos, enemy->pos);
+	enemy->direction = emp_vec2_normalize(enemy->direction);
+
+	float move_speed = 120.0f;
+	emp_vec2_t movement = emp_vec2_mul(enemy->direction, move_speed * dt);
+	emp_vec2_t new_pos = emp_vec2_add(enemy->pos, movement);
+	enemy->pos = new_pos;
+}
+
 void enemy_roamer_update(emp_enemy_t* enemy)
 {
 	emp_roamer_data_t* data = (emp_roamer_data_t*)&enemy->dynamic_data[0];
@@ -254,6 +272,14 @@ void emp_init_enemy_configs()
 	e1->texture_asset = &G->assets->png->boss1_64;
 	e1->data_size = sizeof(emp_roamer_data_t);
 	e1->update = enemy_roamer_update;
+
+	enemy_confs[2] = SDL_malloc(sizeof(emp_enemy_conf_t));
+	emp_enemy_conf_t* e2 = enemy_confs[2];
+	e2->health = 12;
+	e2->speed = 300.0f;
+	e2->texture_asset = &G->assets->png->enemy3_32;
+	e2->data_size = sizeof(emp_shader_data_t);
+	e2->update = enemy_chaser_update;
 }
 
 void emp_init_weapon_configs()
@@ -262,7 +288,7 @@ void emp_init_weapon_configs()
 	weapons[0]->delay_between_shots = 0.2f;
 	weapons[0]->num_shots = 1;
 	weapons[0]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 900.0f,
+		.speed = 300.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
@@ -763,7 +789,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	}
 
-	//draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
+	// draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
 
 void emp_bullet_update(emp_bullet_t* bullet)
@@ -1102,7 +1128,14 @@ void setup_level(emp_asset_t* level_asset)
 			.y = (spawner->y - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
 		};
 		// Maybe just pass down the fucking asset lol
-		emp_create_spawner(pos, 10, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
+		switch (spawner->behaviour) {
+		case emp_behaviour_type_roamer:
+			emp_create_spawner(pos, 10, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
+			break;
+		case emp_behaviour_type_chaser:
+			emp_create_spawner(pos, 10, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
+			break;
+		}
 	}
 
 	found = 0;

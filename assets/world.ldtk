@@ -3762,11 +3762,11 @@
 							"defUid": 123,
 							"px": [88,488],
 							"fieldInstances": [
-								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "roamer", "__tile": null, "defUid": 252, "realEditorValues": [{
+								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "chaser", "__tile": null, "defUid": 252, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["roamer"]
+									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 3, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [3] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 4, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [4] }] }
@@ -5598,11 +5598,11 @@
 							"defUid": 123,
 							"px": [120,360],
 							"fieldInstances": [
-								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "chaser", "__tile": null, "defUid": 252, "realEditorValues": [{
+								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "roamer", "__tile": null, "defUid": 252, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["chaser"]
+									"params": ["roamer"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5709,11 +5709,11 @@
 							"defUid": 123,
 							"px": [216,168],
 							"fieldInstances": [
-								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "roamer", "__tile": null, "defUid": 252, "realEditorValues": [{
+								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "chaser", "__tile": null, "defUid": 252, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["roamer"]
+									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5734,11 +5734,11 @@
 							"defUid": 123,
 							"px": [520,216],
 							"fieldInstances": [
-								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "roamer", "__tile": null, "defUid": 252, "realEditorValues": [{
+								{ "__identifier": "enemy", "__type": "LocalEnum.behaviour", "__value": "chaser", "__tile": null, "defUid": 252, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["roamer"]
+									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
