@@ -299,7 +299,7 @@ void enemy_chest_update(emp_enemy_t* enemy)
 {
 	if (enemy->health <= 0.0f)
 	{
-		G->player->weapon_index = SDL_min(G->player->weapon_index, MAX_WEAPON_CONFIGS);
+		G->player->weapon_index = SDL_min(G->player->weapon_index + 1, MAX_WEAPON_CONFIGS);
 	}
 }
 

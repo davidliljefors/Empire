@@ -153,16 +153,13 @@ void emp_unload_wav_asset(struct emp_asset_t* asset)
 
 #ifdef __EMSCRIPTEN__
 EM_BOOL on_canv_resize(int eventType, const EmscriptenUiEvent* uiEvent, void* userData) {
-	double width, height;
-
-	// Get the new size of the canvas element in the CSS layout
-	emscripten_get_element_css_size("#canvas", &width, &height);
-
-	// Update the SDL Window size to match
-	SDL_SetWindowSize(g_window, (int)width, (int)height);
-
-	SDL_Log("Resized to: %d x %d", (int)width, (int)height);
-	return EM_TRUE;
+	
+	SDL_SetWindowSize(g_window, (int)uiEvent->windowInnerWidth, (int)uiEvent->windowInnerHeight);
+	
+	emscripten_set_element_css_size("#canvas", uiEvent->windowInnerWidth, uiEvent->windowInnerHeight);
+    
+	SDL_Log("Resized to: %d x %d", (int)uiEvent->windowInnerWidth, (int)uiEvent->windowInnerHeight);
+    return EM_TRUE;
 }
 #endif
 
