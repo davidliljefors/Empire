@@ -1061,7 +1061,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 							bullet->alive = false;
 							enemy_in_tile->health -= bullet->damage;
 							enemy_in_tile->last_damage_time = G->args->global_time;
-							play_one_shot(&G->assets->wav->wall_hit_ball);
+							play_one_shot(&G->assets->wav->enemy_damage);
 							emp_damage_number(enemy_in_tile->pos, (u32)bullet->damage);
 							goto collision_done;
 						}
@@ -1090,7 +1090,8 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		collision_done:;
 		if (bullet->mask & emp_player_bullet_mask) {
 			if (check_overlap_bullet_player(bullet, G->player)) {
-				emp_damage_number(G->player->pos, (u32)bullet->damage);
+				//emp_damage_number(G->player->pos, (u32)bullet->damage);
+				play_one_shot(&G->assets->wav->player_damage);
 				G->player->health = G->player->health -= bullet->damage;
 				G->player->last_damage_time = G->args->global_time;
 				bullet->alive = false;
