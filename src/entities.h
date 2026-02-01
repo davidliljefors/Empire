@@ -21,6 +21,11 @@ typedef struct emp_bullet_h
 	u32 generation;
 } emp_bullet_h;
 
+typedef struct emp_spawner_h
+{
+	u32 index;
+} emp_spawner_h;
+
 typedef struct emp_bullet_generator_h
 {
 	u32 index;
@@ -82,11 +87,27 @@ typedef struct emp_enemy_t
 	emp_enemy_update_f update;
 	double last_shot;
 	double last_damage_time;
+	emp_spawner_h spawned_by;
+
 	u8 dynamic_data[64];
 } emp_enemy_t;
 
-typedef enum bullet_mask
+#define EMP_MAX_SPAWNERS 32
+typedef struct emp_spawner_t
 {
+	bool alive;
+	float x;
+	float y;
+	float health;
+	float accumulator;
+	float frequency;
+	u32 enemy_conf_index;
+	u32 weapon_index;
+	u32 limit;
+	u32 count;
+} emp_spawner_t;
+
+typedef enum bullet_mask {
 	emp_player_bullet_mask = 1 << 1,
 	emp_enemy_bullet_mask = 1 << 2,
 	emp_heavy_bullet_mask = 1 << 3,
@@ -139,7 +160,7 @@ typedef struct emp_level_t
 {
 	emp_tile_t* tiles;
 	emp_enemy_t** enemy_in_tile;
-	emp_tile_health_t *health;
+	emp_tile_health_t* health;
 } emp_level_t;
 
 struct MIX_Mixer;
@@ -151,9 +172,10 @@ typedef struct emp_entities_t
 	emp_player_t* player;
 	emp_enemy_t* enemies;
 	emp_bullet_t* bullets;
+	emp_spawner_t* spawners;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
-	struct MIX_Mixer *mixer;
+	struct MIX_Mixer* mixer;
 } emp_G;
 
 extern emp_G* G;
@@ -162,7 +184,7 @@ void emp_init_enemy_configs();
 void emp_init_weapon_configs();
 u32 emp_create_player();
 
-emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index);
+emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_index, emp_spawner_h spawned_by);
 void emp_destroy_enemy(emp_enemy_h handle);
 
 emp_bullet_h emp_create_bullet();

@@ -234,6 +234,14 @@ void emp_init_enemy_configs()
 	e0->texture_asset = &G->assets->png->enemy1_32;
 	e0->data_size = sizeof(emp_roamer_data_t);
 	e0->update = enemy_roamer_update;
+
+	enemy_confs[1] = SDL_malloc(sizeof(emp_enemy_conf_t));
+	emp_enemy_conf_t* e1 = enemy_confs[1];
+	e1->health = 10;
+	e1->speed = 300.0f;
+	e1->texture_asset = &G->assets->png->boss1_64;
+	e1->data_size = sizeof(emp_roamer_data_t);
+	e1->update = enemy_roamer_update;
 }
 
 void emp_init_weapon_configs()
@@ -257,6 +265,7 @@ void emp_init_weapon_configs()
 		.speed = 300.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
 	weapons[1]->asset = &G->assets->wav->shot1;
@@ -268,18 +277,21 @@ void emp_init_weapon_configs()
 		.speed = 450.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[2]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[2]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[2]->asset = &G->assets->wav->shot2;
@@ -291,30 +303,35 @@ void emp_init_weapon_configs()
 		.speed = 450.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[3]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[3]->shots[3] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[4] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->asset = &G->assets->wav->shot3;
@@ -327,78 +344,91 @@ void emp_init_weapon_configs()
 		.speed = 450.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[3] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -60.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[4] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 60.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[5] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -90.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[6] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 90.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[7] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -120.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[8] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 120.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[9] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -150.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[10] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 150.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[11] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 180.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[12] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -180.0f,
 		.lifetime = 3.0f,
+		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 
@@ -415,6 +445,7 @@ void emp_init_weapon_configs()
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
+			.damage = 1.0,
 			.texture_asset = &G->assets->png->bullet_8
 		};
 	}
@@ -431,6 +462,7 @@ void emp_init_weapon_configs()
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
+			.damage = 1.0,
 			.texture_asset = &G->assets->png->bullet2_8
 		};
 	}
@@ -447,6 +479,7 @@ void emp_init_weapon_configs()
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
+			.damage = 1.0,
 			.texture_asset = &G->assets->png->bullet3_8
 		};
 	}
@@ -463,6 +496,7 @@ void emp_init_weapon_configs()
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
+			.damage = 1.0,
 			.texture_asset = &G->assets->png->bullet2_8
 		};
 	}
@@ -501,7 +535,7 @@ u32 emp_create_player()
 	return 0;
 }
 
-emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
+emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_index, emp_spawner_h spawned_by)
 {
 	for (u32 i = 0; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
@@ -519,9 +553,9 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 			enemy->update = conf->update;
 			enemy->speed = conf->speed;
 			enemy->texture_asset = conf->texture_asset;
-			enemy->weapon = weapons[0];
+			enemy->weapon = weapons[weapon_index];
 			enemy->alive = true;
-
+			enemy->spawned_by = spawned_by;
 			return (emp_enemy_h) { .index = i, .generation = enemy->generation };
 		}
 	}
@@ -529,6 +563,27 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 	assert(false && "out of enemies");
 
 	return (emp_enemy_h) { 0 };
+}
+
+void emp_create_spawner(emp_vec2_t pos, float health, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit)
+{
+	for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
+		emp_spawner_t* spawner = &G->spawners[i];
+		if (!spawner->alive) {
+			SDL_memset(spawner, 0, sizeof(*spawner));
+			spawner->enemy_conf_index = enemy_conf_index;
+			spawner->alive = true;
+			spawner->frequency = frequency;
+			spawner->accumulator = 0;
+			spawner->health = health;
+			spawner->weapon_index = weapon_index;
+			spawner->x = pos.x;
+			spawner->y = pos.y;
+			spawner->limit = limit;
+			return;
+		}
+	}
+	assert(false && "out of enemies");
 }
 
 emp_bullet_h emp_create_bullet()
@@ -660,6 +715,11 @@ void emp_enemy_update(emp_enemy_t* enemy)
 
 	if (enemy->health <= 0) {
 		enemy->alive = false;
+		if (enemy->spawned_by.index < EMP_MAX_SPAWNERS) {
+			emp_spawner_t* spawner = G->spawners + enemy->spawned_by.index;
+			SDL_assert(spawner->count != 0);
+			spawner->count = spawner->count - 1;
+		}
 	}
 
 	add_enemy_to_tile(enemy);
@@ -827,11 +887,13 @@ void emp_entities_init()
 	G->enemies = SDL_malloc(sizeof(emp_enemy_t) * EMP_MAX_ENEMIES);
 	G->bullets = SDL_malloc(sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
 	G->generators = SDL_malloc(sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
+	G->spawners = SDL_malloc(sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS);
 
 	SDL_memset(G->player, 0, sizeof(emp_player_t) * EMP_MAX_PLAYERS);
 	SDL_memset(G->enemies, 0, sizeof(emp_enemy_t) * EMP_MAX_ENEMIES);
 	SDL_memset(G->bullets, 0, sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
 	SDL_memset(G->generators, 0, sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
+	SDL_memset(G->spawners, 0, sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS);
 }
 
 int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
@@ -844,32 +906,70 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 		.y = (teleporter->y - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
 	};
 	SDL_FRect dst = render_rect(pos, texture);
-	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+
+	emp_vec2_t centre = (emp_vec2_t){.x = dst.x + (dst.w / 2), .y = dst.y + (dst.h / 2) };
 
 	int on_teleporter = 0;
 	float distance = emp_vec2_dist(G->player->pos, pos);
-	if (distance < EMP_TILE_SIZE * SPRITE_MAGNIFICATION) {
-		if (G->player->is_teleporting == 0 /*&& G->player->was_teleporting == 0*/) {
-			emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
-			u32 found = emp_level_teleporter_list_find(&level->teleporters, teleporter->other);
-			if (found) {
-				u32 at = found - 1;
-				emp_level_teleporter_t const* tp = level->teleporters.entries + at;
 
-				emp_vec2_t new_pos = (emp_vec2_t) { .x = tp->x, .y = tp->y };
-				new_pos = emp_vec2_mul(new_pos, SPRITE_MAGNIFICATION);
-				G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
-				G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
-				G->player->is_teleporting = 1;
+	emp_vec2_t mouse_pos;
+	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
+	// buttons & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT);
+	//(void)buttons;
+	int is_hovering = emp_vec2_dist(mouse_pos, centre) < EMP_TILE_SIZE* SPRITE_MAGNIFICATION;
+	float required = EMP_TILE_SIZE * SPRITE_MAGNIFICATION * (G->player->is_teleporting ? 2.0f : 1.0f);
+	if (distance < required) {
+		if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT) && is_hovering) {
+			if (G->player->is_teleporting == 0 /*&& G->player->was_teleporting == 0*/) {
+				emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
+				u32 found = emp_level_teleporter_list_find(&level->teleporters, teleporter->other);
+				if (found) {
+					u32 at = found - 1;
+					emp_level_teleporter_t const* tp = level->teleporters.entries + at;
+
+					emp_vec2_t new_pos = (emp_vec2_t) { .x = tp->x, .y = tp->y };
+					new_pos = emp_vec2_mul(new_pos, SPRITE_MAGNIFICATION);
+					G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
+					G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
+					G->player->is_teleporting = 1;
+				}
 			}
+			G->player->is_teleporting = 1;
+			on_teleporter = G->player->is_teleporting;
 		}
-		G->player->is_teleporting = 1;
-		on_teleporter = G->player->is_teleporting;
 	}
 
-	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	if (G->player->is_teleporting) {
+
+		SDL_SetTextureAlphaMod(texture->texture, 64);
+		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+		SDL_SetTextureAlphaMod(texture->texture, 255);
+	} else {
+		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	}
+
+	// SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	draw_rect_at(pos, teleporter->w * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
 	return on_teleporter;
+}
+
+void emp_spawner_update(u32 index, emp_spawner_t* spawner)
+{
+	emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
+	if (spawner->count < spawner->limit) {
+		spawner->accumulator = spawner->accumulator + G->args->dt;
+		if (spawner->accumulator > spawner->frequency) {
+			spawner->accumulator = spawner->accumulator - spawner->frequency;
+			spawner->count = spawner->count + 1;
+			emp_create_enemy(pos, spawner->enemy_conf_index, spawner->weapon_index, (emp_spawner_h) { .index = index });
+		}
+	}
+
+	emp_asset_t* texture_asset = &G->assets->png->cave2_32;
+	emp_texture_t* texture = texture_asset->handle;
+	SDL_FRect src = source_rect(texture_asset);
+	SDL_FRect dst = render_rect(pos, texture);
+	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 }
 
 void emp_entities_update()
@@ -907,6 +1007,13 @@ void emp_entities_update()
 		}
 	}
 
+	for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
+		emp_spawner_t* spawner = &G->spawners[i];
+		if (spawner->alive) {
+			emp_spawner_update(i, spawner);
+		}
+	}
+
 	for (u64 i = 0; i < EMP_MAX_BULLET_GENERATORS; ++i) {
 		emp_bullet_generator_t* generator = &G->generators[i];
 		if (generator->alive) {
@@ -920,6 +1027,7 @@ void setup_level(emp_asset_t* level_asset)
 	SDL_memset(G->enemies, 0, sizeof(emp_enemy_t) * EMP_MAX_ENEMIES);
 	SDL_memset(G->bullets, 0, sizeof(emp_bullet_t) * EMP_MAX_BULLETS);
 	SDL_memset(G->generators, 0, sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
+	SDL_memset(G->spawners, 0, sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS);
 
 	u32 player = emp_create_player();
 	G->player[player].texture_asset = &G->assets->png->player_32;
@@ -944,12 +1052,28 @@ void setup_level(emp_asset_t* level_asset)
 			break;
 		}
 
-		float half = level->entities.grid_size * 0.5f;
-		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
-		float x = enemy->x - half;
-		float y = enemy->y - half;
+		emp_level_entity_t* spawner = emp_level_get(level, found - 1);
+		emp_vec2_t pos = (emp_vec2_t) {
+			.x = (spawner->x - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
+			.y = (spawner->y - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
+		};
+		// Maybe just pass down the fucking asset lol
+		emp_create_spawner(pos, 10, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
+	}
 
-		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
+	found = 0;
+	for (;;) {
+		found = emp_level_query(level, emp_entity_type_boss, found);
+		if (!found) {
+			break;
+		}
+
+		float half = level->entities.grid_size * 0.5f;
+		emp_level_entity_t* boss = emp_level_get(level, found - 1);
+		float x = boss->x - half;
+		float y = boss->y - half;
+
+		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 	}
 
 	for (u64 li = 0; li < level->sublevels.count; li++) {
@@ -969,7 +1093,7 @@ void setup_level(emp_asset_t* level_asset)
 
 			u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
 			emp_tile_health_t* health = &G->level->health[di];
-			if(value == 2) {
+			if (value == 2) {
 				health->value = 10;
 			}
 		}

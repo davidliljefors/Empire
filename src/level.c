@@ -82,6 +82,28 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 					out_entity->weapon_index = (uint32_t)yyjson_get_uint(value);
 				}
 			}
+
+			if (SDL_strcmp(str, "limit") == 0) {
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					out_entity->limit = (uint32_t)yyjson_get_uint(value);
+				}
+			}
+
+			if (SDL_strcmp(str, "frequency") == 0) {
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					out_entity->frequency = (float)yyjson_get_num(value);
+				}
+			}
+
+			if (SDL_strcmp(str, "health") == 0) {
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					out_entity->health = (float)yyjson_get_num(value);
+				}
+			}
+
 		}
 
 		yyjson_val* type = yyjson_obj_get(field, "__type");
