@@ -61,7 +61,7 @@ void draw_rect_at(emp_vec2_t pos, float size, u8 r, u8 g, u8 b, u8 a)
 	rect.y += offset.y;
 
 	SDL_SetRenderDrawColor(G->renderer, r, g, b, a);
-	SDL_RenderRect(G->renderer, &rect);
+	//SDL_RenderRect(G->renderer, &rect);
 }
 
 SDL_FRect player_rect(emp_vec2_t pos, emp_texture_t* texture)
@@ -271,7 +271,7 @@ void emp_init_weapon_configs()
 	weapons[0]->asset = &G->assets->wav->shot1;
 
 	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
-	weapons[1]->delay_between_shots = 0.2f;
+	weapons[1]->delay_between_shots = 0.4f;
 	weapons[1]->num_shots = 1;
 	weapons[1]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 300.0f,
@@ -570,6 +570,7 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 			enemy->weapon = weapons[weapon_index];
 			enemy->alive = true;
 			enemy->spawned_by = spawned_by;
+			enemy->enemy_shot_delay = 3.0;
 			return (emp_enemy_h) { .index = i, .generation = enemy->generation };
 		}
 	}
@@ -741,7 +742,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 	emp_vec2_t player_pos = G->player->pos;
 	emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(player_pos, enemy->pos));
 
-	if (enemy->last_shot + enemy->weapon->delay_between_shots <= G->args->global_time) {
+	if (enemy->last_shot + enemy->weapon->delay_between_shots * enemy->enemy_shot_delay <= G->args->global_time) {
 		spawn_bullets(enemy->pos, dir, emp_player_bullet_mask, enemy->weapon);
 		enemy->last_shot = G->args->global_time;
 	}
@@ -762,7 +763,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	}
 
-	draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
+	//draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
 
 void emp_bullet_update(emp_bullet_t* bullet)
