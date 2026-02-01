@@ -5,6 +5,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 #endif
 
 #include <Empire/types.h>
@@ -235,7 +236,7 @@ int main(int argc, char* argv[])
 	g_last_time = SDL_GetTicks();
 
 #ifdef __EMSCRIPTEN__
-	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, EM_FALSE, on_canv_resize);
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, on_canv_resize);
 	emscripten_set_main_loop(main_loop, 0, 1);
 #else
 	u64 last_time = SDL_GetTicks() - 900;
