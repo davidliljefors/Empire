@@ -46,9 +46,9 @@ void emp_music_player_init(void)
 		MIX_CreateTrack(G->mixer),
 	};
 	i32 track_steps[] = {
-		0,
 		1500,
 		2300,
+		9000,
 	};
 
 	music->track_steps[0] = track_steps[0];
@@ -1307,6 +1307,7 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 void emp_entities_update()
 {
 	emp_level_update();
+	emp_music_player_update(G->music_player);
 
 	int is_teleporting = 0;
 	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
