@@ -180,7 +180,7 @@ SDL_FRect render_rect(emp_vec2_t pos, emp_texture_t* texture)
 	return rect;
 }
 
-SDL_FRect render_rect_with_size(emp_vec2_t pos, float grid_size)
+SDL_FRect render_rect_tile(emp_vec2_t pos, float grid_size)
 {
 	SDL_FRect rect;
 	float size = grid_size * SPRITE_MAGNIFICATION;
@@ -197,6 +197,11 @@ SDL_FRect render_rect_with_size(emp_vec2_t pos, float grid_size)
 	emp_vec2_t offset = render_offset();
 	rect.x += offset.x;
 	rect.y += offset.y;
+
+	rect.x = floorf(rect.x);
+	rect.y = floorf(rect.y);
+	rect.w = ceilf(size);
+	rect.h = ceilf(size);
 
 	return rect;
 }
@@ -1194,7 +1199,7 @@ void emp_level_update(void)
 					}
 				}
 
-				SDL_FRect dst = render_rect_with_size(pos, grid_size);
+				SDL_FRect dst = render_rect_tile(pos, grid_size);
 				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 
 				if (value == 1) {
@@ -1214,7 +1219,7 @@ void emp_level_update(void)
 				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
 
 				pos.y = pos.y - 4.0f;
-				SDL_FRect dst = render_rect_with_size(pos, (float)deco->source_size);
+				SDL_FRect dst = render_rect_tile(pos, (float)deco->source_size);
 				SDL_RenderTexture(G->renderer, deco->texture, &src, &dst);
 			}
 		}

@@ -103,7 +103,7 @@ int parse_atlas_width_from_path_name(const char* path)
 void emp_png_load_func(emp_asset_t* asset)
 {
 	int width, height, channels;
-	unsigned char* data = stbi_load_from_memory(asset->data.data, asset->data.size, &width, &height, &channels, 4);
+	unsigned char* data = stbi_load_from_memory(asset->data.data, (int)asset->data.size, &width, &height, &channels, 4);
 
 	SDL_Surface* surface = SDL_CreateSurfaceFrom(
 		width, height, SDL_PIXELFORMAT_RGBA32, data, width * 4);
@@ -121,14 +121,14 @@ void emp_png_load_func(emp_asset_t* asset)
 		emp_tex->source_size = (u32)(atlas_size);
 		emp_tex->columns = width / atlas_size;
 		emp_tex->rows = height / atlas_size;
-		emp_tex->width = atlas_size;
-		emp_tex->height = atlas_size;
+		emp_tex->width = (float)atlas_size;
+		emp_tex->height = (float)atlas_size;
 	} else {
 		emp_tex->source_size = width;
 		emp_tex->rows = 1;
 		emp_tex->columns = 1;
-		emp_tex->width = width;
-		emp_tex->height = height;
+		emp_tex->width = (float)width;
+		emp_tex->height = (float)height;
 	}
 
 	asset->handle = emp_tex;
