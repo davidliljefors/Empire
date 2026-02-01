@@ -17,6 +17,50 @@ emp_weapon_conf_t* weapons[10];
 
 emp_weapon_conf_t* particle_config;
 
+typedef struct emp_music_player
+{
+	SDL_PropertiesID options;
+
+	MIX_Track* tracks[3];
+	i32 track_steps[3];
+
+	i32 current_track;
+} emp_music_player;
+
+void emp_music_player_init(void)
+{
+	G->music_player = (emp_music_player*)SDL_malloc(sizeof(*G->music_player));
+	emp_music_player* music = G->music_player;
+	music->options = 0;
+	SDL_SetNumberProperty(music->options, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, 1000); /* fade-in the first loop over five seconds. No fade on the loops, unless the initial fade is still in progress! */
+
+	MIX_Track* tracks[] = {
+		MIX_CreateTrack(G->mixer),
+		MIX_CreateTrack(G->mixer),
+		MIX_CreateTrack(G->mixer),
+	};
+	i32 track_steps[] = {
+		0,
+		1500,
+		2300,
+	};
+
+	music->track_steps[0] = track_steps[0];
+	music->track_steps[1] = track_steps[1];
+	music->track_steps[2] = track_steps[2];
+
+	MIX_SetTrackAudio(tracks[0], MIX_LoadAudio(G->mixer, G->assets->wav->calm_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[2], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
+
+	music->tracks[0] = tracks[0];
+	music->tracks[1] = tracks[1];
+	music->tracks[2] = tracks[2];
+
+	music->current_track = 0;
+	MIX_PlayTrack(music->tracks[music->current_track], music->options);
+}
+
 typedef struct emp_roamer_data_t
 {
 	float time_until_change;
@@ -298,7 +342,6 @@ void emp_init_enemy_configs()
 	e2->data_size = sizeof(emp_shader_data_t);
 	e2->update = enemy_chaser_update;
 
-
 	enemy_confs[3] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e3 = enemy_confs[3];
 	e3->health = 100;
@@ -564,7 +607,6 @@ void emp_init_weapon_configs()
 		};
 	}
 
-
 	particle_config = SDL_malloc(sizeof(emp_weapon_conf_t));
 	particle_config->delay_between_shots = 0.5f;
 	particle_config->num_shots = total_bullets;
@@ -575,7 +617,7 @@ void emp_init_weapon_configs()
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
 
-		particle_config->shots[i] = (emp_bullet_conf_t){
+		particle_config->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
@@ -726,6 +768,29 @@ emp_bullet_generator_h emp_create_bullet_generator()
 
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 {
+}
+
+void emp_music_player_update(emp_music_player* music)
+{
+	i32 preferred_track = 0;
+	for (i32 index = 0; index < SDL_arraysize(music->track_steps); index++) {
+		if (G->player->pos.x < music->track_steps[index] * SPRITE_MAGNIFICATION) {
+			preferred_track = index;
+			break;
+		}
+	}
+	preferred_track = SDL_min(preferred_track, SDL_arraysize(music->tracks));
+	if (preferred_track != music->current_track) {
+		MIX_StopTrack(music->tracks[music->current_track], MIX_TrackMSToFrames(music->tracks[music->current_track], 1000));
+		music->current_track = preferred_track;
+		MIX_PlayTrack(music->tracks[music->current_track], music->options);
+	}
+
+	Sint64 remaining = MIX_GetTrackRemaining(music->tracks[music->current_track]);
+	Sint64 ms = MIX_TrackFramesToMS(music->tracks[music->current_track], remaining);
+	if (ms == 0) {
+		MIX_PlayTrack(music->tracks[music->current_track], 0);
+	}
 }
 
 void emp_player_update(emp_player_t* player)
@@ -1269,10 +1334,10 @@ void setup_level(emp_asset_t* level_asset)
 
 		switch (boss->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_enemy((emp_vec2_t) { x* SPRITE_MAGNIFICATION, y* SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_enemy((emp_vec2_t) { x* SPRITE_MAGNIFICATION, y* SPRITE_MAGNIFICATION }, 3, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 3, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		default:
 			break;

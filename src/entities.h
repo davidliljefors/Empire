@@ -177,6 +177,8 @@ typedef struct emp_chest_t
 } emp_chest_t;
 
 struct MIX_Mixer;
+struct emp_music_player;
+
 typedef struct emp_entities_t
 {
 	SDL_Renderer* renderer;
@@ -189,11 +191,13 @@ typedef struct emp_entities_t
 	emp_chest_t* chests;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
+	struct emp_music_player* music_player;
 	struct MIX_Mixer* mixer;
 } emp_G;
 
 extern emp_G* G;
 
+void emp_music_player_init(void);
 void emp_init_enemy_configs();
 void emp_init_weapon_configs();
 u32 emp_create_player();

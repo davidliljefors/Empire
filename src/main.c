@@ -61,13 +61,13 @@ static void main_loop(void)
 	SDL_RenderClear(g_renderer);
 
 	emp_entities_update();
-	
+
 	char buffer2[64];
-	SDL_snprintf( buffer2, sizeof(buffer2), "Under the C" );
+	SDL_snprintf(buffer2, sizeof(buffer2), "Under the C");
 	emp_draw_text(WINDOW_WIDTH / 2 - 200, 100, buffer2, &g_assets->ttf->asepritefont);
 
 	char buffer[64];
-	SDL_snprintf( buffer, sizeof(buffer), "Health: %.0f/%.0f", G->player->health, G->player->max_health );
+	SDL_snprintf(buffer, sizeof(buffer), "Health: %.0f/%.0f", G->player->health, G->player->max_health);
 	emp_draw_text(50, WINDOW_HEIGHT - 50, buffer, &g_assets->ttf->asepritefont);
 
 	SDL_RenderPresent(g_renderer);
@@ -140,10 +140,12 @@ const char* get_asset_argument(int argc, char* arguments[])
 	return "";
 }
 
-void emp_load_wav_asset(struct emp_asset_t* asset){
+void emp_load_wav_asset(struct emp_asset_t* asset)
+{
 	asset->handle = MIX_LoadAudio(G->mixer, asset->path, 0);
 }
-void emp_unload_wav_asset(struct emp_asset_t* asset){
+void emp_unload_wav_asset(struct emp_asset_t* asset)
+{
 	MIX_DestroyAudio(asset->handle);
 }
 
@@ -186,12 +188,12 @@ int main(int argc, char* argv[])
 	};
 
 	G = SDL_malloc(sizeof(emp_G));
-	SDL_AudioSpec spec;
+	// SDL_AudioSpec spec;
 	MIX_Init();
 	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
-    if (!G->mixer) {
-        SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
-    }
+	if (!G->mixer) {
+		SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
+	}
 
 	emp_load_font(g_renderer, &g_assets->ttf->bauhs93, 84.0f);
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
@@ -205,34 +207,15 @@ int main(int argc, char* argv[])
 	G->args = SDL_malloc(sizeof(emp_update_args_t));
 	G->renderer = g_renderer;
 
-
 	emp_entities_init();
 	emp_init_enemy_configs();
 	emp_init_weapon_configs();
 
 	emp_create_level(&G->assets->ldtk->world, 0);
 
-    Uint8 *wav_data = NULL;
-    Uint32 wav_data_len = 0;
-
-    if (!SDL_LoadWAV( G->assets->wav->calm_music_loopable.path, &spec, &wav_data, &wav_data_len)) {
-        SDL_Log("Failed to load WAV: %s", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-	SDL_AudioStream *stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
-    if (!stream) {
-        SDL_Log("Failed to open audio stream: %s", SDL_GetError());
-        SDL_free(wav_data);
-        SDL_Quit();
-        return 1;
-    }
-	SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
-    SDL_ResumeAudioStreamDevice(stream);
+	emp_music_player_init();
 
 	SDL_zerop(G->args);
-
 	g_last_time = SDL_GetTicks();
 
 #ifdef __EMSCRIPTEN__
@@ -250,10 +233,27 @@ int main(int argc, char* argv[])
 			frame_count = 0;
 			last_time = currentTime;
 		}
-		
-		if (SDL_GetAudioStreamQueued(stream) == 0) {
-            SDL_PutAudioStreamData(stream, wav_data, wav_data_len);
-        }
+
+		//i32 preferred_track = 0;
+		//for(i32 index = 0; index < SDL_arraysize(track_steps); index++) {
+		//	if(G->player->pos.x < track_steps[index] * 4) 
+		//	{
+		//		preferred_track = index;
+		//		break;
+		//	}
+		//}
+		//preferred_track = SDL_min(preferred_track, SDL_arraysize(tracks));
+		//if (preferred_track != current_track) {
+		//	MIX_StopTrack(tracks[current_track], MIX_TrackMSToFrames(tracks[current_track], 1000));
+		//	current_track = preferred_track;
+		//	MIX_PlayTrack(tracks[current_track], options);
+		//}
+
+		//Sint64 remaining = MIX_GetTrackRemaining(tracks[current_track]);
+		//Sint64 ms = MIX_TrackFramesToMS(tracks[current_track], remaining);
+		//if (ms == 0) {
+		//	MIX_PlayTrack(tracks[current_track], 0);
+		//}
 
 		main_loop();
 		emp_asset_manager_check_hot_reload(g_asset_mgr, G->args->dt);
