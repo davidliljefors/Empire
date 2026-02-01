@@ -77,6 +77,7 @@ typedef struct emp_player_t
 	float health;
 	float max_health;
 	double last_damage_time;
+	double died_at_time;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
