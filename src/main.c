@@ -39,6 +39,20 @@ static emp_asset_manager_o* g_asset_mgr = NULL;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
+void update_sprite_magnification(void)
+{
+	int width, height;
+	SDL_GetWindowSize(g_window, &width, &height);
+	
+	float raw_mag = 4.0f * (float)height / 1080.0f;
+	
+	int snapped = (int)roundf(raw_mag);
+	if (snapped < 2) snapped = 2;
+	if (snapped > 6) snapped = 6;
+	
+	SPRITE_MAGNIFICATION = (float)snapped;
+}
+
 void main_loop(void)
 {
 	SDL_Event event;
@@ -48,6 +62,9 @@ void main_loop(void)
 		}
 		if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
 			g_running = false;
+		}
+		if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+			update_sprite_magnification();
 		}
 	}
 
@@ -63,13 +80,12 @@ void main_loop(void)
 
 	emp_entities_update();
 
+	int win_w, win_h;
+	SDL_GetWindowSize(g_window, &win_w, &win_h);
+
 	char buffer2[64];
 	SDL_snprintf(buffer2, sizeof(buffer2), "Under the C");
-	emp_draw_text(WINDOW_WIDTH / 2 - 200, 100, buffer2, 187, 195, 208, &g_assets->ttf->asepritefont);
-
-	/*char buffer[64];
-	SDL_snprintf(buffer, sizeof(buffer), "Health: %.0f/%.0f", G->player->health, G->player->max_health);
-	emp_draw_text(50, WINDOW_HEIGHT - 50, buffer, &g_assets->ttf->asepritefont);*/
+	emp_draw_text((float)win_w / 2 - 200, 100, buffer2, 187, 195, 208, &g_assets->ttf->asepritefont);
 
 	SDL_RenderPresent(g_renderer);
 }
@@ -105,14 +121,14 @@ void emp_png_load_func(emp_asset_t* asset)
 		emp_tex->source_size = (u32)(atlas_size);
 		emp_tex->columns = width / atlas_size;
 		emp_tex->rows = height / atlas_size;
-		emp_tex->width = atlas_size * SPRITE_MAGNIFICATION;
-		emp_tex->height = atlas_size * SPRITE_MAGNIFICATION;
+		emp_tex->width = atlas_size;
+		emp_tex->height = atlas_size;
 	} else {
 		emp_tex->source_size = width;
 		emp_tex->rows = 1;
 		emp_tex->columns = 1;
-		emp_tex->width = width * SPRITE_MAGNIFICATION;
-		emp_tex->height = height * SPRITE_MAGNIFICATION;
+		emp_tex->width = width;
+		emp_tex->height = height;
 	}
 
 	asset->handle = emp_tex;
@@ -173,10 +189,14 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	SDL_CreateWindowAndRenderer("Empire", WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
+	SDL_DisplayID display = SDL_GetPrimaryDisplay();
+	const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display);
+	int win_w = (int)(mode->w * 0.8f);
+	int win_h = (int)(mode->h * 0.8f);
+	SDL_CreateWindowAndRenderer("Empire", win_w, win_h, SDL_WINDOW_RESIZABLE, &g_window, &g_renderer);
+	SDL_SetWindowPosition(g_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
 	SDL_SetRenderVSync(g_renderer, 1);
-	// SDL_SetRenderScale(g_renderer, 2, 2);
 
 	if (!g_window) {
 		SDL_Log("Failed to create window: %s", SDL_GetError());
@@ -205,7 +225,6 @@ int main(int argc, char* argv[])
 	};
 
 	G = SDL_malloc(sizeof(emp_G));
-	// SDL_AudioSpec spec;
 	MIX_Init();
 	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
 	if (!G->mixer) {
@@ -216,7 +235,6 @@ int main(int argc, char* argv[])
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_add_loader(g_asset_mgr, ldtk_loader, EMP_ASSET_TYPE_LDTK);
-	//emp_asset_manager_add_loader(g_asset_mgr, wav_loader, EMP_ASSET_TYPE_WAV);
 	emp_asset_manager_add_loader(g_asset_mgr, ogg_loader, EMP_ASSET_TYPE_OGG);
 
 	emp_asset_manager_check_hot_reload(g_asset_mgr, 10.0f);
@@ -232,6 +250,8 @@ int main(int argc, char* argv[])
 	emp_create_level(&G->assets->ldtk->world, 0);
 
 	emp_music_player_init();
+
+	update_sprite_magnification();
 
 	SDL_zerop(G->args);
 	g_last_time = SDL_GetTicks();

@@ -14,6 +14,7 @@
 #define MAX_WEAPON_CONFIGS 8
 #define NULL_WEAPON_CONFIG 0
 
+float SPRITE_MAGNIFICATION = 4.0f;
 emp_G* G;
 emp_enemy_conf_t* enemy_confs[16];
 emp_weapon_conf_t* weapons[10];
@@ -88,7 +89,7 @@ typedef struct emp_player_conf_t
 
 emp_player_conf_t get_player_conf()
 {
-	return (emp_player_conf_t) { .speed = 240.0f };
+	return (emp_player_conf_t) { .speed = 60.0f };
 }
 
 void play_one_shot(emp_asset_t* asset)
@@ -120,13 +121,16 @@ emp_vec2_t render_offset()
 void draw_rect_at(emp_vec2_t pos, float size, u8 r, u8 g, u8 b, u8 a)
 {
 	SDL_FRect rect;
-	rect.x = pos.x - (size / 2);
-	rect.y = pos.y - (size / 2);
-	rect.w = size;
-	rect.h = size;
+	float screen_size = size * SPRITE_MAGNIFICATION;
+	float sx = pos.x * SPRITE_MAGNIFICATION;
+	float sy = pos.y * SPRITE_MAGNIFICATION;
+	rect.x = sx - (screen_size / 2);
+	rect.y = sy - (screen_size / 2);
+	rect.w = screen_size;
+	rect.h = screen_size;
 
-	rect.x -= G->player->pos.x;
-	rect.y -= G->player->pos.y;
+	rect.x -= G->player->pos.x * SPRITE_MAGNIFICATION;
+	rect.y -= G->player->pos.y * SPRITE_MAGNIFICATION;
 
 	emp_vec2_t offset = render_offset();
 	rect.x += offset.x;
@@ -139,11 +143,13 @@ void draw_rect_at(emp_vec2_t pos, float size, u8 r, u8 g, u8 b, u8 a)
 SDL_FRect player_rect(emp_vec2_t pos, emp_texture_t* texture)
 {
 	SDL_FRect rect;
+	float width = texture->width * SPRITE_MAGNIFICATION;
+	float height = texture->height * SPRITE_MAGNIFICATION;
 
-	rect.x = -(texture->width / 2);
-	rect.y = -(texture->height / 2);
-	rect.w = (float)texture->width;
-	rect.h = (float)texture->height;
+	rect.x = -(width / 2);
+	rect.y = -(height / 2);
+	rect.w = width;
+	rect.h = height;
 
 	emp_vec2_t offset = render_offset();
 	rect.x += offset.x;
@@ -155,13 +161,17 @@ SDL_FRect player_rect(emp_vec2_t pos, emp_texture_t* texture)
 SDL_FRect render_rect(emp_vec2_t pos, emp_texture_t* texture)
 {
 	SDL_FRect rect;
-	rect.x = pos.x - (texture->width / 2);
-	rect.y = pos.y - (texture->height / 2);
-	rect.w = (float)texture->width;
-	rect.h = (float)texture->height;
+	float width = texture->width * SPRITE_MAGNIFICATION;
+	float height = texture->height * SPRITE_MAGNIFICATION;
+	float sx = pos.x * SPRITE_MAGNIFICATION;
+	float sy = pos.y * SPRITE_MAGNIFICATION;
+	rect.x = sx - (width / 2);
+	rect.y = sy - (height / 2);
+	rect.w = width;
+	rect.h = height;
 
-	rect.x -= G->player->pos.x;
-	rect.y -= G->player->pos.y;
+	rect.x -= G->player->pos.x * SPRITE_MAGNIFICATION;
+	rect.y -= G->player->pos.y * SPRITE_MAGNIFICATION;
 
 	emp_vec2_t offset = render_offset();
 	rect.x += offset.x;
@@ -173,13 +183,16 @@ SDL_FRect render_rect(emp_vec2_t pos, emp_texture_t* texture)
 SDL_FRect render_rect_with_size(emp_vec2_t pos, float grid_size)
 {
 	SDL_FRect rect;
-	rect.x = pos.x - (grid_size / 2);
-	rect.y = pos.y - (grid_size / 2);
-	rect.w = (float)grid_size;
-	rect.h = (float)grid_size;
+	float size = grid_size * SPRITE_MAGNIFICATION;
+	float sx = pos.x * SPRITE_MAGNIFICATION;
+	float sy = pos.y * SPRITE_MAGNIFICATION;
+	rect.x = sx - (size / 2);
+	rect.y = sy - (size / 2);
+	rect.w = size;
+	rect.h = size;
 
-	rect.x -= G->player->pos.x;
-	rect.y -= G->player->pos.y;
+	rect.x -= G->player->pos.x * SPRITE_MAGNIFICATION;
+	rect.y -= G->player->pos.y * SPRITE_MAGNIFICATION;
 
 	emp_vec2_t offset = render_offset();
 	rect.x += offset.x;
@@ -190,8 +203,8 @@ SDL_FRect render_rect_with_size(emp_vec2_t pos, float grid_size)
 
 emp_vec2i_t get_tile(emp_vec2_t pos)
 {
-	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * SPRITE_MAGNIFICATION)));
-	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * SPRITE_MAGNIFICATION)));
+	int tile_x = (int)(roundf(pos.x / EMP_TILE_SIZE));
+	int tile_y = (int)(roundf(pos.y / EMP_TILE_SIZE));
 
 	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
 }
@@ -297,7 +310,7 @@ void enemy_chaser_update(emp_enemy_t* enemy)
 	enemy->flip = enemy->direction.x > 0.0f;
 	emp_vec2_t movement = emp_vec2_mul(enemy->direction, enemy->speed * dt);
 
-	float osc_amplitude = 50.0f;
+	float osc_amplitude = 12.5f;
 	float osc_frequency = 1.5f;
 	float phase_offset = (float)((uintptr_t)enemy % 1000) * 0.01f;
 	movement.y += SDL_sinf((float)G->args->global_time * osc_frequency + phase_offset) * osc_amplitude * dt;
@@ -357,7 +370,7 @@ void emp_init_enemy_configs()
 	enemy_confs[0] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e0 = enemy_confs[0];
 	e0->health = 10;
-	e0->speed = 120.0f;
+	e0->speed = 30.0f;
 	e0->texture_asset = &G->assets->png->enemy1_32;
 	e0->data_size = sizeof(emp_roamer_data_t);
 	e0->update = enemy_roamer_update;
@@ -366,7 +379,7 @@ void emp_init_enemy_configs()
 	enemy_confs[1] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e1 = enemy_confs[1];
 	e1->health = 50;
-	e1->speed = 120.0f;
+	e1->speed = 30.0f;
 	e1->texture_asset = &G->assets->png->boss2_64;
 	e1->data_size = sizeof(emp_roamer_data_t);
 	e1->update = enemy_roamer_update;
@@ -375,7 +388,7 @@ void emp_init_enemy_configs()
 	enemy_confs[2] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e2 = enemy_confs[2];
 	e2->health = 12;
-	e2->speed = 120.0f;
+	e2->speed = 30.0f;
 	e2->texture_asset = &G->assets->png->enemy3_32;
 	e2->data_size = sizeof(emp_chaser_data_t);
 	e2->update = enemy_chaser_update;
@@ -384,7 +397,7 @@ void emp_init_enemy_configs()
 	enemy_confs[3] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e3 = enemy_confs[3];
 	e3->health = 100;
-	e3->speed = 120.0f;
+	e3->speed = 30.0f;
 	e3->texture_asset = &G->assets->png->boss1_64;
 	e3->data_size = sizeof(emp_roamer_data_t);
 	e3->update = enemy_chaser_update;
@@ -415,7 +428,7 @@ void emp_init_weapon_configs()
 	weapons[1]->delay_between_shots = 0.5f;
 	weapons[1]->num_shots = 1;
 	weapons[1]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 500.0f,
+		.speed = 125.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
@@ -428,7 +441,7 @@ void emp_init_weapon_configs()
 	weapons[2]->delay_between_shots = 0.4f;
 	weapons[2]->num_shots = 1;
 	weapons[2]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 300.0f,
+		.speed = 75.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -442,21 +455,21 @@ void emp_init_weapon_configs()
 	weapons[3]->num_shots = 3;
 	weapons[3]->last_played_ms = 0;
 	weapons[3]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 450.0f,
+		.speed = 112.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -469,35 +482,35 @@ void emp_init_weapon_configs()
 	weapons[4]->num_shots = 5;
 	weapons[4]->last_played_ms = 0;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 450.0f,
+		.speed = 112.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[4]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[4]->shots[3] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[4] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -511,91 +524,91 @@ void emp_init_weapon_configs()
 	weapons[5]->sound_asset = &G->assets->ogg->shot1;
 	weapons[5]->last_played_ms = 0;
 	weapons[5]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 450.0f,
+		.speed = 112.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[3] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -60.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[4] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 60.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[5] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -90.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[6] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 90.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[7] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -120.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[8] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 120.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[9] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -150.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[10] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 150.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[11] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = 180.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[12] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
+		.speed = 100.0f,
 		.start_angle = -180.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -610,7 +623,7 @@ void emp_init_weapon_configs()
 	weapons[6]->last_played_ms = 0;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
-		float current_speed = (i % 2) ? 300.0f : 400.0f;
+		float current_speed = (i % 2) ? 75.0f : 100.0f;
 
 		weapons[6]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
@@ -628,7 +641,7 @@ void emp_init_weapon_configs()
 	weapons[7]->sound_asset = &G->assets->ogg->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
-		float current_speed = (i % 2) ? 300.0f : 400.0f;
+		float current_speed = (i % 2) ? 75.0f : 100.0f;
 
 		weapons[7]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
@@ -646,7 +659,7 @@ void emp_init_weapon_configs()
 	weapons[8]->sound_asset = &G->assets->ogg->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
-		float current_speed = (i % 2) ? 300.0f : 400.0f;
+		float current_speed = (i % 2) ? 75.0f : 100.0f;
 
 		weapons[8]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
@@ -664,7 +677,7 @@ void emp_init_weapon_configs()
 	particle_config->sound_asset = &G->assets->ogg->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
-		float current_speed = (i % 2) ? 300.0f : 400.0f;
+		float current_speed = (i % 2) ? 75.0f : 100.0f;
 
 		particle_config->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
@@ -678,11 +691,10 @@ void emp_init_weapon_configs()
 	text_particle_config = SDL_malloc(sizeof(emp_weapon_conf_t));
 	text_particle_config->num_shots = 1;
 	text_particle_config->sound_asset = NULL;
-	float current_speed = 300.0f;
 	text_particle_config->shots[0] = (emp_bullet_conf_t) {
-		.speed = current_speed,
+		.speed = 60.0f,
 		.start_angle = 0.0,
-		.lifetime = 1.5f,
+		.lifetime = 1.0f,
 		.damage = 0.0,
 		.texture_asset = &G->assets->png->bullet4_8,
 		.custom_render = bullet_text_render,
@@ -691,7 +703,7 @@ void emp_init_weapon_configs()
 
 emp_bullet_conf_t get_bullet1()
 {
-	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 1000.0f, .texture_asset = &G->assets->png->bullet_8 };
+	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 250.0f, .texture_asset = &G->assets->png->bullet_8 };
 	return bullet;
 }
 
@@ -835,7 +847,7 @@ void emp_music_player_update(emp_music_player* music)
 {
 	i32 preferred_track = 0;
 	for (i32 index = 0; index < SDL_arraysize(music->track_steps); index++) {
-		if (G->player->pos.x < music->track_steps[index] * SPRITE_MAGNIFICATION) {
+		if (G->player->pos.x < music->track_steps[index]) {
 			preferred_track = index;
 			break;
 		}
@@ -981,7 +993,7 @@ void emp_player_update(emp_player_t* player)
 void emp_enemy_update(emp_enemy_t* enemy)
 {
 	float dist = emp_vec2_dist(G->player->pos, enemy->pos);
-	if (dist > 1800.0f) {
+	if (dist > 450.0f) {
 		return;
 	}
 
@@ -1017,8 +1029,6 @@ void emp_enemy_update(emp_enemy_t* enemy)
 	} else {
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	}
-
-	// draw_rect_at(enemy->pos, 64, 255, 0, 0, 255);
 }
 
 void emp_enemy_late_update(emp_enemy_t* enemy)
@@ -1052,7 +1062,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 
 	emp_vec2i_t tile = get_tile(bullet->pos);
 
-	if (tile.x >= 0 && tile.x < (int)EMP_LEVEL_WIDTH && tile.y >= 0 && tile.y < (int)EMP_LEVEL_HEIGHT) {
+	if (tile_in_bounds(tile) && (bullet->mask & emp_particle_bullet_mask) == 0) {
 		u32 index = ((u32)tile.y * EMP_LEVEL_WIDTH) + (u32)tile.x;
 		emp_tile_t* tile_data = &G->level->tiles[index];
 
@@ -1064,7 +1074,6 @@ void emp_bullet_update(emp_bullet_t* bullet)
 					if (G->level->health[index].value == 0) {
 						play_one_shot(&G->assets->ogg->obj_break);
 					} else {
-
 						play_one_shot(&G->assets->ogg->obj_damage);
 					}
 				}
@@ -1185,30 +1194,27 @@ void emp_level_update(void)
 					}
 				}
 
-				pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
-				SDL_FRect dst = render_rect_with_size(pos, grid_size * SPRITE_MAGNIFICATION);
+				SDL_FRect dst = render_rect_with_size(pos, grid_size);
 				SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 
 				if (value == 1) {
 					tile->state = emp_tile_state_occupied;
-					draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
+					draw_rect_at(pos, grid_size, 255, 0, 0, 255);
 				}
 				if (value == 2) {
 					tile->state = emp_tile_state_breakable;
-					draw_rect_at(pos, grid_size * SPRITE_MAGNIFICATION, 255, 255, 0, 255);
+					draw_rect_at(pos, grid_size, 255, 255, 0, 255);
 				}
 			}
 		}
 		if (deco != NULL) {
 			for (u64 ti = 0; ti < sublevel->decoration.tiles.count; ti++) {
-				// float grid_size = sublevel->decoration.grid_size;
 				emp_tile_desc_t* desc = sublevel->decoration.tiles.values + ti;
 				SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size, (float)deco->source_size };
 				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
 
 				pos.y = pos.y - 4.0f;
-				pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
-				SDL_FRect dst = render_rect_with_size(pos, (float)deco->source_size * SPRITE_MAGNIFICATION);
+				SDL_FRect dst = render_rect_with_size(pos, (float)deco->source_size);
 				SDL_RenderTexture(G->renderer, deco->texture, &src, &dst);
 			}
 		}
@@ -1253,8 +1259,8 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 	emp_texture_t* texture = texture_asset->handle;
 	SDL_FRect src = source_rect(texture_asset);
 	emp_vec2_t pos = (emp_vec2_t) {
-		.x = (teleporter->x - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
-		.y = (teleporter->y - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
+		.x = teleporter->x - (float)EMP_TILE_SIZE / 2,
+		.y = teleporter->y - (float)EMP_TILE_SIZE / 2,
 	};
 	SDL_FRect dst = render_rect(pos, texture);
 
@@ -1265,10 +1271,8 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 
 	emp_vec2_t mouse_pos;
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
-	// buttons & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT);
-	//(void)buttons;
 	int is_hovering = emp_vec2_dist(mouse_pos, centre) < EMP_TILE_SIZE * SPRITE_MAGNIFICATION;
-	if (distance < EMP_TILE_SIZE * SPRITE_MAGNIFICATION) {
+	if (distance < EMP_TILE_SIZE) {
 		if (is_hovering) {
 			float ex = dst.w * 0.25f;
 			float ey = dst.h * 0.25f;
@@ -1285,10 +1289,8 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					u32 at = found - 1;
 					emp_level_teleporter_t const* tp = level->teleporters.entries + at;
 
-					emp_vec2_t new_pos = (emp_vec2_t) { .x = tp->x, .y = tp->y };
-					new_pos = emp_vec2_mul(new_pos, SPRITE_MAGNIFICATION);
-					G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
-					G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
+					G->player->pos.x = tp->x - (EMP_TILE_SIZE / 2.0f);
+					G->player->pos.y = tp->y - (EMP_TILE_SIZE / 2.0f);
 					G->player->is_teleporting = 1;
 					play_one_shot(&G->assets->ogg->teleport);
 
@@ -1310,8 +1312,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 		SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 	}
 
-	// SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
-	draw_rect_at(pos, teleporter->w * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
+	draw_rect_at(pos, teleporter->w, 255, 0, 0, 255);
 	return on_teleporter;
 }
 
@@ -1319,7 +1320,7 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 {
 	emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
 	float dist = emp_vec2_dist(G->player->pos, pos);
-	if(dist > 1800.0f) {
+	if(dist > 450.0f) {
 		return;
 	}
 	if (spawner->count < spawner->limit) {
@@ -1413,8 +1414,8 @@ void setup_level(emp_asset_t* level_asset)
 		float half = level->entities.grid_size * 0.5f;
 		float x = player_entity->x - half;
 		float y = player_entity->y - half;
-		G->player[player].pos.x = x * SPRITE_MAGNIFICATION;
-		G->player[player].pos.y = y * SPRITE_MAGNIFICATION;
+		G->player[player].pos.x = x;
+		G->player[player].pos.y = y;
 	} else {
 		SDL_Log("No Player config broke!");
 	}
@@ -1428,10 +1429,9 @@ void setup_level(emp_asset_t* level_asset)
 
 		emp_level_entity_t* spawner = emp_level_get(level, found - 1);
 		emp_vec2_t pos = (emp_vec2_t) {
-			.x = (spawner->x - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
-			.y = (spawner->y - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
+			.x = spawner->x - (float)EMP_TILE_SIZE / 2,
+			.y = spawner->y - (float)EMP_TILE_SIZE / 2,
 		};
-		// Maybe just pass down the fucking asset lol
 		switch (spawner->behaviour) {
 		case emp_behaviour_type_roamer:
 			emp_create_spawner(pos, 10, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
@@ -1458,10 +1458,10 @@ void setup_level(emp_asset_t* level_asset)
 
 		switch (boss->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x, y }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 3, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x, y }, 3, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		default:
 			break;
@@ -1479,7 +1479,7 @@ void setup_level(emp_asset_t* level_asset)
 		emp_level_entity_t* chest = emp_level_get(level, found - 1);
 		float x = chest->x - half;
 		float y = chest->y - half;
-		emp_create_chest((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, chest->weapon_index);
+		emp_create_chest((emp_vec2_t) { x, y }, chest->weapon_index);
 	}
 
 	for (u64 li = 0; li < level->sublevels.count; li++) {
