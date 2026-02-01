@@ -183,6 +183,7 @@ int main(int argc, char* argv[])
 
 	G = SDL_malloc(sizeof(emp_G));
 	SDL_AudioSpec spec;
+	MIX_Init();
 	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
     if (!G->mixer) {
         SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());
@@ -195,6 +196,7 @@ int main(int argc, char* argv[])
 	emp_asset_manager_add_loader(g_asset_mgr, wav_loader, EMP_ASSET_TYPE_WAV);
 
 	emp_asset_manager_check_hot_reload(g_asset_mgr);
+	emp_load_level_asset(&g_assets->ldtk->world);
 
 	G->assets = g_assets;
 	G->args = SDL_malloc(sizeof(emp_update_args_t));

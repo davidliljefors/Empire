@@ -906,7 +906,6 @@ void setup_level(emp_asset_t* level_asset)
 		if (!found) {
 			break;
 		}
-		SDL_Log("%s", "looping");
 
 		float half = level->entities.grid_size * 0.5f;
 		emp_level_entity_t* enemy = emp_level_get(level, found - 1);
