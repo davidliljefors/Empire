@@ -2,7 +2,7 @@
 
 #include <Empire/types.h>
 
-#define SPRITE_MAGNIFICATION 4.0f
+#define SPRITE_MAGNIFICATION 6.0f
 
 typedef struct emp_asset_t emp_asset_t;
 typedef struct emp_enemy_t emp_enemy_t;
@@ -77,6 +77,7 @@ typedef struct emp_player_t
 	float health;
 	float max_health;
 	double last_damage_time;
+	double died_at_time;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256

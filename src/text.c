@@ -33,10 +33,10 @@ void emp_load_font(SDL_Renderer* renderer, emp_asset_t* font_asset, float size) 
 	font_asset->handle = f;
 }
 
-void emp_draw_text(float x, float y, const char* text, emp_asset_t* font_asset) {
+void emp_draw_text(float x, float y, const char* text, u8 r, u8 g, u8 b, emp_asset_t* font_asset) {
 	emp_font_t* font = font_asset->handle;
 	SDL_Renderer* renderer = G->renderer;
-	SDL_SetTextureColorMod(font->texture, 255, 255, 255); 
+	SDL_SetTextureColorMod(font->texture, r, g, b); 
 
     while (*text) {
         if (*text >= 32 && *text <= 126) {
