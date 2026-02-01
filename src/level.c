@@ -1,5 +1,6 @@
 
 #include <Empire/assets.h>
+#include <Empire/hash.inl>
 #include <Empire/level.h>
 #include <Empire/yyjson.h>
 #include <SDL3/SDL_log.h>
@@ -113,7 +114,9 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 			}
 		}
 	}
-	SDL_Log("No Entity mapping found");
+	if (!is_reasonably_constructed) {
+		SDL_Log("No Entity mapping found");
+	}
 	return is_reasonably_constructed;
 }
 
@@ -124,6 +127,35 @@ static void emp_level_entities_list_add(emp_level_entities_list_t* list, emp_lev
 		list->count = list->count + 1;
 	} else {
 		SDL_Log("No space in entity list anymore. Bump the capacity");
+	}
+}
+
+static void emp_level_teleporter_list_add(emp_level_teleporter_list_t* set, emp_level_teleporter_t* value)
+{
+	u32 slot = value->id % SDL_arraysize(set->entries);
+	for (;;) {
+		emp_level_teleporter_t* teleporter = set->entries + slot;
+		if (teleporter->id == 0) {
+			set->count = set->count + 1;
+			*teleporter = *value;
+			return;
+		}
+		slot = (slot + 1) % SDL_arraysize(set->entries);
+	}
+}
+
+u32 emp_level_teleporter_list_find(emp_level_teleporter_list_t* set, u64 id)
+{
+	u32 slot = id % SDL_arraysize(set->entries);
+	for (;;) {
+		emp_level_teleporter_t* teleporter = set->entries + slot;
+		if (teleporter->id == 0) {
+			return 0;
+		}
+		if(teleporter->id == id) {
+			return slot + 1;
+		}
+		slot = (slot + 1) % SDL_arraysize(set->entries);
 	}
 }
 
@@ -148,6 +180,23 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 				entity.type = emp_entity_type_player;
 				entity.behaviour = emp_behaviour_type_none;
 				emp_level_entities_list_add(&level->entities, &entity);
+				continue;
+			}
+
+			if (SDL_strcmp(str, "teleporter") == 0) {
+				emp_level_teleporter_t tp = { 0 };
+				tp.id = hash_str(yyjson_get_str(yyjson_obj_get(instance, "iid")));
+				tp.x = entity.x;
+				tp.y = entity.y;
+				tp.w = entity.w;
+				tp.h = entity.h;
+
+				yyjson_val* fields = yyjson_obj_get(instance, "fieldInstances");
+				yyjson_val* other = yyjson_arr_get_first(fields);
+				yyjson_val* value = yyjson_obj_get(other, "__value");
+				yyjson_val* eid = yyjson_obj_get(value, "entityIid");
+				tp.other = hash_str(yyjson_get_str(eid));
+				emp_level_teleporter_list_add(&level->teleporters, &tp);
 				continue;
 			}
 		}
@@ -192,13 +241,14 @@ void emp_load_sublevel(emp_level_asset_t* level, size_t index, yyjson_val* data)
 	}
 
 	emp_sublevel_t* sublevel = emp_level_create_sublevel(level, &values, &tiles);
+	// sublevel->id = SDL_strdup(yyjson_get_str(yyjson_obj_get(data, "iid")));
 	sublevel->offset.x = (float)yyjson_get_num(yyjson_obj_get(data, "worldX"));
 	sublevel->offset.y = (float)yyjson_get_num(yyjson_obj_get(data, "worldY"));
 }
 
-size_t emp_level_query(emp_level_asset_t* level, emp_entity_type type, size_t offset)
+u32 emp_level_query(emp_level_asset_t* level, emp_entity_type type, u32 offset)
 {
-	for (size_t index = offset; index < level->entities.count; index++) {
+	for (u32 index = offset; index < level->entities.count; index++) {
 		emp_level_entity_t* entity = level->entities.entries + index;
 		if (entity->type == type) {
 			return index + 1;
@@ -222,7 +272,6 @@ void emp_load_level_asset(struct emp_asset_t* asset)
 
 	emp_level_asset_t* level = SDL_malloc(sizeof(*level));
 	memset(level, 0, sizeof(*level));
-
 	size_t idx, size;
 	yyjson_val* current;
 	yyjson_arr_foreach(sublevels, idx, size, current)

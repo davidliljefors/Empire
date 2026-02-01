@@ -531,10 +531,6 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index)
 	return (emp_enemy_h) { 0 };
 }
 
-void emp_destroy_enemy(emp_enemy_h handle)
-{
-}
-
 emp_bullet_h emp_create_bullet()
 {
 	for (u32 i = 0; i < EMP_MAX_BULLETS; ++i) {
@@ -554,10 +550,6 @@ emp_bullet_h emp_create_bullet()
 	assert(false && "out of bullets");
 
 	return (emp_bullet_h) { 0 };
-}
-
-void emp_destroy_bullet(emp_bullet_h handle)
-{
 }
 
 emp_bullet_generator_h emp_create_bullet_generator()
@@ -834,9 +826,57 @@ void emp_entities_init()
 	SDL_memset(G->generators, 0, sizeof(emp_bullet_generator_t) * EMP_MAX_BULLET_GENERATORS);
 }
 
+int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
+{
+	emp_asset_t* texture_asset = &G->assets->png->cave_32;
+	emp_texture_t* texture = texture_asset->handle;
+	SDL_FRect src = source_rect(texture_asset);
+	emp_vec2_t pos = (emp_vec2_t) {
+		.x = (teleporter->x - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
+		.y = (teleporter->y - (float)EMP_TILE_SIZE / 2) * SPRITE_MAGNIFICATION,
+	};
+	SDL_FRect dst = render_rect(pos, texture);
+	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+
+	int on_teleporter = 0;
+	float distance = emp_vec2_dist(G->player->pos, pos);
+	if (distance < EMP_TILE_SIZE * SPRITE_MAGNIFICATION) {
+		if (G->player->is_teleporting == 0 /*&& G->player->was_teleporting == 0*/) {
+			emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
+			u32 found = emp_level_teleporter_list_find(&level->teleporters, teleporter->other);
+			if (found) {
+				u32 at = found - 1;
+				emp_level_teleporter_t const* tp = level->teleporters.entries + at;
+
+				emp_vec2_t new_pos = (emp_vec2_t) { .x = tp->x, .y = tp->y };
+				new_pos = emp_vec2_mul(new_pos, SPRITE_MAGNIFICATION);
+				G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
+				G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
+				G->player->is_teleporting = 1;
+			}
+		}
+		G->player->is_teleporting = 1;
+		on_teleporter = G->player->is_teleporting;
+	}
+
+	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
+	draw_rect_at(pos, teleporter->w * SPRITE_MAGNIFICATION, 255, 0, 0, 255);
+	return on_teleporter;
+}
+
 void emp_entities_update()
 {
 	emp_level_update();
+	
+	int is_teleporting = 0;
+	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
+	for (u64 i = 0; i < SDL_arraysize(level->teleporters.entries); i++) {
+		emp_level_teleporter_t* tp = level->teleporters.entries + i;
+		if (tp->id != 0) {
+			is_teleporting = emp_teleporter_uptdate(tp) || is_teleporting;
+		}
+	}
+	G->player->is_teleporting = is_teleporting;
 
 	for (u64 i = 0; i < EMP_MAX_PLAYERS; ++i) {
 		emp_player_t* player = &G->player[i];
@@ -877,7 +917,7 @@ void setup_level(emp_asset_t* level_asset)
 	G->player[player].texture_asset = &G->assets->png->player_32;
 
 	emp_level_asset_t* level = (emp_level_asset_t*)level_asset->handle;
-	size_t found = emp_level_query(level, emp_entity_type_player, 0);
+	u32 found = emp_level_query(level, emp_entity_type_player, 0);
 	if (found) {
 		emp_level_entity_t* player_entity = emp_level_get(level, found - 1);
 		float half = level->entities.grid_size * 0.5f;
