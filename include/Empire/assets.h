@@ -10,6 +10,7 @@ typedef struct emp_asset_t
 	u64 size;
 	u64 hash;
 	void* handle;
+	u64 last_modified;
 } emp_asset_t;
 
 typedef struct emp_asset_loader_t
