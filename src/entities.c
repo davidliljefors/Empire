@@ -28,8 +28,8 @@ typedef struct emp_music_player
 {
 	SDL_PropertiesID options;
 
-	MIX_Track* tracks[3];
-	i32 track_steps[3];
+	MIX_Track* tracks[2];
+	i32 track_steps[2];
 
 	i32 current_track;
 } emp_music_player;
@@ -47,22 +47,18 @@ void emp_music_player_init(void)
 		MIX_CreateTrack(G->mixer),
 	};
 	i32 track_steps[] = {
-		1500,
 		2300,
 		9000,
 	}; 
 
 	music->track_steps[0] = track_steps[0];
 	music->track_steps[1] = track_steps[1];
-	music->track_steps[2] = track_steps[2];
 
 	MIX_SetTrackAudio(tracks[0], MIX_LoadAudio(G->mixer, G->assets->wav->calm_music_loopable.path, false));
-	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->wav->party_music_loopable.path, false));
-	MIX_SetTrackAudio(tracks[2], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
 
 	music->tracks[0] = tracks[0];
 	music->tracks[1] = tracks[1];
-	music->tracks[2] = tracks[2];
 
 	music->current_track = 0;
 	MIX_PlayTrack(music->tracks[music->current_track], music->options);
