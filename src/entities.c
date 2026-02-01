@@ -741,7 +741,7 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 			enemy->health = conf->health;
 			enemy->update = conf->update;
 			enemy->late_update = conf->late_update;
-			enemy->speed = conf->speed;
+			enemy->speed = random_float(conf->speed - 20, conf->speed + 20);
 			enemy->texture_asset = conf->texture_asset;
 			enemy->weapon = weapons[weapon_index];
 			enemy->alive = true;
