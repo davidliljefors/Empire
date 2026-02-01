@@ -69,6 +69,8 @@ typedef struct emp_player_t
 	bool is_teleporting;
 	bool flip;
 	bool alive;
+	u32 health;
+	u32 max_health;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256

@@ -532,6 +532,8 @@ u32 emp_create_player()
 	G->player[0].alive = true;
 	G->player[0].generation = 1;
 	G->player[0].weapon_index = 0;
+	G->player[0].health = 10;
+	G->player[0].max_health = 30;
 	return 0;
 }
 
