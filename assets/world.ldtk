@@ -3699,7 +3699,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 3, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [3] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 4, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [4] }] }
@@ -3966,7 +3966,7 @@
 									"id": "V_String",
 									"params": ["roamer"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 5, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [5] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 2, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
@@ -5633,7 +5633,7 @@
 									"id": "V_String",
 									"params": ["roamer"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [3] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5769,7 +5769,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -6604,7 +6604,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [1] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 3, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [3] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
