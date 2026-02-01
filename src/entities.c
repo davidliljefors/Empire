@@ -1152,16 +1152,6 @@ void emp_level_update(void)
 
 	memset(G->level->tiles, 0, sizeof(*G->level->tiles) * EMP_LEVEL_TILES);
 
-	for (u64 i = 0; i < EMP_LEVEL_TILES; ++i) {
-		if (G->level->enemy_in_tile[i] != NULL) {
-			emp_vec2_t pos;
-			pos.x = 64.0f * (i % EMP_LEVEL_WIDTH);
-			pos.y = 64.0f * (i / EMP_LEVEL_WIDTH);
-
-			draw_rect_at(pos, 64, 0, 255, 0, 255);
-		}
-	}
-
 	for (u64 li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
 

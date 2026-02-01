@@ -39,7 +39,7 @@ static emp_asset_manager_o* g_asset_mgr = NULL;
 static Uint64 g_last_time = 0;
 static bool g_running = true;
 
-static void main_loop(void)
+void main_loop(void)
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -72,8 +72,6 @@ static void main_loop(void)
 	emp_draw_text(50, WINDOW_HEIGHT - 50, buffer, &g_assets->ttf->asepritefont);*/
 
 	SDL_RenderPresent(g_renderer);
-
-	SDL_GL_SwapWindow(g_window);
 }
 
 int parse_atlas_width_from_path_name(const char* path)
