@@ -2946,7 +2946,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [56,24],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }],
 							"__worldX": 1976,
 							"__worldY": 152
 						}
@@ -3147,7 +3147,7 @@
 									"id": "V_String",
 									"params": ["jelly"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 263, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
+								{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 263, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
 							],
 							"__worldX": 1768,
 							"__worldY": 520
@@ -3164,7 +3164,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [392,56],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [3] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 4, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [3] }] }],
 							"__worldX": 2056,
 							"__worldY": 440
 						},
@@ -3180,7 +3180,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [72,24],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }],
 							"__worldX": 1736,
 							"__worldY": 408
 						},
@@ -3244,7 +3244,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [472,216],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }],
 							"__worldX": 2136,
 							"__worldY": 600
 						}
@@ -3678,7 +3678,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [40,488],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 4, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [4] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 5, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [4] }] }],
 							"__worldX": 2216,
 							"__worldY": 616
 						},
@@ -3699,7 +3699,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 3, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [3] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 4, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [4] }] }
@@ -3966,7 +3966,7 @@
 									"id": "V_String",
 									"params": ["roamer"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 5, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [5] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 2, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
@@ -4172,7 +4172,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 2, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 3, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [2] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 5, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [5] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 5, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [5] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5212,7 +5212,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [1080,56],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 264, "realEditorValues": [] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 264, "realEditorValues": [] }],
 							"__worldX": 2744,
 							"__worldY": 696
 						}
@@ -5633,7 +5633,7 @@
 									"id": "V_String",
 									"params": ["roamer"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5658,7 +5658,7 @@
 									"id": "V_String",
 									"params": ["octi"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 6, "__tile": null, "defUid": 263, "realEditorValues": [{ "id": "V_Int", "params": [6] }] }
+								{ "__identifier": "weapon", "__type": "Int", "__value": 7, "__tile": null, "defUid": 263, "realEditorValues": [{ "id": "V_Int", "params": [6] }] }
 							],
 							"__worldX": 2632,
 							"__worldY": 392
@@ -5675,7 +5675,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [296,104],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 5, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 6, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }],
 							"__worldX": 2600,
 							"__worldY": 232
 						},
@@ -5744,7 +5744,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5769,7 +5769,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [{ "id": "V_Int", "params": [0] }] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 2, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -5789,7 +5789,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [424,184],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 6, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [6] }] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 7, "__tile": null, "defUid": 264, "realEditorValues": [{ "id": "V_Int", "params": [6] }] }],
 							"__worldX": 2728,
 							"__worldY": 312
 						},
@@ -6595,7 +6595,7 @@
 									"id": "V_String",
 									"params": ["chaser"]
 								}] },
-								{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 254, "realEditorValues": [] },
+								{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 254, "realEditorValues": [] },
 								{ "__identifier": "frequency", "__type": "Float", "__value": 3, "__tile": null, "defUid": 265, "realEditorValues": [{ "id": "V_Float", "params": [3] }] },
 								{ "__identifier": "health", "__type": "Float", "__value": 10, "__tile": null, "defUid": 266, "realEditorValues": [{ "id": "V_Float", "params": [10] }] },
 								{ "__identifier": "limit", "__type": "Int", "__value": 5, "__tile": null, "defUid": 267, "realEditorValues": [{ "id": "V_Int", "params": [5] }] }
@@ -6639,7 +6639,7 @@
 							"height": 32,
 							"defUid": 133,
 							"px": [584,312],
-							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 0, "__tile": null, "defUid": 264, "realEditorValues": [] }],
+							"fieldInstances": [{ "__identifier": "weapon", "__type": "Int", "__value": 1, "__tile": null, "defUid": 264, "realEditorValues": [] }],
 							"__worldX": 584,
 							"__worldY": 312
 						}

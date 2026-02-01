@@ -10,6 +10,8 @@
 #include <SDL3/SDL.h>
 
 #define ANIMATION_SPEED 0.15f
+#define MAX_WEAPON_CONFIGS 8
+#define NULL_WEAPON_CONFIG 0
 
 emp_G* G;
 emp_enemy_conf_t* enemy_confs[16];
@@ -57,7 +59,7 @@ void play_one_shot_bullet(emp_weapon_conf_t* weapon)
 		return;
 	}
 
-	MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->asset->handle);
+	MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->sound_asset->handle);
 
 	weapon->last_played_ms = G->args->global_time;
 }
@@ -253,7 +255,7 @@ void enemy_chest_update(emp_enemy_t* enemy)
 {
 	if (enemy->health <= 0.0f)
 	{
-		SDL_Log("%s", "chest died");
+		G->player->weapon_index = SDL_min(G->player->weapon_index, MAX_WEAPON_CONFIGS);
 	}
 }
 
@@ -336,66 +338,44 @@ void emp_init_enemy_configs()
 	e4->late_update = enemy_chest_update;
 }
 
-#define NULL_WEAPON_CONFIG 8
+
 
 void emp_init_weapon_configs()
 {
+	// 0 is NUll config
 	weapons[0] = SDL_malloc(sizeof(emp_weapon_conf_t));
-	weapons[0]->delay_between_shots = 0.5f;
-	weapons[0]->num_shots = 1;
-	weapons[0]->shots[0] = (emp_bullet_conf_t) {
+	weapons[0]->delay_between_shots = 1000.0f;
+	weapons[0]->num_shots = 0;
+
+	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
+	weapons[1]->delay_between_shots = 0.5f;
+	weapons[1]->num_shots = 1;
+	weapons[1]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 500.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.texture_asset = &G->assets->png->bullet_8,
 		.damage = 1.0,
 	};
-	weapons[0]->asset = &G->assets->wav->shot1;
-	weapons[0]->last_played_ms = 0;
+	weapons[1]->sound_asset = &G->assets->wav->shot1;
+	weapons[1]->last_played_ms = 0;
 
-	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
-	weapons[1]->delay_between_shots = 0.4f;
-	weapons[1]->num_shots = 1;
-	weapons[1]->shots[0] = (emp_bullet_conf_t) {
+	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t));
+	weapons[2]->delay_between_shots = 0.4f;
+	weapons[2]->num_shots = 1;
+	weapons[2]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 300.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
-	weapons[1]->asset = &G->assets->wav->shot1;
-	weapons[1]->last_played_ms = 0;
-
-	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
-	weapons[2]->delay_between_shots = 0.3f;
-	weapons[2]->num_shots = 3;
+	weapons[2]->sound_asset = &G->assets->wav->shot1;
 	weapons[2]->last_played_ms = 0;
-	weapons[2]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 450.0f,
-		.start_angle = 0.0f,
-		.lifetime = 3.0f,
-		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet_8
-	};
-	weapons[2]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
-		.start_angle = -15.0f,
-		.lifetime = 3.0f,
-		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet_8
-	};
-	weapons[2]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
-		.start_angle = 15.0f,
-		.lifetime = 3.0f,
-		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet_8
-	};
-	weapons[2]->asset = &G->assets->wav->shot2;
 
-	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
+	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
 	weapons[3]->delay_between_shots = 0.3f;
-	weapons[3]->num_shots = 5;
+	weapons[3]->num_shots = 3;
 	weapons[3]->last_played_ms = 0;
 	weapons[3]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
@@ -409,35 +389,20 @@ void emp_init_weapon_configs()
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet2_8
+		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet2_8
-	};
-	weapons[3]->shots[3] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
-		.start_angle = -30.0f,
-		.lifetime = 3.0f,
-		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[3]->shots[4] = (emp_bullet_conf_t) {
-		.speed = 400.0f,
-		.start_angle = 30.0f,
-		.lifetime = 3.0f,
-		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet_8
-	};
-	weapons[3]->asset = &G->assets->wav->shot3;
+	weapons[3]->sound_asset = &G->assets->wav->shot2;
 
-	weapons[4] = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
+	weapons[4] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
 	weapons[4]->delay_between_shots = 0.3f;
-	weapons[4]->num_shots = 12;
-	weapons[4]->asset = &G->assets->wav->shot1;
+	weapons[4]->num_shots = 5;
 	weapons[4]->last_played_ms = 0;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
@@ -448,82 +413,124 @@ void emp_init_weapon_configs()
 	};
 	weapons[4]->shots[1] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
-		.start_angle = -30.0f,
+		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet_8
+		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[4]->shots[2] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
-		.start_angle = 30.0f,
+		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
-		.texture_asset = &G->assets->png->bullet_8
+		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[4]->shots[3] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
-		.start_angle = -60.0f,
+		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[4] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
+		.start_angle = 30.0f,
+		.lifetime = 3.0f,
+		.damage = 1.0,
+		.texture_asset = &G->assets->png->bullet_8
+	};
+	weapons[4]->sound_asset = &G->assets->wav->shot3;
+
+	weapons[5] = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
+	weapons[5]->delay_between_shots = 0.3f;
+	weapons[5]->num_shots = 12;
+	weapons[5]->sound_asset = &G->assets->wav->shot1;
+	weapons[5]->last_played_ms = 0;
+	weapons[5]->shots[0] = (emp_bullet_conf_t) {
+		.speed = 450.0f,
+		.start_angle = 0.0f,
+		.lifetime = 3.0f,
+		.damage = 1.0,
+		.texture_asset = &G->assets->png->bullet_8
+	};
+	weapons[5]->shots[1] = (emp_bullet_conf_t) {
+		.speed = 400.0f,
+		.start_angle = -30.0f,
+		.lifetime = 3.0f,
+		.damage = 1.0,
+		.texture_asset = &G->assets->png->bullet_8
+	};
+	weapons[5]->shots[2] = (emp_bullet_conf_t) {
+		.speed = 400.0f,
+		.start_angle = 30.0f,
+		.lifetime = 3.0f,
+		.damage = 1.0,
+		.texture_asset = &G->assets->png->bullet_8
+	};
+	weapons[5]->shots[3] = (emp_bullet_conf_t) {
+		.speed = 400.0f,
+		.start_angle = -60.0f,
+		.lifetime = 3.0f,
+		.damage = 1.0,
+		.texture_asset = &G->assets->png->bullet_8
+	};
+	weapons[5]->shots[4] = (emp_bullet_conf_t) {
+		.speed = 400.0f,
 		.start_angle = 60.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[5] = (emp_bullet_conf_t) {
+	weapons[5]->shots[5] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -90.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[6] = (emp_bullet_conf_t) {
+	weapons[5]->shots[6] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 90.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[7] = (emp_bullet_conf_t) {
+	weapons[5]->shots[7] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -120.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[8] = (emp_bullet_conf_t) {
+	weapons[5]->shots[8] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 120.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[9] = (emp_bullet_conf_t) {
+	weapons[5]->shots[9] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -150.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[10] = (emp_bullet_conf_t) {
+	weapons[5]->shots[10] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 150.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[11] = (emp_bullet_conf_t) {
+	weapons[5]->shots[11] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = 180.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->shots[12] = (emp_bullet_conf_t) {
+	weapons[5]->shots[12] = (emp_bullet_conf_t) {
 		.speed = 400.0f,
 		.start_angle = -180.0f,
 		.lifetime = 3.0f,
@@ -532,29 +539,11 @@ void emp_init_weapon_configs()
 	};
 
 	int total_bullets = 24;
-	weapons[5] = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
-	weapons[5]->delay_between_shots = 0.3f;
-	weapons[5]->num_shots = total_bullets;
-	weapons[5]->asset = &G->assets->wav->shot2;
-	weapons[5]->last_played_ms = 0;
-	for (int i = 0; i < total_bullets; i++) {
-		float angle = i * 15.0f;
-		float current_speed = (i % 2) ? 300.0f : 400.0f;
-
-		weapons[5]->shots[i] = (emp_bullet_conf_t) {
-			.speed = current_speed,
-			.start_angle = angle,
-			.lifetime = 3.0f,
-			.damage = 1.0,
-			.texture_asset = &G->assets->png->bullet_8
-		};
-	}
-
-	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
-	weapons[6]->delay_between_shots = 0.5f;
+	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
+	weapons[6]->delay_between_shots = 0.3f;
 	weapons[6]->num_shots = total_bullets;
+	weapons[6]->sound_asset = &G->assets->wav->shot2;
 	weapons[6]->last_played_ms = 0;
-	weapons[6]->asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -564,19 +553,38 @@ void emp_init_weapon_configs()
 			.start_angle = angle,
 			.lifetime = 3.0f,
 			.damage = 1.0,
+			.texture_asset = &G->assets->png->bullet_8
+		};
+	}
+
+	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty double circle
+	weapons[7]->delay_between_shots = 0.5f;
+	weapons[7]->num_shots = total_bullets;
+	weapons[7]->last_played_ms = 0;
+	weapons[7]->sound_asset = &G->assets->wav->shot3;
+	for (int i = 0; i < total_bullets; i++) {
+		float angle = i * 15.0f;
+		float current_speed = (i % 2) ? 300.0f : 400.0f;
+
+		weapons[7]->shots[i] = (emp_bullet_conf_t) {
+			.speed = current_speed,
+			.start_angle = angle,
+			.lifetime = 3.0f,
+			.damage = 1.0,
 			.texture_asset = &G->assets->png->bullet2_8
 		};
 	}
 
-	weapons[7] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
-	weapons[7]->delay_between_shots = 0.5f;
-	weapons[7]->num_shots = total_bullets / 2 + 1;
-	weapons[7]->last_played_ms = 0;
+	weapons[8] = SDL_malloc(sizeof(emp_weapon_conf_t)); // pretty half circle
+	weapons[8]->delay_between_shots = 0.5f;
+	weapons[8]->num_shots = total_bullets / 2 + 1;
+	weapons[8]->last_played_ms = 0;
+	weapons[8]->sound_asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
 
-		weapons[7]->shots[i] = (emp_bullet_conf_t) {
+		weapons[8]->shots[i] = (emp_bullet_conf_t) {
 			.speed = current_speed,
 			.start_angle = angle,
 			.lifetime = 3.0f,
@@ -590,7 +598,7 @@ void emp_init_weapon_configs()
 	particle_config->delay_between_shots = 0.5f;
 	particle_config->num_shots = total_bullets;
 	particle_config->last_played_ms = 0;
-	particle_config->asset = &G->assets->wav->shot3;
+	particle_config->sound_asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -603,11 +611,6 @@ void emp_init_weapon_configs()
 			.texture_asset = &G->assets->png->bullet4_8
 		};
 	}
-
-	// index 8
-	weapons[NULL_WEAPON_CONFIG] = SDL_malloc(sizeof(emp_weapon_conf_t));
-	weapons[NULL_WEAPON_CONFIG]->delay_between_shots = 1000.0f;
-	weapons[NULL_WEAPON_CONFIG]->num_shots = 0;
 }
 
 emp_bullet_conf_t get_bullet1()
@@ -639,7 +642,7 @@ u32 emp_create_player()
 {
 	G->player[0].alive = true;
 	G->player[0].generation = 1;
-	G->player[0].weapon_index = 0;
+	G->player[0].weapon_index = 1;
 	G->player[0].health = 10;
 	G->player[0].max_health = 30;
 	return 0;
@@ -824,8 +827,6 @@ void emp_player_update(emp_player_t* player)
 		player->weapon_index = 7;
 	} else if (state[SDL_SCANCODE_8]) {
 		player->weapon_index = 8;
-	} else if (state[SDL_SCANCODE_9]) {
-		player->weapon_index = 9;
 	} else if (state[SDL_SCANCODE_K]) {
 		emp_create_level(&G->assets->ldtk->world, 1);
 	}
