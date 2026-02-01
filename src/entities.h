@@ -2,7 +2,7 @@
 
 #include <Empire/types.h>
 
-#define SPRITE_MAGNIFICATION 8.0f
+#define SPRITE_MAGNIFICATION 6.0f
 
 typedef struct emp_asset_t emp_asset_t;
 typedef struct emp_enemy_t emp_enemy_t;
