@@ -54,8 +54,8 @@ void emp_music_player_init(void)
 	music->track_steps[0] = track_steps[0];
 	music->track_steps[1] = track_steps[1];
 
-	MIX_SetTrackAudio(tracks[0], MIX_LoadAudio(G->mixer, G->assets->wav->calm_music_loopable.path, false));
-	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[0], MIX_LoadAudio(G->mixer, G->assets->ogg->calm_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->ogg->intense_music_loopable.path, false));
 
 	music->tracks[0] = tracks[0];
 	music->tracks[1] = tracks[1];
@@ -421,7 +421,7 @@ void emp_init_weapon_configs()
 		.texture_asset = &G->assets->png->bullet_8,
 		.damage = 1.0,
 	};
-	weapons[1]->sound_asset = &G->assets->wav->shot1;
+	weapons[1]->sound_asset = &G->assets->ogg->shot1;
 	weapons[1]->last_played_ms = 0;
 
 	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t));
@@ -434,7 +434,7 @@ void emp_init_weapon_configs()
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8,
 	};
-	weapons[2]->sound_asset = &G->assets->wav->shot1;
+	weapons[2]->sound_asset = &G->assets->ogg->shot1;
 	weapons[2]->last_played_ms = 0;
 
 	weapons[3] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
@@ -462,7 +462,7 @@ void emp_init_weapon_configs()
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[3]->sound_asset = &G->assets->wav->shot2;
+	weapons[3]->sound_asset = &G->assets->ogg->shot2;
 
 	weapons[4] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 5 shot
 	weapons[4]->delay_between_shots = 0.3f;
@@ -503,12 +503,12 @@ void emp_init_weapon_configs()
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
-	weapons[4]->sound_asset = &G->assets->wav->shot3;
+	weapons[4]->sound_asset = &G->assets->ogg->shot3;
 
 	weapons[5] = SDL_malloc(sizeof(emp_weapon_conf_t)); // full circle
 	weapons[5]->delay_between_shots = 0.3f;
 	weapons[5]->num_shots = 12;
-	weapons[5]->sound_asset = &G->assets->wav->shot1;
+	weapons[5]->sound_asset = &G->assets->ogg->shot1;
 	weapons[5]->last_played_ms = 0;
 	weapons[5]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
@@ -606,7 +606,7 @@ void emp_init_weapon_configs()
 	weapons[6] = SDL_malloc(sizeof(emp_weapon_conf_t)); // simple double circle
 	weapons[6]->delay_between_shots = 0.3f;
 	weapons[6]->num_shots = total_bullets;
-	weapons[6]->sound_asset = &G->assets->wav->shot2;
+	weapons[6]->sound_asset = &G->assets->ogg->shot2;
 	weapons[6]->last_played_ms = 0;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
@@ -625,7 +625,7 @@ void emp_init_weapon_configs()
 	weapons[7]->delay_between_shots = 0.5f;
 	weapons[7]->num_shots = total_bullets;
 	weapons[7]->last_played_ms = 0;
-	weapons[7]->sound_asset = &G->assets->wav->shot3;
+	weapons[7]->sound_asset = &G->assets->ogg->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -643,7 +643,7 @@ void emp_init_weapon_configs()
 	weapons[8]->delay_between_shots = 0.5f;
 	weapons[8]->num_shots = total_bullets / 2 + 1;
 	weapons[8]->last_played_ms = 0;
-	weapons[8]->sound_asset = &G->assets->wav->shot3;
+	weapons[8]->sound_asset = &G->assets->ogg->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -661,7 +661,7 @@ void emp_init_weapon_configs()
 	particle_config->delay_between_shots = 0.5f;
 	particle_config->num_shots = total_bullets;
 	particle_config->last_played_ms = 0;
-	particle_config->sound_asset = &G->assets->wav->shot3;
+	particle_config->sound_asset = &G->assets->ogg->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -1062,10 +1062,10 @@ void emp_bullet_update(emp_bullet_t* bullet)
 				if (bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0) {
 					G->level->health[index].value--;
 					if (G->level->health[index].value == 0) {
-						play_one_shot(&G->assets->wav->obj_break);
+						play_one_shot(&G->assets->ogg->obj_break);
 					} else {
 
-						play_one_shot(&G->assets->wav->obj_damage);
+						play_one_shot(&G->assets->ogg->obj_damage);
 					}
 				}
 			}
@@ -1096,7 +1096,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 							bullet->alive = false;
 							enemy_in_tile->health -= bullet->damage;
 							enemy_in_tile->last_damage_time = G->args->global_time;
-							play_one_shot(&G->assets->wav->enemy_damage);
+							play_one_shot(&G->assets->ogg->enemy_damage);
 							emp_damage_number(enemy_in_tile->pos, (u32)bullet->damage);
 							goto collision_done;
 						}
@@ -1126,7 +1126,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		if (bullet->mask & emp_player_bullet_mask) {
 			if (check_overlap_bullet_player(bullet, G->player)) {
 				//emp_damage_number(G->player->pos, (u32)bullet->damage);
-				play_one_shot(&G->assets->wav->player_damage);
+				play_one_shot(&G->assets->ogg->player_damage);
 				G->player->health = G->player->health -= bullet->damage;
 				G->player->last_damage_time = G->args->global_time;
 				bullet->alive = false;
@@ -1297,7 +1297,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
 					G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
 					G->player->is_teleporting = 1;
-					play_one_shot(&G->assets->wav->teleport);
+					play_one_shot(&G->assets->ogg->teleport);
 
 					emp_ka_ching(G->player->pos);
 				}

@@ -150,6 +150,15 @@ void emp_unload_wav_asset(struct emp_asset_t* asset)
 	MIX_DestroyAudio(asset->handle);
 }
 
+void emp_load_ogg_asset(struct emp_asset_t* asset)
+{
+	asset->handle = MIX_LoadAudio(G->mixer, asset->path, 0);
+}
+void emp_unload_ogg_asset(struct emp_asset_t* asset)
+{
+	MIX_DestroyAudio(asset->handle);
+}
+
 
 #ifdef __EMSCRIPTEN__
 EM_BOOL on_canv_resize(int eventType, const EmscriptenUiEvent* uiEvent, void* userData) {
@@ -196,9 +205,9 @@ int main(int argc, char* argv[])
 		.unload = &emp_unload_level_asset,
 	};
 
-	emp_asset_loader_t wav_loader = {
-		.load = &emp_load_wav_asset,
-		.unload = &emp_unload_wav_asset,
+	emp_asset_loader_t ogg_loader = {
+		.load = &emp_load_ogg_asset,
+		.unload = &emp_unload_ogg_asset,
 	};
 
 	G = SDL_malloc(sizeof(emp_G));
@@ -213,7 +222,8 @@ int main(int argc, char* argv[])
 	emp_load_font(g_renderer, &g_assets->ttf->asepritefont, 84.0f);
 	emp_asset_manager_add_loader(g_asset_mgr, png_loader, EMP_ASSET_TYPE_PNG);
 	emp_asset_manager_add_loader(g_asset_mgr, ldtk_loader, EMP_ASSET_TYPE_LDTK);
-	emp_asset_manager_add_loader(g_asset_mgr, wav_loader, EMP_ASSET_TYPE_WAV);
+	//emp_asset_manager_add_loader(g_asset_mgr, wav_loader, EMP_ASSET_TYPE_WAV);
+	emp_asset_manager_add_loader(g_asset_mgr, ogg_loader, EMP_ASSET_TYPE_OGG);
 
 	emp_asset_manager_check_hot_reload(g_asset_mgr, 10.0f);
 
