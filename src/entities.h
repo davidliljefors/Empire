@@ -176,8 +176,8 @@ typedef struct emp_level_t
 	emp_tile_health_t* health;
 } emp_level_t;
 
-struct MIX_Mixer;
-struct emp_music_player;
+typedef struct emp_music_player emp_music_player;
+typedef struct MIX_Mixer MIX_Mixer;
 
 typedef struct emp_entities_t
 {
@@ -190,8 +190,8 @@ typedef struct emp_entities_t
 	emp_spawner_t* spawners;
 	emp_bullet_generator_t* generators;
 	emp_level_t* level;
-	struct emp_music_player* music_player;
-	struct MIX_Mixer* mixer;
+	emp_music_player* music_player;
+	MIX_Mixer* mixer;
 } emp_G;
 
 extern emp_G* G;

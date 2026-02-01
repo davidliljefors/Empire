@@ -1088,19 +1088,22 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			for (int y = -1; y <= 1; ++y) {
 				for (int x = -1; x <= 1; ++x) {
 					emp_vec2i_t bullet_tile = get_tile(bullet->pos);
-					bullet_tile.x += x;
-					bullet_tile.y += y;
-					emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
-					while (enemy_in_tile != NULL) {
-						if (check_overlap_bullet_enemy(bullet, enemy_in_tile)) {
-							bullet->alive = false;
-							enemy_in_tile->health -= bullet->damage;
-							enemy_in_tile->last_damage_time = G->args->global_time;
-							play_one_shot(&G->assets->ogg->enemy_damage);
-							emp_damage_number(enemy_in_tile->pos, (u32)bullet->damage);
-							goto collision_done;
+					if (tile_in_bounds(bullet_tile))
+					{
+						bullet_tile.x += x;
+						bullet_tile.y += y;
+						emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
+						while (enemy_in_tile != NULL) {
+							if (check_overlap_bullet_enemy(bullet, enemy_in_tile)) {
+								bullet->alive = false;
+								enemy_in_tile->health -= bullet->damage;
+								enemy_in_tile->last_damage_time = G->args->global_time;
+								play_one_shot(&G->assets->ogg->enemy_damage);
+								emp_damage_number(enemy_in_tile->pos, (u32)bullet->damage);
+								goto collision_done;
+							}
+							enemy_in_tile = enemy_in_tile->next_in_tile;
 						}
-						enemy_in_tile = enemy_in_tile->next_in_tile;
 					}
 				}
 			}
