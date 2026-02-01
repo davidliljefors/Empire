@@ -39,6 +39,22 @@ void emp_asset_manager_add_loader(emp_asset_manager_o* mgr, emp_asset_loader_t l
 
 void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr, float dt)
 {
+#ifdef FLORENCE_PACKAGE_ASSETS
+	(void)dt;
+	u64 len = hmlen(mgr->assets_by_ext);
+	for (u64 i = 0; i < len; ++i) {
+		emp_asset_kvp* pair = &mgr->assets_by_ext[i];
+		emp_asset_loader_t loader = pair->value.loader;
+		if (loader.load && loader.unload) {
+			for (u64 j = 0; j < pair->value.count; ++j) {
+				emp_asset_t* asset = &pair->value.assets[j];
+				if (asset->handle == NULL) {
+					loader.load(asset);
+				}
+			}
+		}
+	}
+#else
 	mgr->accumulator = mgr->accumulator + dt;
 	if (mgr->accumulator < 1.0f) {
 		return;
@@ -59,7 +75,6 @@ void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr, float dt)
 					loader.load(asset);
 					asset->last_modified = info.modify_time;
 				}
-#ifndef __EMSCRIPTEN__
 				if (asset->last_modified != info.modify_time) {
 					emp_buffer new_data = emp_read_entire_file(asset->path);
 					u64 new_hash = emp_hash_data(new_data);
@@ -73,8 +88,8 @@ void emp_asset_manager_check_hot_reload(emp_asset_manager_o* mgr, float dt)
 						SDL_free(new_data.data);
 					}
 				}
-#endif
 			}
 		}
 	}
+#endif
 }

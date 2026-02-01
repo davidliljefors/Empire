@@ -54,8 +54,8 @@ void emp_music_player_init(void)
 	music->track_steps[0] = track_steps[0];
 	music->track_steps[1] = track_steps[1];
 
-	MIX_SetTrackAudio(tracks[0], MIX_LoadAudio(G->mixer, G->assets->ogg->calm_music_loopable.path, false));
-	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->ogg->intense_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[0], (MIX_Audio*)G->assets->ogg->calm_music_loopable.handle);
+	MIX_SetTrackAudio(tracks[1], (MIX_Audio*)G->assets->ogg->intense_music_loopable.handle);
 
 	music->tracks[0] = tracks[0];
 	music->tracks[1] = tracks[1];

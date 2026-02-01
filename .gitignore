@@ -7,3 +7,4 @@ src/generated/
 out/*
 .vscode
 build
+assets.bin

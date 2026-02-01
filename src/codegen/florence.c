@@ -1,15 +1,20 @@
 #include <SDL3/SDL.h>
 #include <Empire/hash.inl>
+#include <Empire/lz4.h>
 #include <stdio.h>
 
 #define MAX_ASSETS 4096
 #define ASSETS_DIR "assets"
 
+static uint64_t g_total_uncompressed_size = 0;
+
 typedef struct {
-    char* name;        // filename without extension
-    char* ext;         // extension (e.g., "obj", "png")
-    char* path;        // relative path from project root
+    char* name;
+    char* ext;
+    char* path;
     uint64_t hash;
+    uint64_t offset;
+    uint64_t size;
 } Asset;
 
 static char* to_snake_case(const char* filename) {
@@ -233,12 +238,15 @@ static void write_header(Asset* assets, int count, uint64_t checksum) {
     SDL_IOprintf(f, "#define GENERATED_ASSETS_CHECKSUM 0x%016llxULL\n", (unsigned long long)checksum);
     SDL_IOprintf(f, "#define GENERATED_OUTPUT_CHECKSUM 0x0000000000000000ULL\n\n");
     
-    // Group by extension
+#ifdef FLORENCE_PACKAGE_ASSETS
+    SDL_IOprintf(f, "#define FLORENCE_PACKAGE_ASSETS 1\n");
+    SDL_IOprintf(f, "#define PACKAGED_UNCOMPRESSED_SIZE %lluULL\n\n", (unsigned long long)g_total_uncompressed_size);
+#endif
+    
     for (int ext_pass = 0; ext_pass < count; ext_pass++) {
         const char* current_ext = assets[ext_pass].ext;
         int already_written = 0;
         
-        // Check if we already wrote this extension
         for (int i = 0; i < ext_pass; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
                 already_written = 1;
@@ -247,14 +255,12 @@ static void write_header(Asset* assets, int count, uint64_t checksum) {
         }
         if (already_written) continue;
         
-        // Write struct for this extension
         char uppercase_ext_buf[64]= {0};
         upper_ext(current_ext, uppercase_ext_buf);
         uint64_t ext_hash = hash_str(uppercase_ext_buf);
         SDL_IOprintf(f, "#define EMP_ASSET_TYPE_%s 0x%016llxULL\n\n", uppercase_ext_buf, ext_hash);
         SDL_IOprintf(f, "typedef struct emp_generated_%s_t\n{\n", current_ext);
         
-        // Count assets for this extension
         int asset_count = 0;
         for (int i = 0; i < count; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
@@ -274,7 +280,6 @@ static void write_header(Asset* assets, int count, uint64_t checksum) {
         SDL_IOprintf(f, "} emp_generated_%s_t;\n\n", current_ext);
     }
     
-    // Write main struct
     SDL_IOprintf(f, "typedef struct emp_generated_assets_o\n{\n");
     
     for (int ext_pass = 0; ext_pass < count; ext_pass++) {
@@ -292,6 +297,9 @@ static void write_header(Asset* assets, int count, uint64_t checksum) {
         SDL_IOprintf(f, "    emp_generated_%s_t* %s;\n", current_ext, current_ext);
     }
     
+#ifdef FLORENCE_PACKAGE_ASSETS
+    SDL_IOprintf(f, "    u8* packaged_blob;\n");
+#endif
     SDL_IOprintf(f, "} emp_generated_assets_o;\n\n");
     SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(const char* root);\n");
     
@@ -308,14 +316,27 @@ static void write_source(Asset* assets, int count) {
     
     SDL_IOprintf(f, "#include <Empire/generated/assets_generated.h>\n");
     SDL_IOprintf(f, "#include <Empire/util.h>\n");
-    SDL_IOprintf(f, "#include <SDL3/SDL.h>\n\n");
     SDL_IOprintf(f, "// Auto-generated file. Do not edit.\n\n");
+    SDL_IOprintf(f, "#include <SDL3/SDL.h>\n");
+#ifdef FLORENCE_PACKAGE_ASSETS
+    SDL_IOprintf(f, "#include <Empire/lz4.h>\n");
+#endif
+    SDL_IOprintf(f, "\n");
     
     SDL_IOprintf(f, "emp_generated_assets_o* emp_generated_assets_create(const char* root) {\n");
     SDL_IOprintf(f, "    emp_generated_assets_o* assets = (emp_generated_assets_o*)SDL_malloc(sizeof(emp_generated_assets_o));\n");
     SDL_IOprintf(f, "    SDL_memset(assets, 0, sizeof(emp_generated_assets_o));\n\n");
+
+#ifdef FLORENCE_PACKAGE_ASSETS
+    SDL_IOprintf(f, "    size_t compressed_size = 0;\n");
+    SDL_IOprintf(f, "    const char* pkg_path = emp_concat(root, \"assets.bin\");\n");
+    SDL_IOprintf(f, "    void* compressed = SDL_LoadFile(pkg_path, &compressed_size);\n");
+    SDL_IOprintf(f, "    SDL_free((void*)pkg_path);\n");
+    SDL_IOprintf(f, "    assets->packaged_blob = (u8*)SDL_malloc(PACKAGED_UNCOMPRESSED_SIZE);\n");
+    SDL_IOprintf(f, "    LZ4_decompress_safe((const char*)compressed, (char*)assets->packaged_blob, (int)compressed_size, (int)PACKAGED_UNCOMPRESSED_SIZE);\n");
+    SDL_IOprintf(f, "    SDL_free(compressed);\n\n");
+#endif
     
-    // Allocate structs for each extension type
     for (int ext_pass = 0; ext_pass < count; ext_pass++) {
         const char* current_ext = assets[ext_pass].ext;
         int already_written = 0;
@@ -328,7 +349,6 @@ static void write_source(Asset* assets, int count) {
         }
         if (already_written) continue;
         
-        // Count assets for this extension
         int asset_count = 0;
         for (int i = 0; i < count; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
@@ -336,7 +356,6 @@ static void write_source(Asset* assets, int count) {
             }
         }
         
-        // Calculate extension hash
         char uppercase_ext_buf[64]= {0};
         upper_ext(current_ext, uppercase_ext_buf);
         uint64_t ext_hash = hash_str(uppercase_ext_buf);
@@ -349,7 +368,6 @@ static void write_source(Asset* assets, int count) {
     }
     SDL_IOprintf(f, "\n");
     
-    // Group by extension
     for (int ext_pass = 0; ext_pass < count; ext_pass++) {
         const char* current_ext = assets[ext_pass].ext;
         int already_written = 0;
@@ -362,14 +380,21 @@ static void write_source(Asset* assets, int count) {
         }
         if (already_written) continue;
         
-        SDL_IOprintf(f, "    // %s Assets\n", current_ext);
-        
         for (int i = 0; i < count; i++) {
             if (SDL_strcmp(assets[i].ext, current_ext) == 0) {
+#ifdef FLORENCE_PACKAGE_ASSETS
+                SDL_IOprintf(f, "    assets->%s->%s.path = \"%s\";\n", 
+                    current_ext, assets[i].name, assets[i].path);
+                SDL_IOprintf(f, "    assets->%s->%s.data.data = assets->packaged_blob + %lluULL;\n",
+                    current_ext, assets[i].name, (unsigned long long)assets[i].offset);
+                SDL_IOprintf(f, "    assets->%s->%s.data.size = %lluULL;\n",
+                    current_ext, assets[i].name, (unsigned long long)assets[i].size);
+#else
                 SDL_IOprintf(f, "    assets->%s->%s.path = emp_concat(root, \"%s\");\n", 
                     current_ext, assets[i].name, assets[i].path);
                 SDL_IOprintf(f, "    assets->%s->%s.data = emp_read_entire_file(assets->%s->%s.path);\n",
                     current_ext, assets[i].name, current_ext, assets[i].name);
+#endif
                 SDL_IOprintf(f, "    assets->%s->%s.hash = 0x%016llxULL;\n", 
                     current_ext, assets[i].name, (unsigned long long)assets[i].hash);
                 SDL_IOprintf(f, "\n");
@@ -382,6 +407,53 @@ static void write_source(Asset* assets, int count) {
     
     SDL_CloseIO(f);
 }
+
+#ifdef FLORENCE_PACKAGE_ASSETS
+static void write_package(Asset* assets, int count) {
+    uint64_t total_size = 0;
+    for (int i = 0; i < count; i++) {
+        size_t file_size = 0;
+        void* data = SDL_LoadFile(assets[i].path, &file_size);
+        if (data) {
+            assets[i].offset = total_size;
+            assets[i].size = file_size;
+            total_size += file_size;
+            SDL_free(data);
+        }
+    }
+    
+    g_total_uncompressed_size = total_size;
+    
+    uint8_t* blob = (uint8_t*)SDL_malloc(total_size);
+    uint64_t write_offset = 0;
+    
+    for (int i = 0; i < count; i++) {
+        size_t file_size = 0;
+        void* data = SDL_LoadFile(assets[i].path, &file_size);
+        if (data) {
+            SDL_memcpy(blob + write_offset, data, file_size);
+            write_offset += file_size;
+            SDL_free(data);
+        }
+    }
+    
+    int max_compressed = LZ4_compressBound((int)total_size);
+    char* compressed = (char*)SDL_malloc(max_compressed);
+    int compressed_size = LZ4_compress_default((const char*)blob, compressed, (int)total_size, max_compressed);
+    
+    SDL_IOStream* f = SDL_IOFromFile("assets.bin", "wb");
+    if (f) {
+        SDL_WriteIO(f, compressed, compressed_size);
+        SDL_CloseIO(f);
+        printf("Packaged %d assets: %llu bytes -> %d bytes (%.1f%%)\n", 
+            count, (unsigned long long)total_size, compressed_size, 
+            100.0f * compressed_size / total_size);
+    }
+    
+    SDL_free(blob);
+    SDL_free(compressed);
+}
+#endif
 
 int main(int argc, char* argv[]) {
     (void)argc;
@@ -419,6 +491,9 @@ int main(int argc, char* argv[]) {
     
     printf("Generating assets (input checksum: 0x%016llx)...\n", (unsigned long long)new_input_checksum);
     
+#ifdef FLORENCE_PACKAGE_ASSETS
+    write_package(assets, count);
+#endif
     write_header(assets, count, new_input_checksum);
     write_source(assets, count);
     update_output_checksum(header_path, source_path);

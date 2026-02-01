@@ -22,7 +22,7 @@ endif()
 
 # Codegen tool (native only)
 if(NOT EMSCRIPTEN)
-    add_executable(Florence src/codegen/florence.c)
+    add_executable(Florence src/codegen/florence.c src/lz4.c)
     target_include_directories(Florence PRIVATE include)
     target_link_libraries(Florence PRIVATE SDL3::SDL3)
 
@@ -33,6 +33,9 @@ if(NOT EMSCRIPTEN)
         EXCLUDE_FROM_ALL FALSE
     )
     set_property(TARGET Florence PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+        target_compile_definitions(Florence PRIVATE FLORENCE_PACKAGE_ASSETS)
+    endif()
     # Create placeholder files if they don't exist (for first-time configure)
     foreach(gen_file ${EMPIRE_GENERATED})
         if(NOT EXISTS ${gen_file})
@@ -60,6 +63,7 @@ set(EMPIRE_SOURCES
     src/assets.c
     src/entities.c
     src/level.c
+    src/lz4.c
     src/main.c
     src/stb_ds.c
     src/stb_image.c
@@ -75,6 +79,7 @@ set(EMPIRE_HEADERS
     include/Empire/assets.h
     include/Empire/hash.inl
     include/Empire/level.h
+    include/Empire/lz4.h
     include/Empire/math.inl
     include/Empire/prototypes.h
     include/Empire/stb_ds.h
@@ -97,6 +102,10 @@ add_executable(Empire
 target_include_directories(Empire PRIVATE include)
 target_link_libraries(Empire PRIVATE SDL3::SDL3)
 target_link_libraries(Empire PRIVATE SDL3_mixer::SDL3_mixer)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    target_compile_definitions(Empire PRIVATE FLORENCE_PACKAGE_ASSETS)
+endif()
 
 if(EMSCRIPTEN)
     target_link_options(Empire PRIVATE "--preload-file" "${CMAKE_CURRENT_SOURCE_DIR}/assets@/assets")

@@ -6,13 +6,13 @@ const char* emp_concat(const char* root, const char* path)
 	char buffer[260];
 
 	if (root != NULL && strcmp(root, "") == 0) {
-		return path;
+		return SDL_strdup(path);
 	}
 
 	if (SDL_snprintf(buffer, sizeof(buffer), "%s/%s", root, path) != 0) {
 		return SDL_strdup(buffer);
 	}
-	return path;
+	return SDL_strdup(path);
 }
 
 emp_buffer emp_read_entire_file(const char* path)

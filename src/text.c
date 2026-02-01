@@ -9,12 +9,11 @@ void emp_load_font(SDL_Renderer* renderer, emp_asset_t* font_asset, float size) 
     emp_font_t* f = SDL_malloc(sizeof(emp_font_t));
     f->size = size;
 
-	emp_buffer ttf_buffer = emp_read_entire_file(font_asset->path);
+	emp_buffer ttf_buffer = font_asset->data;
 
     int w = 512, h = 512;
     unsigned char* alpha_bitmap = SDL_malloc(w * h);
     stbtt_BakeFontBitmap(ttf_buffer.data, 0, size, alpha_bitmap, w, h, 32, 96, f->cdata);
-	SDL_free(ttf_buffer.data);
 
     unsigned int* pixels = SDL_malloc(w * h * 4);
     for (int i = 0; i < w * h; i++) {

@@ -89,7 +89,7 @@ int parse_atlas_width_from_path_name(const char* path)
 void emp_png_load_func(emp_asset_t* asset)
 {
 	int width, height, channels;
-	unsigned char* data = stbi_load(asset->path, &width, &height, &channels, 4);
+	unsigned char* data = stbi_load_from_memory(asset->data.data, asset->data.size, &width, &height, &channels, 4);
 
 	SDL_Surface* surface = SDL_CreateSurfaceFrom(
 		width, height, SDL_PIXELFORMAT_RGBA32, data, width * 4);
@@ -141,18 +141,14 @@ const char* get_asset_argument(int argc, char* arguments[])
 	return "";
 }
 
-void emp_load_wav_asset(struct emp_asset_t* asset)
-{
-	asset->handle = MIX_LoadAudio(G->mixer, asset->path, 0);
-}
-void emp_unload_wav_asset(struct emp_asset_t* asset)
-{
-	MIX_DestroyAudio(asset->handle);
-}
-
 void emp_load_ogg_asset(struct emp_asset_t* asset)
 {
-	asset->handle = MIX_LoadAudio(G->mixer, asset->path, 0);
+	SDL_IOStream* io = SDL_IOFromConstMem(asset->data.data, asset->data.size);
+	asset->handle = MIX_LoadAudio_IO(G->mixer, io, false, true);
+	if (!asset->handle) {
+		SDL_Log("Failed to load OGG asset '%s': %s (data=%p, size=%u)", 
+			asset->path, SDL_GetError(), (void*)asset->data.data, (unsigned)asset->data.size);
+	}
 }
 void emp_unload_ogg_asset(struct emp_asset_t* asset)
 {
