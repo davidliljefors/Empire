@@ -19,6 +19,8 @@ emp_weapon_conf_t* weapons[10];
 
 emp_weapon_conf_t* particle_config;
 
+void emp_ka_ching(emp_vec2_t pos);
+
 typedef struct emp_music_player
 {
 	SDL_PropertiesID options;
@@ -300,6 +302,8 @@ void enemy_chest_update(emp_enemy_t* enemy)
 	if (enemy->health <= 0.0f)
 	{
 		G->player->weapon_index = SDL_min(G->player->weapon_index + 1, MAX_WEAPON_CONFIGS);
+
+		emp_ka_ching(enemy->pos);
 	}
 }
 
@@ -1143,9 +1147,9 @@ void emp_generator_uptdate(emp_bullet_generator_t* generator)
 {
 }
 
-void emp_ka_ching(float x, float y)
+void emp_ka_ching(emp_vec2_t pos)
 {
-	spawn_bullets((emp_vec2_t) { x, y }, (emp_vec2_t) { 1.0f, 1.0f }, 0, particle_config);
+	spawn_bullets(pos, (emp_vec2_t) { 1.0f, 1.0f }, 0, particle_config);
 }
 
 void emp_entities_init()
@@ -1208,7 +1212,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					G->player->is_teleporting = 1;
 					play_one_shot(&G->assets->wav->teleport);
 
-					emp_ka_ching(G->player->pos.x, G->player->pos.y);
+					emp_ka_ching(G->player->pos);
 				}
 			}
 
