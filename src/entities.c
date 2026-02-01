@@ -152,6 +152,18 @@ bool check_overlap_bullet_enemy(emp_bullet_t* bullet, emp_enemy_t* enemy)
 	return emp_vec2_dist_sq(bullet->pos, enemy->pos) < size * size;
 }
 
+bool check_overlap_bullet_player(emp_bullet_t* bullet, emp_player_t* player)
+{
+	emp_texture_t* texture = player->texture_asset->handle;
+	float size = texture->width / 2.0f;
+	return emp_vec2_dist_sq(bullet->pos, player->pos) < size * size;
+}
+
+bool check_overlap_bullet(emp_bullet_t* bullet, emp_vec2_t pos, float size)
+{
+	return emp_vec2_dist_sq(bullet->pos, pos) < size * size;
+}
+
 u64 index_from_tile(emp_vec2i_t tile)
 {
 	return tile.y * EMP_LEVEL_WIDTH + tile.x;
@@ -776,6 +788,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			if (tile_data->state == emp_tile_state_breakable) {
 				if (bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0) {
 					G->level->health[index].value--;
+					PlayOneShot(&G->assets->wav->obj_break);
 				}
 			}
 		}
@@ -804,8 +817,28 @@ void emp_bullet_update(emp_bullet_t* bullet)
 				}
 			}
 		}
+
+		for (u32 i = 0; i < EMP_MAX_SPAWNERS; ++i) {
+			emp_spawner_t* spawner = &G->spawners[i];
+			if (spawner->alive) {
+				emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
+				SDL_FRect dst = render_rect(pos, G->assets->png->cave2_32.handle);
+				emp_vec2_t centre = (emp_vec2_t) { .x = dst.x + (dst.w / 2), .y = dst.y + (dst.h / 2) };
+				if (check_overlap_bullet(bullet, centre, dst.w)) {
+					spawner->health = spawner->health - bullet->damage;
+					if (spawner->health == 0) {
+						bullet->alive = false;
+					}
+				}
+			}
+		}
 	}
 collision_done:;
+	if (bullet->mask & emp_player_bullet_mask) {
+		if (check_overlap_bullet_player(bullet, G->player)) {
+			G->player->health = G->player->health -= bullet->damage;
+		}
+	}
 }
 
 static emp_texture_t* emp_texture_find(const char* path)
@@ -910,7 +943,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 	};
 	SDL_FRect dst = render_rect(pos, texture);
 
-	emp_vec2_t centre = (emp_vec2_t){.x = dst.x + (dst.w / 2), .y = dst.y + (dst.h / 2) };
+	emp_vec2_t centre = (emp_vec2_t) { .x = dst.x + (dst.w / 2), .y = dst.y + (dst.h / 2) };
 
 	int on_teleporter = 0;
 	float distance = emp_vec2_dist(G->player->pos, pos);
@@ -919,9 +952,16 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
 	// buttons & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT);
 	//(void)buttons;
-	int is_hovering = emp_vec2_dist(mouse_pos, centre) < EMP_TILE_SIZE* SPRITE_MAGNIFICATION;
-	float required = EMP_TILE_SIZE * SPRITE_MAGNIFICATION * (G->player->is_teleporting ? 2.0f : 1.0f);
-	if (distance < required) {
+	int is_hovering = emp_vec2_dist(mouse_pos, centre) < EMP_TILE_SIZE * SPRITE_MAGNIFICATION;
+	if (distance < EMP_TILE_SIZE * SPRITE_MAGNIFICATION) {
+		if (is_hovering) {
+			float ex = dst.w * 0.25f;
+			float ey = dst.h * 0.25f;
+			dst.w = dst.w + ex;
+			dst.h = dst.h + ey;
+			dst.x = dst.x - (ex * 0.5f);
+			dst.y = dst.y - (ex * 0.5f);
+		}
 		if (buttons & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT) && is_hovering) {
 			if (G->player->is_teleporting == 0 /*&& G->player->was_teleporting == 0*/) {
 				emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
