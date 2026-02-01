@@ -149,6 +149,22 @@ void emp_unload_wav_asset(struct emp_asset_t* asset)
 	MIX_DestroyAudio(asset->handle);
 }
 
+
+#ifdef __EMSCRIPTEN__
+EM_BOOL on_canv_resize(int eventType, const EmscriptenUiEvent* uiEvent, void* userData) {
+	double width, height;
+
+	// Get the new size of the canvas element in the CSS layout
+	emscripten_get_element_css_size("#canvas", &width, &height);
+
+	// Update the SDL Window size to match
+	SDL_SetWindowSize(g_window, (int)width, (int)height);
+
+	SDL_Log("Resized to: %d x %d", (int)width, (int)height);
+	return EM_TRUE;
+}
+#endif
+
 int main(int argc, char* argv[])
 {
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -219,6 +235,7 @@ int main(int argc, char* argv[])
 	g_last_time = SDL_GetTicks();
 
 #ifdef __EMSCRIPTEN__
+	emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, EM_FALSE, on_canv_resize);
 	emscripten_set_main_loop(main_loop, 0, 1);
 #else
 	u64 last_time = SDL_GetTicks() - 900;
@@ -233,27 +250,6 @@ int main(int argc, char* argv[])
 			frame_count = 0;
 			last_time = currentTime;
 		}
-
-		//i32 preferred_track = 0;
-		//for(i32 index = 0; index < SDL_arraysize(track_steps); index++) {
-		//	if(G->player->pos.x < track_steps[index] * 4) 
-		//	{
-		//		preferred_track = index;
-		//		break;
-		//	}
-		//}
-		//preferred_track = SDL_min(preferred_track, SDL_arraysize(tracks));
-		//if (preferred_track != current_track) {
-		//	MIX_StopTrack(tracks[current_track], MIX_TrackMSToFrames(tracks[current_track], 1000));
-		//	current_track = preferred_track;
-		//	MIX_PlayTrack(tracks[current_track], options);
-		//}
-
-		//Sint64 remaining = MIX_GetTrackRemaining(tracks[current_track]);
-		//Sint64 ms = MIX_TrackFramesToMS(tracks[current_track], remaining);
-		//if (ms == 0) {
-		//	MIX_PlayTrack(tracks[current_track], 0);
-		//}
 
 		main_loop();
 		emp_asset_manager_check_hot_reload(g_asset_mgr, G->args->dt);
