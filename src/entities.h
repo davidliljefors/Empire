@@ -47,8 +47,7 @@ typedef struct emp_weapon_conf_t
 	u32 num_shots;
 	emp_bullet_conf_t shots[36];
 	emp_asset_t* asset;
-	uint32_t last_played_ms;
-    uint32_t cooldown_ms;
+	double last_played_ms;
 } emp_weapon_conf_t;
 
 typedef struct emp_enemy_conf_t
@@ -73,6 +72,7 @@ typedef struct emp_player_t
 	bool alive;
 	float health;
 	float max_health;
+	double last_damage_time;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256

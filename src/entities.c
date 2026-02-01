@@ -39,23 +39,22 @@ emp_player_conf_t get_player_conf()
 	return (emp_player_conf_t) { .speed = 620.0f };
 }
 
-void PlayOneShot(emp_asset_t* asset)
+void play_one_shot(emp_asset_t* asset)
 {
 	MIX_PlayAudio(G->mixer, (MIX_Audio*)asset->handle);
 }
 
-void PlayOneShotBullet(emp_weapon_conf_t* weapon)
+void play_one_shot_bullet(emp_weapon_conf_t* weapon)
 {
-	uint32_t current_time = (uint32_t)SDL_GetTicks();
-
-	if (current_time - weapon->last_played_ms < weapon->cooldown_ms) {
+	double current_time = G->args->global_time;
+	if (current_time - weapon->last_played_ms < weapon->delay_between_shots) {
 		SDL_Log("Current Health: ");
 		return;
 	}
 
 	MIX_PlayAudio(G->mixer, (MIX_Audio*)weapon->asset->handle);
 
-	weapon->last_played_ms = current_time;
+	weapon->last_played_ms = G->args->global_time;
 }
 
 emp_vec2_t render_offset()
@@ -301,7 +300,6 @@ void emp_init_enemy_configs()
 
 void emp_init_weapon_configs()
 {
-	u32 cooldown = 200;
 	weapons[0] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[0]->delay_between_shots = 0.5f;
 	weapons[0]->num_shots = 1;
@@ -314,7 +312,6 @@ void emp_init_weapon_configs()
 	};
 	weapons[0]->asset = &G->assets->wav->shot1;
 	weapons[0]->last_played_ms = 0;
-	weapons[0]->cooldown_ms = cooldown;
 
 	weapons[1] = SDL_malloc(sizeof(emp_weapon_conf_t));
 	weapons[1]->delay_between_shots = 0.4f;
@@ -328,13 +325,11 @@ void emp_init_weapon_configs()
 	};
 	weapons[1]->asset = &G->assets->wav->shot1;
 	weapons[1]->last_played_ms = 0;
-	weapons[1]->cooldown_ms = cooldown;
 
 	weapons[2] = SDL_malloc(sizeof(emp_weapon_conf_t)); // 3 shot
 	weapons[2]->delay_between_shots = 0.3f;
 	weapons[2]->num_shots = 3;
 	weapons[2]->last_played_ms = 0;
-	weapons[2]->cooldown_ms = cooldown;
 	weapons[2]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -362,7 +357,6 @@ void emp_init_weapon_configs()
 	weapons[3]->delay_between_shots = 0.3f;
 	weapons[3]->num_shots = 5;
 	weapons[3]->last_played_ms = 0;
-	weapons[3]->cooldown_ms = cooldown;
 	weapons[3]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -405,7 +399,6 @@ void emp_init_weapon_configs()
 	weapons[4]->num_shots = 12;
 	weapons[4]->asset = &G->assets->wav->shot1;
 	weapons[4]->last_played_ms = 0;
-	weapons[4]->cooldown_ms = cooldown;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 450.0f,
 		.start_angle = 0.0f,
@@ -504,7 +497,6 @@ void emp_init_weapon_configs()
 	weapons[5]->num_shots = total_bullets;
 	weapons[5]->asset = &G->assets->wav->shot2;
 	weapons[5]->last_played_ms = 0;
-	weapons[5]->cooldown_ms = cooldown;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -522,7 +514,6 @@ void emp_init_weapon_configs()
 	weapons[6]->delay_between_shots = 0.5f;
 	weapons[6]->num_shots = total_bullets;
 	weapons[6]->last_played_ms = 0;
-	weapons[6]->cooldown_ms = cooldown;
 	weapons[6]->asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
@@ -541,7 +532,6 @@ void emp_init_weapon_configs()
 	weapons[7]->delay_between_shots = 0.5f;
 	weapons[7]->num_shots = total_bullets / 2 + 1;
 	weapons[7]->last_played_ms = 0;
-	weapons[7]->cooldown_ms = cooldown;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = 90 - i * 15.0f;
 		float current_speed = (i % 2) ? 300.0f : 400.0f;
@@ -560,7 +550,6 @@ void emp_init_weapon_configs()
 	particle_config->delay_between_shots = 0.5f;
 	particle_config->num_shots = total_bullets;
 	particle_config->last_played_ms = 0;
-	particle_config->cooldown_ms = cooldown;
 	particle_config->asset = &G->assets->wav->shot3;
 	for (int i = 0; i < total_bullets; i++) {
 		float angle = i * 15.0f;
@@ -598,7 +587,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->texture_asset = bullet_conf.texture_asset;
 		bullet->mask = mask;
 	}
-	PlayOneShotBullet(conf);
+	play_one_shot_bullet(conf);
 }
 
 u32 emp_create_player()
@@ -754,6 +743,17 @@ void emp_player_update(emp_player_t* player)
 	dst.w = player->flip ? -dst.w : dst.w;
 	SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
 
+	double t = 0.3;
+	double has_taken_damage = player->last_damage_time + t - G->args->global_time;
+	if (has_taken_damage > 0.0) {
+		u8 mod_value = 255 - (u8)(600.0 * has_taken_damage);
+		SDL_SetTextureColorMod(tex->texture, 255, mod_value, mod_value);
+		SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
+		SDL_SetTextureColorMod(tex->texture, 255, 255, 255);
+	} else {
+		SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
+	}
+
 	emp_vec2_t mouse_pos;
 	SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
 
@@ -872,10 +872,10 @@ void emp_bullet_update(emp_bullet_t* bullet)
 				if (bullet->mask & emp_heavy_bullet_mask && G->level->health[index].value > 0) {
 					G->level->health[index].value--;
 					if (G->level->health[index].value == 0) {
-						PlayOneShot(&G->assets->wav->obj_break);
+						play_one_shot(&G->assets->wav->obj_break);
 					} else {
 
-						PlayOneShot(&G->assets->wav->obj_damage);
+						play_one_shot(&G->assets->wav->obj_damage);
 					}
 				}
 			}
@@ -899,6 +899,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 						bullet->alive = false;
 						enemy_in_tile->health -= bullet->damage;
 						enemy_in_tile->last_damage_time = G->args->global_time;
+						play_one_shot(&G->assets->wav->wall_hit_ball);
 						goto collision_done;
 					}
 					enemy_in_tile = enemy_in_tile->next_in_tile;
@@ -926,6 +927,7 @@ collision_done:;
 	if (bullet->mask & emp_player_bullet_mask) {
 		if (check_overlap_bullet_player(bullet, G->player)) {
 			G->player->health = G->player->health -= bullet->damage;
+			G->player->last_damage_time = G->args->global_time;
 			bullet->alive = false;
 		}
 	}
@@ -1097,7 +1099,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 					G->player->pos.x = new_pos.x - (EMP_TILE_SIZE / 2.0f);
 					G->player->pos.y = new_pos.y - (EMP_TILE_SIZE / 2.0f);
 					G->player->is_teleporting = 1;
-					PlayOneShot(&G->assets->wav->teleport);
+					play_one_shot(&G->assets->wav->teleport);
 
 					emp_ka_ching(G->player->pos.x, G->player->pos.y);
 				}
