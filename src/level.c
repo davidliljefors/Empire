@@ -129,8 +129,12 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 				out_entity->type = emp_entity_type_boss;
 				yyjson_val* value = yyjson_obj_get(field, "__value");
 				if (value) {
-					if (SDL_strcmp(yyjson_get_str(value), "octopus") == 0) {
+					if (SDL_strcmp(yyjson_get_str(value), "jelly") == 0) {
 						out_entity->behaviour = emp_behaviour_type_roamer;
+						is_reasonably_constructed = 1;
+					}
+					if (SDL_strcmp(yyjson_get_str(value), "octi") == 0) {
+						out_entity->behaviour = emp_behaviour_type_chaser;
 						is_reasonably_constructed = 1;
 					}
 				}

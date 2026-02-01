@@ -283,9 +283,9 @@ void emp_init_enemy_configs()
 
 	enemy_confs[1] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e1 = enemy_confs[1];
-	e1->health = 10;
+	e1->health = 50;
 	e1->speed = 300.0f;
-	e1->texture_asset = &G->assets->png->boss1_64;
+	e1->texture_asset = &G->assets->png->boss2_64;
 	e1->data_size = sizeof(emp_roamer_data_t);
 	e1->update = enemy_roamer_update;
 
@@ -296,6 +296,15 @@ void emp_init_enemy_configs()
 	e2->texture_asset = &G->assets->png->enemy3_32;
 	e2->data_size = sizeof(emp_shader_data_t);
 	e2->update = enemy_chaser_update;
+
+
+	enemy_confs[3] = SDL_malloc(sizeof(emp_enemy_conf_t));
+	emp_enemy_conf_t* e3 = enemy_confs[3];
+	e3->health = 100;
+	e3->speed = 300.0f;
+	e3->texture_asset = &G->assets->png->boss1_64;
+	e3->data_size = sizeof(emp_roamer_data_t);
+	e3->update = enemy_chaser_update;
 }
 
 void emp_init_weapon_configs()
@@ -1260,7 +1269,16 @@ void setup_level(emp_asset_t* level_asset)
 		float x = boss->x - half;
 		float y = boss->y - half;
 
-		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+		switch (boss->behaviour) {
+		case emp_behaviour_type_roamer:
+			emp_create_enemy((emp_vec2_t) { x* SPRITE_MAGNIFICATION, y* SPRITE_MAGNIFICATION }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			break;
+		case emp_behaviour_type_chaser:
+			emp_create_enemy((emp_vec2_t) { x* SPRITE_MAGNIFICATION, y* SPRITE_MAGNIFICATION }, 3, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			break;
+		default:
+			break;
+		}
 	}
 
 	found = 0;
