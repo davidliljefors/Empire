@@ -3,6 +3,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <Empire/types.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -10,8 +14,6 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stddef.h>
-#include <stdio.h>
-#include <string.h>
 
 #define WINDOW_WIDTH 2200
 #define WINDOW_HEIGHT 1200
@@ -50,7 +52,7 @@ static void main_loop(void)
 
 	Uint64 current_time = SDL_GetTicks();
 	double delta_time = (current_time - g_last_time) / 1000.0;
-	delta_time = min(delta_time, 0.5f);
+	delta_time = SDL_min(delta_time, 0.5f);
 	g_last_time = current_time;
 	G->args->dt = (float)delta_time;
 	G->args->global_time += delta_time;
@@ -179,6 +181,7 @@ int main(int argc, char* argv[])
 
 	G = SDL_malloc(sizeof(emp_G));
 	SDL_AudioSpec spec;
+	MIX_Init();
 	G->mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
     if (!G->mixer) {
         SDL_Log("Couldn't create mixer on default device: %s", SDL_GetError());

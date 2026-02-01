@@ -648,7 +648,7 @@ void emp_player_update(emp_player_t* player)
 		if (player->last_shot + weapons[player->weapon_index]->delay_between_shots < G->args->global_time) {
 			emp_vec2_t player_screen_pos = (emp_vec2_t) { .x = dst.x + dst.w / 2, .y = dst.y + dst.h / 2 };
 			emp_vec2_t delta = emp_vec2_sub(mouse_pos, player_screen_pos);
-			spawn_bullets(player->pos, delta, emp_enemy_bullet_mask, weapons[player->weapon_index]);
+			spawn_bullets(player->pos, delta, emp_enemy_bullet_mask | emp_heavy_bullet_mask, weapons[player->weapon_index]);
 			player->last_shot = G->args->global_time;
 		}
 	}
@@ -790,11 +790,19 @@ void emp_level_update(void)
 			u64 wx = (u64)(pos.x / grid_size);
 			u64 wy = (u64)(pos.y / grid_size);
 
+			u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
+			emp_tile_t* tile = &G->level->tiles[di];
+			emp_tile_health_t* health = &G->level->health[di];
+
+			if (value == 2) {
+				if (health->value == 0) {
+					continue;
+				}
+			}
+
 			pos = emp_vec2_mul(pos, SPRITE_MAGNIFICATION);
 			SDL_FRect dst = render_rect_with_size(pos, grid_size * SPRITE_MAGNIFICATION);
 			SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
-
-			emp_tile_t* tile = &G->level->tiles[(wy * EMP_LEVEL_WIDTH) + wx];
 
 			if (value == 1) {
 				tile->state = emp_tile_state_occupied;
@@ -867,7 +875,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 void emp_entities_update()
 {
 	emp_level_update();
-	
+
 	int is_teleporting = 0;
 	emp_level_asset_t* level = (emp_level_asset_t*)G->assets->ldtk->world.handle;
 	for (u64 i = 0; i < SDL_arraysize(level->teleporters.entries); i++) {
@@ -943,6 +951,29 @@ void setup_level(emp_asset_t* level_asset)
 
 		emp_create_enemy((emp_vec2_t) { x * SPRITE_MAGNIFICATION, y * SPRITE_MAGNIFICATION }, 0);
 	}
+
+	for (u64 li = 0; li < level->sublevels.count; li++) {
+		emp_sublevel_t* sublevel = level->sublevels.entries + li;
+		for (u64 ti = 0; ti < sublevel->tiles.count; ti++) {
+			float grid_size = sublevel->values.grid_size;
+			emp_tile_desc_t* desc = sublevel->tiles.values + ti;
+			u64 lx = (u64)(desc->dst.x / grid_size);
+			u64 ly = (u64)(desc->dst.y / grid_size);
+
+			size_t index = (size_t)(ly * sublevel->values.grid_width) + (size_t)lx;
+			u8 value = sublevel->values.entries[index];
+
+			emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
+			u64 wx = (u64)(pos.x / grid_size);
+			u64 wy = (u64)(pos.y / grid_size);
+
+			u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
+			emp_tile_health_t* health = &G->level->health[di];
+			if(value == 2) {
+				health->value = 10;
+			}
+		}
+	}
 }
 
 void emp_create_level(emp_asset_t* level_asset, int is_reload)
@@ -963,6 +994,7 @@ void emp_create_level(emp_asset_t* level_asset, int is_reload)
 	G->level->tiles = tiles;
 	G->level->health = health;
 	G->level->enemy_in_tile = enemy_in_tile;
+	SDL_Log("%s", level_asset->path);
 	setup_level(&G->assets->ldtk->world);
 }
 

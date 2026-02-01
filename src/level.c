@@ -15,14 +15,14 @@ emp_sublevel_t* emp_level_create_sublevel(emp_level_asset_t* level, emp_value_gr
 	return sublevel;
 }
 
-emp_value_grid_t emp_level_reserve_values(emp_level_asset_t* level, size_t count)
+emp_value_grid_t emp_level_reserve_values(emp_level_asset_t* level, u32 count)
 {
 	u8* data = level->values.values + level->values.count;
 	level->values.count = level->values.count + count;
 	return (emp_value_grid_t) { .entries = data, .count = count };
 }
 
-emp_tiles_data_t emp_level_reserve_tiles(emp_level_asset_t* level, size_t count)
+emp_tiles_data_t emp_level_reserve_tiles(emp_level_asset_t* level, u32 count)
 {
 	emp_tile_desc_t* data = level->tiles.entries + level->tiles.count;
 	level->tiles.count = level->tiles.count + count;
@@ -33,9 +33,9 @@ void emp_level_parse_int_grid_data(emp_level_asset_t* level, yyjson_val* layer, 
 {
 	yyjson_val* int_grid = yyjson_obj_get(layer, "intGridCsv");
 
-	size_t idx, size;
-	size = yyjson_arr_size(int_grid);
-	*values = emp_level_reserve_values(level, size);
+	u64 idx;
+	u64 size = yyjson_arr_size(int_grid);
+	*values = emp_level_reserve_values(level, (u32)size);
 
 	yyjson_val* value;
 	yyjson_arr_foreach(int_grid, idx, size, value)
@@ -48,9 +48,9 @@ void emp_level_parse_tile_data(emp_level_asset_t* level, yyjson_val* layer, emp_
 {
 	yyjson_val* layer_tiles = yyjson_obj_get(layer, "autoLayerTiles");
 
-	size_t idx, size;
+	u64 idx, size;
 	size = yyjson_arr_size(layer_tiles);
-	*tiles = emp_level_reserve_tiles(level, size);
+	*tiles = emp_level_reserve_tiles(level, (u32)size);
 
 	yyjson_val* value;
 	yyjson_arr_foreach(layer_tiles, idx, size, value)
@@ -68,7 +68,7 @@ void emp_level_parse_tile_data(emp_level_asset_t* level, yyjson_val* layer, emp_
 
 int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fields, emp_level_entity_t* out_entity)
 {
-	size_t idx, size;
+	u64 idx, size;
 	yyjson_val* field;
 	int is_reasonably_constructed = 0;
 	yyjson_arr_foreach(fields, idx, size, field)
@@ -161,7 +161,7 @@ u32 emp_level_teleporter_list_find(emp_level_teleporter_list_t* set, u64 id)
 
 static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instances)
 {
-	size_t idx, size;
+	u64 idx, size;
 	yyjson_val* instance;
 	yyjson_arr_foreach(instances, idx, size, instance)
 	{
@@ -208,11 +208,11 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 	}
 }
 
-void emp_load_sublevel(emp_level_asset_t* level, size_t index, yyjson_val* data)
+void emp_load_sublevel(emp_level_asset_t* level, u32 index, yyjson_val* data)
 {
 	yyjson_val* layerInstances = yyjson_obj_get(data, "layerInstances");
 
-	size_t idx, size;
+	u64 idx, size;
 
 	yyjson_val* layer;
 
@@ -257,7 +257,7 @@ u32 emp_level_query(emp_level_asset_t* level, emp_entity_type type, u32 offset)
 	return 0;
 }
 
-emp_level_entity_t* emp_level_get(emp_level_asset_t* level, size_t at)
+emp_level_entity_t* emp_level_get(emp_level_asset_t* level, u32 at)
 {
 	return level->entities.entries + at;
 }
@@ -271,12 +271,13 @@ void emp_load_level_asset(struct emp_asset_t* asset)
 	yyjson_val* sublevels = yyjson_obj_get(root, "levels");
 
 	emp_level_asset_t* level = SDL_malloc(sizeof(*level));
-	memset(level, 0, sizeof(*level));
-	size_t idx, size;
+	SDL_memset(level, 0, sizeof(*level));
+
+	u64 idx, size;
 	yyjson_val* current;
 	yyjson_arr_foreach(sublevels, idx, size, current)
 	{
-		emp_load_sublevel(level, idx, current);
+		emp_load_sublevel(level, (u32)idx, current);
 	}
 
 	asset->handle = (emp_level_asset_t*)level;
@@ -287,7 +288,7 @@ void emp_load_level_asset(struct emp_asset_t* asset)
 void emp_unload_level_asset(struct emp_asset_t* asset)
 {
 	emp_level_asset_t* level_asset = (emp_level_asset_t*)asset->handle;
-	for (size_t li = 0; li < level_asset->sublevels.count; li++) {
+	for (u32 li = 0; li < level_asset->sublevels.count; li++) {
 		emp_sublevel_t* sublevel = level_asset->sublevels.entries + li;
 		SDL_free(sublevel->tiles.tilemap);
 	}

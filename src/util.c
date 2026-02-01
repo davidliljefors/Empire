@@ -9,7 +9,7 @@ const char* emp_concat(const char* root, const char* path)
 		return path;
 	}
 
-	if (SDL_snprintf(buffer, sizeof(buffer), "%s\\%s", root, path) != 0) {
+	if (SDL_snprintf(buffer, sizeof(buffer), "%s/%s", root, path) != 0) {
 		return SDL_strdup(buffer);
 	}
 	return path;
@@ -21,6 +21,7 @@ emp_buffer emp_read_entire_file(const char* path)
 	size_t size = 0;
 	void* data = SDL_LoadFile(path, &size);
 	if (!data) {
+		SDL_Log("Failed to read file: %s - %s", path, SDL_GetError());
 		return buffer;
 	}
 	buffer.size = size;
