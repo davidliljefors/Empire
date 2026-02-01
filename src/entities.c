@@ -50,14 +50,14 @@ void emp_music_player_init(void)
 		1500,
 		2300,
 		9000,
-	};
+	}; 
 
 	music->track_steps[0] = track_steps[0];
 	music->track_steps[1] = track_steps[1];
 	music->track_steps[2] = track_steps[2];
 
 	MIX_SetTrackAudio(tracks[0], MIX_LoadAudio(G->mixer, G->assets->wav->calm_music_loopable.path, false));
-	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
+	MIX_SetTrackAudio(tracks[1], MIX_LoadAudio(G->mixer, G->assets->wav->party_music_loopable.path, false));
 	MIX_SetTrackAudio(tracks[2], MIX_LoadAudio(G->mixer, G->assets->wav->intense_music_loopable.path, false));
 
 	music->tracks[0] = tracks[0];
@@ -92,7 +92,7 @@ typedef struct emp_player_conf_t
 
 emp_player_conf_t get_player_conf()
 {
-	return (emp_player_conf_t) { .speed = 620.0f };
+	return (emp_player_conf_t) { .speed = 240.0f };
 }
 
 void play_one_shot(emp_asset_t* asset)
@@ -194,8 +194,8 @@ SDL_FRect render_rect_with_size(emp_vec2_t pos, float grid_size)
 
 emp_vec2i_t get_tile(emp_vec2_t pos)
 {
-	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * 4.0f)));
-	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * 4.0f)));
+	int tile_x = (int)(roundf(pos.x / (EMP_TILE_SIZE * SPRITE_MAGNIFICATION)));
+	int tile_y = (int)(roundf(pos.y / (EMP_TILE_SIZE * SPRITE_MAGNIFICATION)));
 
 	return (emp_vec2i_t) { .x = tile_x, .y = tile_y };
 }
@@ -946,7 +946,7 @@ void emp_player_update(emp_player_t* player)
 void emp_enemy_update(emp_enemy_t* enemy)
 {
 	float dist = emp_vec2_dist(G->player->pos, enemy->pos);
-	if (dist > 1000.0f) {
+	if (dist > 1800.0f) {
 		return;
 	}
 
@@ -1289,6 +1289,10 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 {
 	emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
+	float dist = emp_vec2_dist(G->player->pos, pos);
+	if(dist > 1800.0f) {
+		return;
+	}
 	if (spawner->count < spawner->limit) {
 		spawner->accumulator = spawner->accumulator - G->args->dt;
 		if (spawner->accumulator <= 0.0f) {
