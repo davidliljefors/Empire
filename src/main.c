@@ -15,8 +15,8 @@
 #include <math.h>
 #include <stddef.h>
 
-#define WINDOW_WIDTH 1080
-#define WINDOW_HEIGHT 920
+#define WINDOW_WIDTH 1920
+#define WINDOW_HEIGHT 1080
 
 #include "entities.h"
 
