@@ -148,11 +148,6 @@ typedef struct emp_bullet_generator_t
 	emp_weapon_conf_t weapons[16];
 } emp_bullet_generator_t;
 
-#define EMP_TILE_SIZE 16.0f
-#define EMP_LEVEL_WIDTH 1024
-#define EMP_LEVEL_HEIGHT 1024
-#define EMP_LEVEL_TILES EMP_LEVEL_WIDTH* EMP_LEVEL_HEIGHT
-
 typedef enum emp_tile_state {
 	emp_tile_state_none,
 	emp_tile_state_occupied,
@@ -169,6 +164,11 @@ typedef struct emp_tile_health_t
 {
 	u8 value;
 } emp_tile_health_t;
+
+#define EMP_TILE_SIZE 16.0f
+#define EMP_LEVEL_WIDTH 1024
+#define EMP_LEVEL_HEIGHT 1024
+#define EMP_LEVEL_TILES EMP_LEVEL_WIDTH * EMP_LEVEL_HEIGHT
 
 typedef struct emp_level_t
 {

@@ -16,6 +16,13 @@ typedef struct emp_buffer
 	u8* data;
 } emp_buffer;
 
+typedef struct emp_compressed_buffer
+{
+	u64 compressed_size;
+	u64 original_size;
+	u8* data;
+} emp_compressed_buffer;
+
 typedef struct SDL_Texture SDL_Texture;
 typedef struct SDL_Renderer SDL_Renderer;
 typedef struct emp_generated_assets_o emp_generated_assets_o;
