@@ -798,7 +798,7 @@ u32 emp_create_player()
 	return 0;
 }
 
-emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_index, emp_spawner_h spawned_by)
+emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, float health, u32 weapon_index, emp_spawner_h spawned_by)
 {
 	for (u32 i = 1; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
@@ -812,7 +812,7 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 
 			enemy->direction = dir;
 			enemy->generation++;
-			enemy->health = conf->health;
+			enemy->health = health == 0.0f ? conf->health : health;
 			enemy->update = conf->update;
 			enemy->late_update = conf->late_update;
 			enemy->speed = random_float(conf->speed * 0.8f, conf->speed * 1.2f);
@@ -832,13 +832,13 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, u32 weapon_in
 
 void emp_create_chest(emp_vec2_t pos, u32 weapon_index)
 {
-	emp_enemy_h handle = emp_create_enemy(pos, ENEMY_CONF_CHEST, NULL_WEAPON_CONFIG, (emp_spawner_h){0});
+	emp_enemy_h handle = emp_create_enemy(pos, ENEMY_CONF_CHEST, 0.0f, NULL_WEAPON_CONFIG, (emp_spawner_h){0});
 
 	//emp_enemy_t* enemy = &G->enemies[handle.index];
 	(void)handle;
 }
 
-void emp_create_spawner(emp_vec2_t pos, float health, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit)
+void emp_create_spawner(emp_vec2_t pos, float health, float enemy_health, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit)
 {
 	for (u32 i = 1; i < EMP_MAX_SPAWNERS; ++i) {
 		emp_spawner_t* spawner = &G->spawners[i];
@@ -849,6 +849,7 @@ void emp_create_spawner(emp_vec2_t pos, float health, u32 enemy_conf_index, u32 
 			spawner->frequency = frequency;
 			spawner->accumulator = 0;
 			spawner->health = health;
+			spawner->enemy_health = enemy_health;
 			spawner->weapon_index = weapon_index;
 			spawner->x = pos.x;
 			spawner->y = pos.y;
@@ -1387,7 +1388,8 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 		if (spawner->accumulator <= 0.0f) {
 			spawner->accumulator = spawner->accumulator + spawner->frequency;
 			spawner->count = spawner->count + 1;
-			emp_create_enemy(pos, spawner->enemy_conf_index, spawner->weapon_index, (emp_spawner_h) { .index = index });
+
+			emp_create_enemy(pos, spawner->enemy_conf_index, spawner->enemy_health, spawner->weapon_index, (emp_spawner_h) { .index = index });
 		}
 	}
 
@@ -1493,10 +1495,10 @@ void setup_level(emp_asset_t* level_asset)
 		};
 		switch (spawner->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_spawner(pos, 10, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
+			emp_create_spawner(pos, 10, spawner->enemy_health, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_spawner(pos, 10, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
+			emp_create_spawner(pos, 10, spawner->enemy_health, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
 		default:
 			break;
@@ -1517,10 +1519,10 @@ void setup_level(emp_asset_t* level_asset)
 
 		switch (boss->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_enemy((emp_vec2_t) { x, y }, 1, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x, y }, 1, 0.0f, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_enemy((emp_vec2_t) { x, y }, 3, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x, y }, 3, 0.0f, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		default:
 			break;

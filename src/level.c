@@ -105,6 +105,13 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 					out_entity->health = (float)yyjson_get_num(value);
 				}
 			}
+
+			if (SDL_strcmp(str, "enemy_health") == 0) {
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					out_entity->enemy_health = (float)yyjson_get_num(value);
+				}
+			}
 		}
 
 		yyjson_val* type = yyjson_obj_get(field, "__type");
