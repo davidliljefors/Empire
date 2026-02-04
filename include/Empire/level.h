@@ -89,6 +89,7 @@ typedef struct emp_level_entity_t
 	float frequency;
 	float enemy_health;
 	float health;
+	float movement_speed;
 	u32 limit;
 } emp_level_entity_t;
 

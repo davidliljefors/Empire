@@ -79,6 +79,7 @@ typedef struct emp_player_t
 	float max_health;
 	double last_damage_time;
 	double died_at_time;
+	float movement_speed;
 } emp_player_t;
 
 #define EMP_MAX_ENEMIES 256
@@ -99,6 +100,7 @@ typedef struct emp_enemy_t
 	emp_enemy_update_f late_update;
 	double last_shot;
 	double last_damage_time;
+	float movement_speed;
 	emp_spawner_h spawned_by;
 	bool flip;
 	u8 dynamic_data[64];
@@ -112,6 +114,7 @@ typedef struct emp_spawner_t
 	float y;
 	float health;
 	float enemy_health;
+	float movement_speed;
 	float accumulator;
 	float frequency;
 	u32 enemy_conf_index;
@@ -202,11 +205,6 @@ void emp_init_enemy_configs();
 void emp_init_weapon_configs();
 u32 emp_create_player();
 
-void emp_create_spawner(emp_vec2_t pos, float health, float enemy_health, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit);
-void emp_destroy_enemy(emp_enemy_h handle);
-
-emp_bullet_h emp_create_bullet();
-void emp_destroy_bullet(emp_bullet_h handle);
 
 emp_bullet_generator_h emp_create_bullet_generator();
 void emp_destroy_bullet_generator(emp_bullet_generator_h handle);

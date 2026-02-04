@@ -112,6 +112,15 @@ int emp_level_add_entities_from_fields(emp_level_asset_t* level, yyjson_val* fie
 					out_entity->enemy_health = (float)yyjson_get_num(value);
 				}
 			}
+
+			if (SDL_strcmp(str, "movement_speed") == 0) {
+				yyjson_val* value = yyjson_obj_get(field, "__value");
+				if (value) {
+					out_entity->movement_speed = (float)yyjson_get_num(value);
+				}
+			}
+
+
 		}
 
 		yyjson_val* type = yyjson_obj_get(field, "__type");
@@ -208,13 +217,15 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 
 		yyjson_val* identifier = yyjson_obj_get(instance, "__identifier");
 
+		int is_reasonably_constructed = 0;
+
 		if (identifier) {
 			const char* str = yyjson_get_str(identifier);
 			if (SDL_strcmp(str, "player") == 0) {
 				entity.type = emp_entity_type_player;
 				entity.behaviour = emp_behaviour_type_none;
-				emp_level_entities_list_add(&level->entities, &entity);
-				continue;
+				//emp_level_entities_list_add(&level->entities, &entity);
+				is_reasonably_constructed = 1;
 			}
 
 			if (SDL_strcmp(str, "teleporter") == 0) {
@@ -230,6 +241,7 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 				yyjson_val* value = yyjson_obj_get(other, "__value");
 				yyjson_val* eid = yyjson_obj_get(value, "entityIid");
 				tp.other = hash_str(yyjson_get_str(eid));
+				// THIS ONE IS NOT GETTING ADDED 
 				emp_level_teleporter_list_add(&level->teleporters, &tp);
 				continue;
 			}
@@ -242,6 +254,9 @@ static void emp_level_add_entities(emp_level_asset_t* level, yyjson_val* instanc
 
 		yyjson_val* fields = yyjson_obj_get(instance, "fieldInstances");
 		if (emp_level_add_entities_from_fields(level, fields, &entity)) {
+			is_reasonably_constructed = 1;
+		}
+		if(is_reasonably_constructed) {
 			emp_level_entities_list_add(&level->entities, &entity);
 		}
 	}
