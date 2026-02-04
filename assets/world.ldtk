@@ -2370,7 +2370,7 @@
 		{
 			"__cWid": 3,
 			"__cHei": 5,
-			"identifier": "tileset2",
+			"identifier": "decorations",
 			"uid": 245,
 			"relPath": "env2_32.png",
 			"embedAtlas": null,
@@ -2382,7 +2382,7 @@
 			"tags": [],
 			"tagsSourceEnumUid": null,
 			"enumTags": [],
-			"customData": [],
+			"customData": [{ "tileId": 0, "data": "animation_frame_count = 3" }],
 			"savedSelections": [],
 			"cachedPixelData": { "opaqueTiles": "000000000000000", "averageColors": "378437843784367436743684268426842784278427842784367436743674" }
 		},
