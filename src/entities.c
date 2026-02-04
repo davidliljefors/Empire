@@ -9,6 +9,7 @@
 #include <SDL3/SDL.h>
 
 #define ANIMATION_SPEED 0.15f
+#define DECO_ANIMATION_SPEED 0.5f
 #define MAX_WEAPON_CONFIGS 8
 #define NULL_WEAPON_CONFIG 0
 
@@ -1268,13 +1269,17 @@ void emp_level_update(void)
 		if (deco != NULL) {
 			for (u64 ti = 0; ti < sublevel->decoration.tiles.count; ti++) {
 				emp_tile_desc_t* desc = sublevel->decoration.tiles.values + ti;
-				SDL_FRect animated = source_rect(deco);
-				//SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size, (float)deco->source_size };
+				//SDL_FRect animated = source_rect(deco);
+				SDL_FRect src = { desc->src.x, (float)desc->src.y, (float)deco->source_size, (float)deco->source_size };
+				float value = (float)G->args->global_time / DECO_ANIMATION_SPEED;
+				u32 src_x = (u32)value % deco->columns;
+				src.x = (float)src_x * (float)deco->source_size;
+
 				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
 
 				pos.y = pos.y - 4.0f;
 				SDL_FRect dst = render_rect_tile(pos, (float)deco->source_size);
-				SDL_RenderTexture(G->renderer, deco->texture, &animated, &dst);
+				SDL_RenderTexture(G->renderer, deco->texture, &src, &dst);
 			}
 		}
 	}
