@@ -326,10 +326,8 @@ void add_enemy_to_tile(emp_enemy_t* enemy)
 	}
 }
 
-SDL_FRect source_rect(emp_asset_t* texture_asset)
+SDL_FRect source_rect(emp_texture_t* texture)
 {
-	emp_texture_t* texture = texture_asset->handle;
-
 	u32 total_frames = texture->columns * texture->rows;
 	u32 slot = (u32)(G->args->global_time / ANIMATION_SPEED) % total_frames;
 
@@ -937,8 +935,8 @@ void emp_player_update(emp_player_t* player)
 		player->alive = false;
 	}
 
-	SDL_FRect src = source_rect(player->texture_asset);
 	emp_texture_t* tex = player->texture_asset->handle;
+	SDL_FRect src = source_rect(tex);
 	SDL_FRect dst = player_rect(player->pos, tex);
 
 	if (player->alive)
@@ -1074,7 +1072,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 
 	emp_texture_t* texture = enemy->texture_asset->handle;
 
-	SDL_FRect src = source_rect(enemy->texture_asset);
+	SDL_FRect src = source_rect(texture);
 	SDL_FRect dst = render_rect(enemy->pos, texture);
 	dst.x = enemy->flip ? dst.x + dst.w : dst.x;
 	dst.w = enemy->flip ? -dst.w : dst.w;
@@ -1270,12 +1268,13 @@ void emp_level_update(void)
 		if (deco != NULL) {
 			for (u64 ti = 0; ti < sublevel->decoration.tiles.count; ti++) {
 				emp_tile_desc_t* desc = sublevel->decoration.tiles.values + ti;
-				SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size, (float)deco->source_size };
+				SDL_FRect animated = source_rect(deco);
+				//SDL_FRect src = { desc->src.x, desc->src.y, (float)deco->source_size, (float)deco->source_size };
 				emp_vec2_t pos = emp_vec2_add(desc->dst, sublevel->offset);
 
 				pos.y = pos.y - 4.0f;
 				SDL_FRect dst = render_rect_tile(pos, (float)deco->source_size);
-				SDL_RenderTexture(G->renderer, deco->texture, &src, &dst);
+				SDL_RenderTexture(G->renderer, deco->texture, &animated, &dst);
 			}
 		}
 	}
@@ -1317,7 +1316,7 @@ int emp_teleporter_uptdate(emp_level_teleporter_t const* teleporter)
 {
 	emp_asset_t* texture_asset = &G->assets->png->cave_32;
 	emp_texture_t* texture = texture_asset->handle;
-	SDL_FRect src = source_rect(texture_asset);
+	SDL_FRect src = source_rect(texture);
 	emp_vec2_t pos = (emp_vec2_t) {
 		.x = teleporter->x - (float)EMP_TILE_SIZE / 2,
 		.y = teleporter->y - (float)EMP_TILE_SIZE / 2,
@@ -1395,7 +1394,7 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 
 	emp_asset_t* texture_asset = &G->assets->png->cave2_32;
 	emp_texture_t* texture = texture_asset->handle;
-	SDL_FRect src = source_rect(texture_asset);
+	SDL_FRect src = source_rect(texture);
 	SDL_FRect dst = render_rect(pos, texture);
 	SDL_RenderTexture(G->renderer, texture->texture, &src, &dst);
 }

@@ -26,6 +26,7 @@
 #include <Empire/level.h>
 #include <Empire/stb_image.h>
 #include <Empire/text.h>
+#include <Empire/util.h>
 
 typedef struct
 {
@@ -67,6 +68,7 @@ void main_loop(void)
 		if (event.type == SDL_EVENT_WINDOW_RESIZED) {
 			update_sprite_magnification();
 		}
+
 	}
 
 	Uint64 current_time = SDL_GetTicks();
@@ -200,6 +202,88 @@ EM_BOOL on_canv_resize(int eventType, const EmscriptenUiEvent* uiEvent, void* us
 }
 #endif
 
+emp_compressed_buffer write_game_snapshot()
+{
+	u64 args_size = sizeof(emp_update_args_t);
+	u64 player_size = sizeof(emp_player_t) * EMP_MAX_PLAYERS;
+	u64 enemy_size = sizeof(emp_enemy_t) * EMP_MAX_ENEMIES;
+	u64 spawner_size = sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS;
+	u64 bullet_size = sizeof(emp_bullet_t) * EMP_MAX_BULLETS;
+	u64 tile_health_size = sizeof(emp_tile_health_t) * EMP_LEVEL_TILES;
+
+	u64 total_size = 0;
+
+	total_size += args_size;
+	total_size += player_size;
+	total_size += enemy_size;
+	total_size += spawner_size;
+	total_size += bullet_size;
+	total_size += tile_health_size;
+
+	static emp_buffer scratch_buffer;
+	if (scratch_buffer.size != total_size)
+	{
+		scratch_buffer.data =SDL_realloc(scratch_buffer.data, total_size);
+		scratch_buffer.size = total_size;
+	}
+
+	u64 write_pos = 0;
+
+	SDL_memcpy(scratch_buffer.data + write_pos, G->args, args_size);
+	write_pos += args_size;
+	
+	SDL_memcpy(scratch_buffer.data + write_pos, G->player, player_size);
+	write_pos += player_size;
+
+	SDL_memcpy(scratch_buffer.data + write_pos, G->enemies, enemy_size);
+	write_pos += enemy_size;
+
+	SDL_memcpy(scratch_buffer.data + write_pos, G->spawners, spawner_size);
+	write_pos += spawner_size;
+
+	SDL_memcpy(scratch_buffer.data + write_pos, G->bullets, bullet_size);
+	write_pos += bullet_size;
+
+	SDL_memcpy(scratch_buffer.data + write_pos, G->level->health, tile_health_size);
+
+
+	return emp_compress_buffer(scratch_buffer);
+}
+
+void restore_game_snapshot(emp_compressed_buffer compressed_buffer)
+{
+	emp_buffer state_buffer = emp_decompress_buffer(compressed_buffer);
+
+	u64 args_size = sizeof(emp_update_args_t);
+	u64 player_size = sizeof(emp_player_t) * EMP_MAX_PLAYERS;
+	u64 enemy_size = sizeof(emp_enemy_t) * EMP_MAX_ENEMIES;
+	u64 spawner_size = sizeof(emp_spawner_t) * EMP_MAX_SPAWNERS;
+	u64 bullet_size = sizeof(emp_bullet_t) * EMP_MAX_BULLETS;
+	u64 tile_health_size = sizeof(emp_tile_health_t) * EMP_LEVEL_TILES;
+
+	u64 read_pos = 0;
+
+	SDL_memcpy(G->args, state_buffer.data + read_pos, args_size);
+	read_pos += args_size;
+
+	SDL_memcpy(G->player, state_buffer.data + read_pos, player_size);
+	read_pos += player_size;
+
+	SDL_memcpy(G->enemies , state_buffer.data+ read_pos, enemy_size);
+	read_pos += enemy_size;
+
+	SDL_memcpy(G->spawners , state_buffer.data+ read_pos, spawner_size);
+	read_pos += spawner_size;
+
+	SDL_memcpy(G->bullets , state_buffer.data+ read_pos, bullet_size);
+	read_pos += bullet_size;
+
+	SDL_memcpy(G->level->health , state_buffer.data+ read_pos, tile_health_size);
+	read_pos += tile_health_size;
+
+	emp_free_buffer(&state_buffer);
+}
+
 int main(int argc, char* argv[])
 {
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
@@ -281,15 +365,38 @@ int main(int argc, char* argv[])
 #else
 	u64 last_time = SDL_GetTicks() - 900;
 	u64 frame_count = 0;
+
+	u32 prev_state_write = 0;
+	emp_compressed_buffer* prvious_states = SDL_calloc(1024, sizeof(emp_compressed_buffer));
+
 	while (g_running) {
 		frame_count++;
 		u64 currentTime = SDL_GetTicks();
-		if (currentTime - last_time >= 1000) {
+		if (currentTime - last_time >= 100) {
 			char title[64];
 			SDL_snprintf(title, sizeof(title), "My App - FPS: %llu", frame_count);
 			SDL_SetWindowTitle(g_window, title);
 			frame_count = 0;
 			last_time = currentTime;
+
+			emp_compressed_buffer* next = &prvious_states[prev_state_write];
+			if(next->data) { 
+				SDL_free(next->data);
+				next->data = NULL;
+			}
+			*next = write_game_snapshot();
+			prev_state_write = prev_state_write + 1 & (1024 - 1);
+		}
+
+		const bool* keys = SDL_GetKeyboardState(NULL);
+		if (keys[SDL_SCANCODE_R])
+		{
+			u32 slot = (prev_state_write - 1) & (1024 - 1);
+			if (prvious_states[slot].original_size > 0)
+			{
+				restore_game_snapshot(prvious_states[slot]);
+				prev_state_write = slot;
+			}
 		}
 
 		main_loop();
