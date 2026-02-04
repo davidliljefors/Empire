@@ -1,10 +1,10 @@
 #include "entities.h"
 
-#include <Empire/miniaudio.h>
 #include <Empire/assets.h>
 #include <Empire/generated/assets_generated.h>
 #include <Empire/level.h>
 #include <Empire/math.inl>
+#include <Empire/miniaudio.h>
 #include <Empire/text.h>
 #include <SDL3/SDL.h>
 
@@ -42,17 +42,23 @@ void emp_music_player_init(void)
 	i32 track_steps[] = {
 		2300,
 		9000,
-	}; 
+	};
 
 	music->track_steps[0] = track_steps[0];
 	music->track_steps[1] = track_steps[1];
 	music->current_track = 0;
 	music->initialized = false;
 
-	if (!G->mixer) return;
+	if (!G->mixer)
+		return;
 
-	typedef struct { ma_decoder decoder; const void* data; size_t size; } emp_audio_t;
-	
+	typedef struct
+	{
+		ma_decoder decoder;
+		const void* data;
+		size_t size;
+	} emp_audio_t;
+
 	emp_asset_t* tracks[] = {
 		&G->assets->ogg->calm_music_loopable,
 		&G->assets->ogg->intense_music_loopable,
@@ -60,7 +66,7 @@ void emp_music_player_init(void)
 
 	for (int i = 0; i < 2; i++) {
 		emp_audio_t* audio = tracks[i]->handle;
-		
+
 		ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, G->mixer->sampleRate);
 		ma_result result = ma_decoder_init_memory(audio->data, audio->size, &config, &music->decoders[i]);
 		SDL_assert(result == MA_SUCCESS && "Failed to init music decoder");
@@ -103,7 +109,8 @@ emp_player_conf_t get_player_conf()
 
 #define SOUND_POOL_SIZE 32
 
-typedef struct {
+typedef struct
+{
 	ma_sound sound;
 	ma_decoder decoder;
 	bool in_use;
@@ -113,11 +120,17 @@ static emp_sound_slot_t g_sound_pool[SOUND_POOL_SIZE];
 
 void play_one_shot(emp_asset_t* asset)
 {
-	if (!asset || !asset->handle || !G->mixer) return;
-	
-	typedef struct { ma_decoder decoder; const void* data; size_t size; } emp_audio_t;
+	if (!asset || !asset->handle || !G->mixer)
+		return;
+
+	typedef struct
+	{
+		ma_decoder decoder;
+		const void* data;
+		size_t size;
+	} emp_audio_t;
 	emp_audio_t* audio = asset->handle;
-	
+
 	// Find a free slot (not playing)
 	emp_sound_slot_t* slot = NULL;
 	for (int i = 0; i < SOUND_POOL_SIZE; i++) {
@@ -134,19 +147,21 @@ void play_one_shot(emp_asset_t* asset)
 			break;
 		}
 	}
-	
-	if (!slot) return; // All slots busy
-	
+
+	if (!slot)
+		return; // All slots busy
+
 	ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, G->mixer->sampleRate);
 	ma_result result = ma_decoder_init_memory(audio->data, audio->size, &config, &slot->decoder);
-	if (result != MA_SUCCESS) return;
-	
+	if (result != MA_SUCCESS)
+		return;
+
 	result = ma_sound_init_from_data_source(G->mixer, &slot->decoder, 0, NULL, &slot->sound);
 	if (result != MA_SUCCESS) {
 		ma_decoder_uninit(&slot->decoder);
 		return;
 	}
-	
+
 	slot->in_use = true;
 	ma_sound_start(&slot->sound);
 }
@@ -351,8 +366,9 @@ u32 simple_rng(u32* state)
 	return (*state >> 16) & 0x7FFF;
 }
 
-float random_float(float min, float max) {
-    float normalized = (float)simple_rng(&rng_state) / 32767.0f;
+float random_float(float min, float max)
+{
+	float normalized = (float)simple_rng(&rng_state) / 32767.0f;
 	return min + normalized * (max - min);
 }
 
@@ -377,8 +393,7 @@ void enemy_chaser_update(emp_enemy_t* enemy)
 
 void enemy_chest_update(emp_enemy_t* enemy)
 {
-	if (enemy->health <= 0.0f)
-	{
+	if (enemy->health <= 0.0f) {
 		G->player->weapon_index = SDL_min(G->player->weapon_index + 1, MAX_WEAPON_CONFIGS);
 
 		emp_ka_ching(enemy->pos);
@@ -469,8 +484,6 @@ void emp_init_enemy_configs()
 	e4->update = NULL;
 	e4->late_update = enemy_chest_update;
 }
-
-
 
 void emp_init_weapon_configs()
 {
@@ -757,6 +770,28 @@ void emp_init_weapon_configs()
 	};
 }
 
+emp_bullet_h emp_create_bullet()
+{
+	for (u32 i = 1; i < EMP_MAX_BULLETS; ++i) {
+		emp_bullet_t* bullet = &G->bullets[i];
+		if (!bullet->alive) {
+			bullet->generation++;
+			bullet->pos = (emp_vec2_t){ 0 };
+			bullet->vel = (emp_vec2_t){ 0 };
+			bullet->life_left = 0.0f;
+			bullet->damage = 0.0f;
+			bullet->texture_asset = NULL;
+			bullet->alive = true;
+			return (emp_bullet_h) { .index = i, .generation = bullet->generation };
+		}
+	}
+
+	assert(false && "out of bullets");
+
+	return (emp_bullet_h) { 0 };
+}
+
+
 emp_bullet_conf_t get_bullet1()
 {
 	emp_bullet_conf_t bullet = (emp_bullet_conf_t) { .speed = 250.0f, .texture_asset = &G->assets->png->bullet_8 };
@@ -780,7 +815,7 @@ void spawn_bullets(emp_vec2_t pos, emp_vec2_t direction, bullet_mask mask, emp_w
 		bullet->mask = mask;
 		bullet->custom_render = bullet_conf.custom_render;
 	}
-	if(conf->sound_asset) { 
+	if (conf->sound_asset) {
 		play_one_shot_bullet(conf);
 	}
 }
@@ -797,7 +832,7 @@ u32 emp_create_player()
 	return 0;
 }
 
-emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, float health, u32 weapon_index, emp_spawner_h spawned_by)
+emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, float health, float movement_speed, u32 weapon_index, emp_spawner_h spawned_by)
 {
 	for (u32 i = 1; i < EMP_MAX_ENEMIES; ++i) {
 		emp_enemy_t* enemy = &G->enemies[i];
@@ -809,12 +844,14 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, float health,
 			emp_vec2_t player_pos = G->player->pos;
 			emp_vec2_t dir = emp_vec2_normalize(emp_vec2_sub(enemy->pos, player_pos));
 
+			float speed = movement_speed == 0.0f ? conf->speed : movement_speed;
+
 			enemy->direction = dir;
 			enemy->generation++;
 			enemy->health = health == 0.0f ? conf->health : health;
 			enemy->update = conf->update;
 			enemy->late_update = conf->late_update;
-			enemy->speed = random_float(conf->speed * 0.8f, conf->speed * 1.2f);
+			enemy->speed = random_float(speed * 0.8f, speed * 1.2f);
 			enemy->texture_asset = conf->texture_asset;
 			enemy->weapon = weapons[weapon_index];
 			enemy->alive = true;
@@ -831,13 +868,13 @@ emp_enemy_h emp_create_enemy(emp_vec2_t pos, u32 enemy_conf_index, float health,
 
 void emp_create_chest(emp_vec2_t pos, u32 weapon_index)
 {
-	emp_enemy_h handle = emp_create_enemy(pos, ENEMY_CONF_CHEST, 0.0f, NULL_WEAPON_CONFIG, (emp_spawner_h){0});
+	emp_enemy_h handle = emp_create_enemy(pos, ENEMY_CONF_CHEST, 0.0f, 0.0f, NULL_WEAPON_CONFIG, (emp_spawner_h) { 0 });
 
-	//emp_enemy_t* enemy = &G->enemies[handle.index];
+	// emp_enemy_t* enemy = &G->enemies[handle.index];
 	(void)handle;
 }
 
-void emp_create_spawner(emp_vec2_t pos, float health, float enemy_health, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit)
+void emp_create_spawner(emp_vec2_t pos, float health, float enemy_health, float movement_speed, u32 enemy_conf_index, u32 weapon_index, float frequency, u32 limit)
 {
 	for (u32 i = 1; i < EMP_MAX_SPAWNERS; ++i) {
 		emp_spawner_t* spawner = &G->spawners[i];
@@ -850,6 +887,7 @@ void emp_create_spawner(emp_vec2_t pos, float health, float enemy_health, u32 en
 			spawner->health = health;
 			spawner->enemy_health = enemy_health;
 			spawner->weapon_index = weapon_index;
+			spawner->movement_speed = movement_speed;
 			spawner->x = pos.x;
 			spawner->y = pos.y;
 			spawner->limit = limit;
@@ -857,27 +895,6 @@ void emp_create_spawner(emp_vec2_t pos, float health, float enemy_health, u32 en
 		}
 	}
 	assert(false && "out of enemies");
-}
-
-emp_bullet_h emp_create_bullet()
-{
-	for (u32 i = 1; i < EMP_MAX_BULLETS; ++i) {
-		emp_bullet_t* bullet = &G->bullets[i];
-		if (!bullet->alive) {
-			bullet->generation++;
-			bullet->pos = (emp_vec2_t) { 0 };
-			bullet->vel = (emp_vec2_t) { 0 };
-			bullet->life_left = 0.0f;
-			bullet->damage = 0.0f;
-			bullet->texture_asset = NULL;
-			bullet->alive = true;
-			return (emp_bullet_h) { .index = i, .generation = bullet->generation };
-		}
-	}
-
-	assert(false && "out of bullets");
-
-	return (emp_bullet_h) { 0 };
 }
 
 emp_bullet_generator_h emp_create_bullet_generator()
@@ -902,7 +919,8 @@ void emp_destroy_bullet_generator(emp_bullet_generator_h handle)
 
 void emp_music_player_update(emp_music_player* music)
 {
-	if (!music->initialized) return;
+	if (!music->initialized)
+		return;
 
 	i32 preferred_track = 0;
 	for (i32 index = 0; index < SDL_arraysize(music->track_steps); index++) {
@@ -916,7 +934,7 @@ void emp_music_player_update(emp_music_player* music)
 		// Fade out current track
 		ma_sound_set_fade_in_milliseconds(&music->sounds[music->current_track], -1, 0, 1000);
 		ma_sound_set_stop_time_in_milliseconds(&music->sounds[music->current_track], 1000);
-		
+
 		// Start and fade in new track
 		music->current_track = preferred_track;
 		ma_sound_seek_to_pcm_frame(&music->sounds[music->current_track], 0);
@@ -930,8 +948,7 @@ void emp_player_update(emp_player_t* player)
 	const bool* state = SDL_GetKeyboardState(NULL);
 	emp_player_conf_t conf = get_player_conf();
 
-	if (player->alive && player->health <= 0 && player->died_at_time == 0)
-	{
+	if (player->alive && player->health <= 0 && player->died_at_time == 0) {
 		player->died_at_time = G->args->global_time;
 		player->alive = false;
 	}
@@ -940,8 +957,7 @@ void emp_player_update(emp_player_t* player)
 	SDL_FRect src = source_rect(tex);
 	SDL_FRect dst = player_rect(player->pos, tex);
 
-	if (player->alive)
-	{
+	if (player->alive) {
 		dst.x = player->flip ? dst.x + dst.w : dst.x;
 		dst.w = player->flip ? -dst.w : dst.w;
 		double t = 0.3;
@@ -955,9 +971,7 @@ void emp_player_update(emp_player_t* player)
 			SDL_SetTextureColorMod(tex->texture, 255, 255, 255);
 			SDL_RenderTexture(G->renderer, tex->texture, &src, &dst);
 		}
-	}
-	else
-	{
+	} else {
 		dst.y = dst.y + dst.h;
 		dst.h = -dst.w;
 		SDL_SetTextureColorMod(tex->texture, 47, 77, 47);
@@ -967,15 +981,12 @@ void emp_player_update(emp_player_t* player)
 		char buf[64];
 		SDL_snprintf(buf, 64, "You died.. Respawn in %d", (int)time_left);
 		emp_draw_text(dst.x - 230, dst.y, buf, 223, 132, 165, &G->assets->ttf->asepritefont);
-		if (time_left <= 0)
-		{
+		if (time_left <= 0) {
 			emp_create_level(&G->assets->ldtk->world, 1);
 		}
 	}
-	
 
-	if (player->alive)
-	{
+	if (player->alive) {
 		emp_vec2_t movement = { 0 };
 
 		if (state[SDL_SCANCODE_W]) {
@@ -1001,8 +1012,9 @@ void emp_player_update(emp_player_t* player)
 		}
 
 		movement = emp_vec2_normalize(movement);
-		movement = emp_vec2_mul(movement, G->args->dt * conf.speed);
-		
+		float speed = player->movement_speed == 0.0f ? conf.speed : player->movement_speed;
+		movement = emp_vec2_mul(movement, G->args->dt * speed);
+
 		emp_vec2_t mouse_pos;
 		SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mouse_pos.x, &mouse_pos.y);
 
@@ -1056,8 +1068,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 		return;
 	}
 
-	if (enemy->update)
-	{
+	if (enemy->update) {
 		enemy->update(enemy);
 	}
 
@@ -1092,8 +1103,7 @@ void emp_enemy_update(emp_enemy_t* enemy)
 
 void emp_enemy_late_update(emp_enemy_t* enemy)
 {
-	if (enemy->late_update)
-	{
+	if (enemy->late_update) {
 		enemy->late_update(enemy);
 	}
 
@@ -1140,13 +1150,11 @@ void emp_bullet_update(emp_bullet_t* bullet)
 		}
 	}
 
-	if (bullet->custom_render)
-	{
+	if (bullet->custom_render) {
 		bullet->custom_render(bullet);
 	}
 
-	if ((bullet->mask & emp_particle_bullet_mask) == 0)
-	{
+	if ((bullet->mask & emp_particle_bullet_mask) == 0) {
 		emp_texture_t* tex = bullet->texture_asset->handle;
 		SDL_FRect dstRect = render_rect(bullet->pos, bullet->texture_asset->handle);
 		SDL_RenderTexture(G->renderer, tex->texture, NULL, &dstRect);
@@ -1156,8 +1164,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			for (int y = -1; y <= 1; ++y) {
 				for (int x = -1; x <= 1; ++x) {
 					emp_vec2i_t bullet_tile = get_tile(bullet->pos);
-					if (tile_in_bounds(bullet_tile))
-					{
+					if (tile_in_bounds(bullet_tile)) {
 						bullet_tile.x += x;
 						bullet_tile.y += y;
 						emp_enemy_t* enemy_in_tile = G->level->enemy_in_tile[index_from_tile(bullet_tile)];
@@ -1193,10 +1200,10 @@ void emp_bullet_update(emp_bullet_t* bullet)
 			}
 		}
 
-		collision_done:;
+	collision_done:;
 		if (bullet->mask & emp_player_bullet_mask) {
 			if (check_overlap_bullet_player(bullet, G->player)) {
-				//emp_damage_number(G->player->pos, (u32)bullet->damage);
+				// emp_damage_number(G->player->pos, (u32)bullet->damage);
 				play_one_shot(&G->assets->ogg->player_damage);
 				G->player->health = G->player->health -= bullet->damage;
 				G->player->last_damage_time = G->args->global_time;
@@ -1269,7 +1276,7 @@ void emp_level_update(void)
 		if (deco != NULL) {
 			for (u64 ti = 0; ti < sublevel->decoration.tiles.count; ti++) {
 				emp_tile_desc_t* desc = sublevel->decoration.tiles.values + ti;
-				//SDL_FRect animated = source_rect(deco);
+				// SDL_FRect animated = source_rect(deco);
 				SDL_FRect src = { desc->src.x, (float)desc->src.y, (float)deco->source_size, (float)deco->source_size };
 				float value = (float)G->args->global_time / DECO_ANIMATION_SPEED;
 				u32 src_x = (u32)value % deco->columns;
@@ -1384,7 +1391,7 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 {
 	emp_vec2_t pos = (emp_vec2_t) { .x = spawner->x, .y = spawner->y };
 	float dist = emp_vec2_dist(G->player->pos, pos);
-	if(dist > 450.0f) {
+	if (dist > 450.0f) {
 		return;
 	}
 	if (spawner->count < spawner->limit) {
@@ -1393,7 +1400,7 @@ void emp_spawner_update(u32 index, emp_spawner_t* spawner)
 			spawner->accumulator = spawner->accumulator + spawner->frequency;
 			spawner->count = spawner->count + 1;
 
-			emp_create_enemy(pos, spawner->enemy_conf_index, spawner->enemy_health, spawner->weapon_index, (emp_spawner_h) { .index = index });
+			emp_create_enemy(pos, spawner->enemy_conf_index, spawner->enemy_health, spawner->movement_speed, spawner->weapon_index, (emp_spawner_h) { .index = index });
 		}
 	}
 
@@ -1481,6 +1488,7 @@ void setup_level(emp_asset_t* level_asset)
 		float y = player_entity->y - half;
 		G->player[player].pos.x = x;
 		G->player[player].pos.y = y;
+		G->player[player].movement_speed = player_entity->movement_speed;
 	} else {
 		SDL_Log("No Player config broke!");
 	}
@@ -1499,10 +1507,10 @@ void setup_level(emp_asset_t* level_asset)
 		};
 		switch (spawner->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_spawner(pos, 10, spawner->enemy_health, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
+			emp_create_spawner(pos, 10, spawner->enemy_health, spawner->movement_speed, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_spawner(pos, 10, spawner->enemy_health, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
+			emp_create_spawner(pos, 10, spawner->enemy_health, spawner->movement_speed, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
 		default:
 			break;
@@ -1523,10 +1531,10 @@ void setup_level(emp_asset_t* level_asset)
 
 		switch (boss->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_enemy((emp_vec2_t) { x, y }, 1, 0.0f, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x, y }, 1, 0.0f, boss->movement_speed, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_enemy((emp_vec2_t) { x, y }, 3, 0.0f, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
+			emp_create_enemy((emp_vec2_t) { x, y }, 3, 0.0f, boss->movement_speed, boss->weapon_index, (emp_spawner_h) { .index = EMP_MAX_SPAWNERS });
 			break;
 		default:
 			break;
