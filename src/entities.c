@@ -1565,7 +1565,7 @@ void setup_level(emp_asset_t* level_asset)
 			u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
 			emp_tile_health_t* health = &G->level->health[di];
 			if (value == 2) {
-				health->value = 10;
+				health->value = 3;
 			}
 		}
 	}
