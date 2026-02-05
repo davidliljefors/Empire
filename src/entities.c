@@ -1508,10 +1508,10 @@ void setup_level(emp_asset_t* level_asset)
 		};
 		switch (spawner->behaviour) {
 		case emp_behaviour_type_roamer:
-			emp_create_spawner(pos, 10, spawner->enemy_health, spawner->movement_speed, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
+			emp_create_spawner(pos, spawner->health, spawner->enemy_health, spawner->movement_speed, 0, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
 		case emp_behaviour_type_chaser:
-			emp_create_spawner(pos, 10, spawner->enemy_health, spawner->movement_speed, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
+			emp_create_spawner(pos, spawner->health, spawner->enemy_health, spawner->movement_speed, 2, spawner->weapon_index, spawner->frequency, spawner->limit);
 			break;
 		default:
 			break;
