@@ -477,7 +477,7 @@ void emp_init_enemy_configs()
 	// index 4
 	enemy_confs[ENEMY_CONF_CHEST] = SDL_malloc(sizeof(emp_enemy_conf_t));
 	emp_enemy_conf_t* e4 = enemy_confs[4];
-	e4->health = 10;
+	e4->health = 1;
 	e4->speed = 0.0f;
 	e4->texture_asset = &G->assets->png->chest1_32;
 	e4->data_size = sizeof(emp_chest_data_t);
@@ -499,7 +499,7 @@ void emp_init_weapon_configs()
 	weapons[1]->shots[0] = (emp_bullet_conf_t) {
 		.speed = 125.0f,
 		.start_angle = 0.0f,
-		.lifetime = 3.0f,
+		.lifetime = 4.0f,
 		.texture_asset = &G->assets->png->bullet_8,
 		.damage = 1.0,
 	};
@@ -510,7 +510,7 @@ void emp_init_weapon_configs()
 	weapons[2]->delay_between_shots = 0.4f;
 	weapons[2]->num_shots = 1;
 	weapons[2]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 75.0f,
+		.speed = 200.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -524,21 +524,21 @@ void emp_init_weapon_configs()
 	weapons[3]->num_shots = 3;
 	weapons[3]->last_played_ms = 0;
 	weapons[3]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 112.0f,
+		.speed = 224.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[3]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -551,35 +551,35 @@ void emp_init_weapon_configs()
 	weapons[4]->num_shots = 5;
 	weapons[4]->last_played_ms = 0;
 	weapons[4]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 112.0f,
+		.speed = 224.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[4]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 15.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet2_8
 	};
 	weapons[4]->shots[3] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[4]->shots[4] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -593,91 +593,91 @@ void emp_init_weapon_configs()
 	weapons[5]->sound_asset = &G->assets->ogg->shot1;
 	weapons[5]->last_played_ms = 0;
 	weapons[5]->shots[0] = (emp_bullet_conf_t) {
-		.speed = 112.0f,
+		.speed = 224.0f,
 		.start_angle = 0.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[1] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[2] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 30.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[3] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -60.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[4] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 60.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[5] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -90.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[6] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 90.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[7] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -120.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[8] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 120.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[9] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -150.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[10] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 150.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[11] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = 180.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
 		.texture_asset = &G->assets->png->bullet_8
 	};
 	weapons[5]->shots[12] = (emp_bullet_conf_t) {
-		.speed = 100.0f,
+		.speed = 200.0f,
 		.start_angle = -180.0f,
 		.lifetime = 3.0f,
 		.damage = 1.0,
@@ -824,7 +824,7 @@ u32 emp_create_player()
 {
 	G->player[0].alive = true;
 	G->player[0].generation = 1;
-	G->player[0].weapon_index = 1;
+	G->player[0].weapon_index = 2;
 	G->player[0].health = 20;
 	G->player[0].max_health = 20;
 	G->player[0].last_damage_time = 0;
@@ -1192,6 +1192,7 @@ void emp_bullet_update(emp_bullet_t* bullet)
 					if (check_overlap_bullet(bullet, centre, dst.w)) {
 						spawner->health = spawner->health - bullet->damage;
 						bullet->alive = false;
+						play_one_shot(&G->assets->ogg->enemy_damage);
 						if (spawner->health == 0) {
 							spawner->alive = false;
 						}
@@ -1573,7 +1574,7 @@ void setup_level(emp_asset_t* level_asset)
 			u64 di = (wy * EMP_LEVEL_WIDTH) + wx;
 			emp_tile_health_t* health = &G->level->health[di];
 			if (value == 2) {
-				health->value = 3;
+				health->value = 2;
 			}
 		}
 	}
